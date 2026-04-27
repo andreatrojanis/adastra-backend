@@ -1,3 +1,5 @@
+const https = require('https');
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -6,34 +8,30 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).end();
 
   if (req.method === 'GET') {
-    const API_KEY = process.env.ANTHROPIC_API_KEY;
-    if (!API_KEY) return res.status(200).send('API key mancante');
-    try {
-      const testRes = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': API_KEY,
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 200,
-          messages: [{ role: 'user', content: 'Rispondi SOLO con questo JSON: {"scoreON":75,"scoreSS":80,"sintesi":"test ok","redFlags":["flag1"]}' }]
-        })
-      });
-      const data = await testRes.json();
-      return res.status(200).send('FULL: ' + JSON.stringify(data).substring(0, 800));
-    } catch(e) {
-      return res.status(200).send('ERRORE: ' + e.message);
-    }
+    return res.status(200).send('AdAstra API OK');
   }
 
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   try {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-const { prompts } = body;
+    // Parse body manually if needed
+    let body = req.body;
+    if (typeof body === 'string') {
+      try { body = JSON.parse(body); } catch(e) {}
+    }
+    if (!body) {
+      // Read raw body
+      body = await new Promise((resolve, reject) => {
+        let data = '';
+        req.on('data', chunk => data += chunk);
+        req.on('end', () => {
+          try { resolve(JSON.parse(data)); } catch(e) { reject(e); }
+        });
+        req.on('error', reject);
+      });
+    }
+
+    const prompts = body.prompts;
     const API_KEY = process.env.ANTHROPIC_API_KEY;
     if (!API_KEY) return res.status(500).json({ error: 'API key mancante' });
 
@@ -48,7 +46,7 @@ const { prompts } = body;
           'anthropic-version': '2023-06-01'
         },
         body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+          model: 'claude-haiku-4-5-20251001',
           max_tokens: 1000,
           messages: [{ role: 'user', content: prompt }]
         })
@@ -87,7 +85,7 @@ const { prompts } = body;
           sintesi: text.substring(0, 400),
           redFlags: [], puntiForza: [], puntiDeboli: [],
           opportunita: [], critiche: [],
-          verdict: '', decisione: '',
+          verdict: 'BORDERLINE', decisione: 'GO CON CORREZIONI',
           puntiChiave: [], azioniImmediate: []
         });
       }
