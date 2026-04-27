@@ -17,7 +17,7 @@ module.exports = async function handler(req, res) {
           'anthropic-version': '2023-06-01'
         },
         body: JSON.stringify({
-          claude-haiku-4-5-20251001
+          model: 'claude-haiku-4-5-20251001',
           max_tokens: 200,
           messages: [{ role: 'user', content: 'Rispondi SOLO con questo JSON: {"scoreON":75,"scoreSS":80,"sintesi":"test ok","redFlags":["flag1"]}' }]
         })
@@ -47,7 +47,7 @@ module.exports = async function handler(req, res) {
           'anthropic-version': '2023-06-01'
         },
         body: JSON.stringify({
-          claude-haiku-4-5-20251001
+        model: 'claude-haiku-4-5-20251001',
           max_tokens: 1000,
           messages: [{ role: 'user', content: prompt }]
         })
