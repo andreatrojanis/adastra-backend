@@ -38,11 +38,13 @@ module.exports = async function handler(req, res) {
       const text = (data.content || []).map(i => i.text || '').join('').trim();
 
       let parsed = null;
-      try { parsed = JSON.parse(text); } catch(e) {}
-      if (!parsed) {
-        const m = text.match(/\{[\s\S]*\}/);
-        if (m) try { parsed = JSON.parse(m[0]); } catch(e) {}
-      }
+// Rimuovi backtick markdown
+const clean = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+try { parsed = JSON.parse(clean); } catch(e) {}
+if (!parsed) {
+  const m = clean.match(/\{[\s\S]*\}/);
+  if (m) try { parsed = JSON.parse(m[0]); } catch(e) {}
+}
 
       results.push(parsed || {
         scoreON: 55, scoreSS: 60,
