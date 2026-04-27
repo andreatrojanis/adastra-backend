@@ -6,7 +6,6 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method === 'GET') return res.status(200).send('AdAstra API OK');
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
-  return res.status(200).json({ results: [{ scoreON: 77, scoreSS: 82, sintesi: 'TEST VERCEL FUNZIONA', redFlags: ['test ok'], puntiForza: [], puntiDeboli: [], opportunita: [], critiche: [], verdict: 'TEST', decisione: 'GO', puntiChiave: [], azioniImmediate: [] }] });
 
   try {
     // Read and parse body
