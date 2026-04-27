@@ -14,9 +14,7 @@ module.exports = async function handler(req, res) {
     if (!API_KEY) return res.status(500).json({ error: 'API key mancante' });
     if (!prompts || !prompts.length) return res.status(400).json({ error: 'Nessun prompt' });
 
-    const results = [];
-
-    for (const prompt of prompts) {
+    async function callClaude(prompt) {
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -26,18 +24,16 @@ module.exports = async function handler(req, res) {
         },
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: 1000,
+          max_tokens: 800,
           messages: [{ 
             role: 'user', 
-            content: 'Rispondi SOLO con JSON valido, nessun testo prima o dopo, nessun markdown.\n\n' + prompt 
+            content: 'Rispondi SOLO con JSON valido, nessun testo extra.\n\n' + prompt 
           }]
         })
       });
 
       const data = await response.json();
       const text = (data.content || []).map(i => i.text || '').join('').trim();
-      
-      // Rimuovi backtick markdown se presenti
       const clean = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
 
       let parsed = null;
@@ -47,16 +43,17 @@ module.exports = async function handler(req, res) {
         if (m) try { parsed = JSON.parse(m[0]); } catch(e) {}
       }
 
-      results.push(parsed || {
+      return parsed || {
         scoreON: 55, scoreSS: 60,
-        sintesi: clean.substring(0, 400) || 'Analisi completata',
+        sintesi: clean.substring(0, 300) || 'Analisi completata',
         redFlags: [], puntiForza: [], puntiDeboli: [],
         opportunita: [], critiche: [],
         verdict: 'BORDERLINE', decisione: 'GO CON CORREZIONI',
         puntiChiave: [], azioniImmediate: []
-      });
+      };
     }
 
+    const results = await Promise.all(prompts.map(p => callClaude(p)));
     return res.status(200).json({ results });
 
   } catch (err) {
