@@ -4,7 +4,30 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
 
   if (req.method === 'OPTIONS') return res.status(204).end();
-  if (req.method === 'GET') return res.status(200).send('AdAstra API OK');
+  
+  if (req.method === 'GET') {
+    // Test mode — call Claude with a fixed prompt and return raw response
+    const API_KEY = process.env.ANTHROPIC_API_KEY;
+    if (!API_KEY) return res.status(200).send('API key mancante');
+    
+    const testRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 200,
+        messages: [{ role: 'user', content: 'Rispondi SOLO con questo JSON esatto: {"scoreON":75,"scoreSS":80,"sintesi":"test ok","redFlags":["flag1"]}' }]
+      })
+    });
+    const data = await testRes.json();
+    const text = (data.content || []).map(i => i.text || '').join('');
+    return res.status(200).send('RAW: ' + text);
+  }
+
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   try {
@@ -41,20 +64,20 @@ export default async function handler(req, res) {
 
       if (parsed) {
         results.push({
-          scoreON: parsed.scoreON || parsed.score_on || 0,
-          scoreSS: parsed.scoreSS || parsed.score_ss || 0,
+          scoreON: parsed.scoreON || 0,
+          scoreSS: parsed.scoreSS || 0,
           scoreONLabel: parsed.scoreONLabel || '',
           scoreSSLabel: parsed.scoreSSLabel || '',
-          sintesi: parsed.sintesi || parsed.summary || parsed.analisi || '',
+          sintesi: parsed.sintesi || parsed.summary || '',
           redFlags: parsed.redFlags || parsed.red_flags || [],
           puntiForza: parsed.puntiForza || parsed.punti_forza || [],
           puntiDeboli: parsed.puntiDeboli || parsed.punti_deboli || [],
           opportunita: parsed.opportunita || [],
           critiche: parsed.critiche || [],
-          verdict: parsed.verdict || parsed.verdetto || '',
+          verdict: parsed.verdict || '',
           decisione: parsed.decisione || '',
-          puntiChiave: parsed.puntiChiave || parsed.punti_chiave || [],
-          azioniImmediate: parsed.azioniImmediate || parsed.azioni_immediate || []
+          puntiChiave: parsed.puntiChiave || [],
+          azioniImmediate: parsed.azioniImmediate || []
         });
       } else {
         results.push({
