@@ -36,6 +36,7 @@ module.exports = async function handler(req, res) {
 
       const data = await response.json();
       const text = (data.content || []).map(i => i.text || '').join('').trim();
+      if (!text) return res.status(200).json({ results: [{ scoreON: 0, scoreSS: 0, sintesi: 'TEXT VUOTO - data: ' + JSON.stringify(data).substring(0,300), redFlags: [], puntiForza: [], puntiDeboli: [], opportunita: [], critiche: [], verdict: 'DEBUG', decisione: 'DEBUG', puntiChiave: [], azioniImmediate: [] }] });
 
       let parsed = null;
 // Rimuovi backtick markdown
