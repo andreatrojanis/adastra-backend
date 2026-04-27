@@ -24,8 +24,7 @@ export default async function handler(req, res) {
       })
     });
     const data = await testRes.json();
-    const text = (data.content || []).map(i => i.text || '').join('');
-    return res.status(200).send('RAW: ' + text);
+return res.status(200).send('FULL: ' + JSON.stringify(data).substring(0, 500));
   }
 
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
