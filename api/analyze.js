@@ -18,7 +18,7 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
+       claude-3-haiku-20240307
         max_tokens: 200,
         messages: [{ role: 'user', content: 'Rispondi SOLO con questo JSON esatto: {"scoreON":75,"scoreSS":80,"sintesi":"test ok","redFlags":["flag1"]}' }]
       })
@@ -45,7 +45,7 @@ return res.status(200).send('FULL: ' + JSON.stringify(data).substring(0, 500));
           'anthropic-version': '2023-06-01'
         },
         body: JSON.stringify({
-          model: 'claude-3-5-sonnet-20241022',
+        claude-3-haiku-20240307
           max_tokens: 1000,
           messages: [{ role: 'user', content: prompt }]
         })
