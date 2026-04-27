@@ -36,20 +36,20 @@ module.exports = async function handler(req, res) {
 
       const data = await response.json();
       const text = (data.content || []).map(i => i.text || '').join('').trim();
-      if (!text) return res.status(200).json({ results: [{ scoreON: 0, scoreSS: 0, sintesi: 'TEXT VUOTO - data: ' + JSON.stringify(data).substring(0,300), redFlags: [], puntiForza: [], puntiDeboli: [], opportunita: [], critiche: [], verdict: 'DEBUG', decisione: 'DEBUG', puntiChiave: [], azioniImmediate: [] }] });
+      
+      // Rimuovi backtick markdown se presenti
+      const clean = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
 
       let parsed = null;
-// Rimuovi backtick markdown
-const clean = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
-try { parsed = JSON.parse(clean); } catch(e) {}
-if (!parsed) {
-  const m = clean.match(/\{[\s\S]*\}/);
-  if (m) try { parsed = JSON.parse(m[0]); } catch(e) {}
-}
+      try { parsed = JSON.parse(clean); } catch(e) {}
+      if (!parsed) {
+        const m = clean.match(/\{[\s\S]*\}/);
+        if (m) try { parsed = JSON.parse(m[0]); } catch(e) {}
+      }
 
       results.push(parsed || {
         scoreON: 55, scoreSS: 60,
-        sintesi: text.substring(0, 400) || 'Analisi completata',
+        sintesi: clean.substring(0, 400) || 'Analisi completata',
         redFlags: [], puntiForza: [], puntiDeboli: [],
         opportunita: [], critiche: [],
         verdict: 'BORDERLINE', decisione: 'GO CON CORREZIONI',
