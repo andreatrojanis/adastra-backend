@@ -811,28 +811,153 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       </div>`;
     }
 
-    // ── TIMELINE ──
+    // ── TIMELINE DINAMICA ──
     function timelineHTML(on,ss){
       const score=(on+ss)/2;
+
+      // Leggi dati rilevanti
+      const anzianita = answers['s6']||'';
+      const trl = answers['s9']||'';
+      const deminimis = document.getElementById('f-deminimis')?.value||'';
+      const fideiussione = document.getElementById('f-fideiussione')?.value||'';
+      const docsVal = answers['s20']||'';
+      const nDocs = docsVal?docsVal.split('|').length:0;
+
+      // Calcola settimane per ogni fase
+      let settVerifica = 1;
+      let settDossier = 3;
+      let settPreIstr = 2;
+      let settAttesa = 8; // tempo medio risposta Invitalia
+
+      // Anzianità — se costituenda aggiunge tempo per costituzione
+      let noteVerifica = 'Scelta misura, roadmap operativa';
+      if(anzianita.includes('Costituenda')){
+        settVerifica = 3;
+        noteVerifica = 'Scelta misura + strutturazione societaria';
+      }
+
+      // Score basso — dossier più lungo
+      if(score < 40) settDossier = 10;
+      else if(score < 55) settDossier = 7;
+      else if(score < 70) settDossier = 4;
+      else settDossier = 2;
+
+      // TRL basso — aggiunge sviluppo prodotto
+      let trlNote = '';
+      let settTRL = 0;
+      if(trl.includes('TRL 3')){settTRL=12;trlNote='Sviluppo prodotto: +12 sett.';}
+      else if(trl.includes('TRL 4')){settTRL=8;trlNote='Sviluppo prodotto: +8 sett.';}
+      else if(trl.includes('TRL 5')){settTRL=4;trlNote='Completamento prototipo: +4 sett.';}
+
+      // De minimis non verificato
+      let deminimisNote = '';
+      if(deminimis.includes('Non verificato')) deminimisNote = '+ verifica de minimis richiesta';
+
+      // Fideiussione da strutturare
+      let fidNote = '';
+      if(fideiussione.includes('Da strutturare')||fideiussione.includes('Non disponibile')||fideiussione.includes('Non ancora')){
+        settDossier += 2;
+        fidNote = '+ strutturazione garanzia fideiussoria';
+      }
+
+      // Documenti mancanti
+      let docsNote = '';
+      if(nDocs < 3){ settDossier += 3; docsNote = '+ raccolta documentazione base'; }
+      else if(nDocs < 5){ settDossier += 1; }
+
+      // Calcola orizzonte totale
+      const totSett = settVerifica + settTRL + settDossier + settPreIstr + settAttesa;
+      const totMesi = Math.ceil(totSett/4);
+
+      // Note per step dossier
+      const noteDossier = [
+        score<55?'Riallineamento requisiti e narrazione':'Redazione dossier e piano finanziario',
+        trlNote, deminimisNote, fidNote, docsNote
+      ].filter(Boolean).join(' · ');
+
+      // Nota candidatura
+      const noteCandidatura = score>=70
+        ? `Stima: ${totMesi} mesi da oggi`
+        : score>=50
+          ? `Stima: ${totMesi} mesi — subordinata a correzioni`
+          : `Stima: ${totMesi}+ mesi — ricostruzione necessaria`;
+
       const steps=[
-        {label:'Oggi',sub:'Profilo analizzato',done:true},
-        {label:'Verifica strategica',sub:'Scelta misura e roadmap',done:false},
-        {label:'Dossier',sub:score>=65?'2–4 settimane':'4–8 settimane',done:false},
-        {label:'Pre-istruttoria',sub:'Simulazione valutazione',done:false},
-        {label:'Candidatura',sub:score>=65?'Pronta':'Subordinata a correzioni',done:false}
-      ];
-      const items=steps.map((s,i)=>`
-        <div style="display:flex;flex-direction:column;align-items:center;flex:1;position:relative;padding:0 4px;">
-          ${i>0?`<div style="position:absolute;top:10px;right:50%;width:100%;height:1px;background:rgba(201,168,76,0.2);z-index:0;"></div>`:''}
-          <div style="width:22px;height:22px;border-radius:50%;background:${s.done?gold:'#fff'};border:2px solid ${s.done?gold:'rgba(201,168,76,0.3)'};z-index:1;display:flex;align-items:center;justify-content:center;margin-bottom:8px;flex-shrink:0;">
-            ${s.done?`<span style="font-size:9px;color:#fff;font-weight:700">\u2713</span>`:`<span style="font-size:8px;color:rgba(201,168,76,0.5);">${i+1}</span>`}
+        {
+          label:'Oggi',
+          sub:'Profilo analizzato dal panel AI',
+          weeks:null,
+          done:true,
+          color:gold
+        },
+        {
+          label:'Verifica strategica',
+          sub:noteVerifica,
+          weeks:settVerifica,
+          done:false,
+          color:'rgba(201,168,76,0.4)'
+        },
+        trl.includes('TRL 3')||trl.includes('TRL 4')||trl.includes('TRL 5') ? {
+          label:'Sviluppo prodotto',
+          sub:trlNote||'Completamento TRL minimo',
+          weeks:settTRL,
+          done:false,
+          color:'rgba(201,168,76,0.3)',
+          alert:true
+        } : null,
+        {
+          label:'Strutturazione dossier',
+          sub:noteDossier||'Documentazione e piano finanziario',
+          weeks:settDossier,
+          done:false,
+          color:'rgba(201,168,76,0.3)'
+        },
+        {
+          label:'Pre-istruttoria',
+          sub:'Simulazione valutazione interna',
+          weeks:settPreIstr,
+          done:false,
+          color:'rgba(201,168,76,0.3)'
+        },
+        {
+          label:'Candidatura',
+          sub:noteCandidatura,
+          weeks:null,
+          done:false,
+          color:score>=65?'rgba(10,127,46,0.5)':'rgba(176,0,32,0.4)',
+          final:true
+        }
+      ].filter(Boolean);
+
+      const items=steps.map((s,i)=>{
+        const dotBg=s.done?gold:s.final?(score>=65?'rgba(10,127,46,0.15)':'rgba(176,0,32,0.1)'):'rgba(201,168,76,0.08)';
+        const dotBorder=s.done?gold:s.final?(score>=65?'rgba(10,127,46,0.5)':'rgba(176,0,32,0.4)'):'rgba(201,168,76,0.3)';
+        const textColor=s.done?'#111':s.final?(score>=65?'#0a7f2e':'#b00020'):'#555';
+        const weeksBadge=s.weeks?`<div style="${fd};font-size:9px;color:${gold};background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2);border-radius:4px;padding:1px 6px;margin-top:4px;">${s.weeks} sett.</div>`:'';
+        return `<div style="display:flex;flex-direction:column;align-items:center;flex:1;position:relative;padding:0 3px;">
+          ${i>0?`<div style="position:absolute;top:11px;right:50%;width:100%;height:1px;background:rgba(201,168,76,0.2);z-index:0;"></div>`:''}
+          <div style="width:24px;height:24px;border-radius:50%;background:${dotBg};border:2px solid ${dotBorder};z-index:1;display:flex;align-items:center;justify-content:center;margin-bottom:6px;flex-shrink:0;">
+            ${s.done?`<span style="font-size:9px;color:#fff;font-weight:700">\u2713</span>`:`<span style="font-size:8px;color:${dotBorder};font-weight:600">${i+1}</span>`}
           </div>
-          <div style="${fd};font-size:9px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:${s.done?'#111':'#888'};text-align:center;margin-bottom:3px;">${s.label}</div>
-          <div style="${fb};font-size:10px;font-weight:300;color:#aaa;text-align:center;line-height:1.4;">${s.sub}</div>
-        </div>`).join('');
+          <div style="${fd};font-size:8px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:${textColor};text-align:center;margin-bottom:2px;line-height:1.3;">${s.label}</div>
+          <div style="${fb};font-size:9px;font-weight:300;color:#aaa;text-align:center;line-height:1.4;">${s.sub}</div>
+          ${weeksBadge}
+        </div>`;
+      }).join('');
+
+      // Sommario orizzonte
+      const horizzonteColor=totMesi<=3?'#0a7f2e':totMesi<=6?'#a07820':'#b00020';
+
       return `<div style="border:1px solid ${border};${br};padding:20px 16px;background:#fff;margin-bottom:12px;">
-        <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:16px;">Timeline verso la candidatura</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};">Timeline verso la candidatura</div>
+          <div style="${fd};font-size:11px;font-weight:600;color:${horizzonteColor};border:1px solid rgba(0,0,0,0.08);border-radius:6px;padding:3px 10px;background:rgba(0,0,0,0.02);">Orizzonte: ~${totMesi} mesi</div>
+        </div>
         <div style="display:flex;align-items:flex-start;position:relative;">${items}</div>
+        ${trlNote||deminimisNote||fidNote?`<div style="margin-top:14px;padding:10px 14px;background:rgba(201,168,76,0.05);border-radius:8px;border:1px solid rgba(201,168,76,0.15);${fb};font-size:11px;font-weight:300;color:#666;line-height:1.6;">
+          <span style="${fd};font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:${gold};">Elementi che allungano i tempi</span><br>
+          ${[trlNote,deminimisNote,fidNote,docsNote].filter(Boolean).map(n=>`\u00b7 ${n}`).join('  ')}
+        </div>`:''}
       </div>`;
     }
 
