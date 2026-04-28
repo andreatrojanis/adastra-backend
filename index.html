@@ -105,8 +105,8 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
 </head>
 <body>
 <header class="page-header">
-  <a href="https://andreatrojanis1.wixsite.com/website-6" class="logo">A D A<span>S</span>T R A</a>
-  <a href="https://andreatrojanis1.wixsite.com/website-6/starton" class="back-link">← Come funziona</a>
+  <div class="logo">S T A R T<span> </span>O N</div>
+  <div style="font-family:var(--fd);font-size:10px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:#aaa;">Pre-verifica Finanziabilità Startup</div>
 </header>
 <main class="page-main">
   <div class="wiz-nav"><button id="wiz-back" class="hidden">← Indietro</button></div>
@@ -729,35 +729,41 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       impatti:Math.min(1,Math.max(0.15,(on+ss)/200*0.6+0.2))
     };
 
-    // ── GAUGE ──
+    // ── GAUGE (semicerchio corretto) ──
     function gaugeArc(val,color){
-      const r=60,cx=90,cy=90;
-      const startAngle=210*Math.PI/180;
-      const endAngle=330*Math.PI/180;
-      const totalAngle=(2*Math.PI)-(endAngle-startAngle);
-      const angle=startAngle+totalAngle*(val/100);
-      function pt(a){return{x:(cx+r*Math.cos(a)).toFixed(2),y:(cy+r*Math.sin(a)).toFixed(2)};}
-      const s=pt(startAngle),e=pt(endAngle),ea=pt(angle);
-      const large=(angle-startAngle+2*Math.PI)%(2*Math.PI)>Math.PI?1:0;
-      return `<svg width="180" height="120" viewBox="0 0 180 120">
-        <path d="M${s.x},${s.y} A${r},${r} 0 1,1 ${e.x},${e.y}" fill="none" stroke="rgba(201,168,76,0.12)" stroke-width="10" stroke-linecap="round"/>
-        <path d="M${s.x},${s.y} A${r},${r} 0 ${large},1 ${ea.x},${ea.y}" fill="none" stroke="${color}" stroke-width="10" stroke-linecap="round"/>
-        <text x="${cx}" y="${cy+6}" text-anchor="middle" font-size="26" font-weight="600" fill="${color}" font-family="Avenir Next,Century Gothic,sans-serif">${val}</text>
-        <text x="${cx}" y="${cy+22}" text-anchor="middle" font-size="10" fill="#aaa" font-family="Helvetica Neue,Arial,sans-serif">/100</text>
+      const r=55,cx=90,cy=85;
+      // Semicerchio da 180° a 0° (sinistra→destra in alto)
+      const startRad=Math.PI; // 180°
+      const endRad=0;         // 0°
+      const sweep=Math.PI;    // 180° totali
+      const angle=startRad - sweep*(val/100);
+      function pt(a){return[(cx+r*Math.cos(a)).toFixed(2),(cy+r*Math.sin(a)).toFixed(2)];}
+      const [sx,sy]=pt(startRad);
+      const [ex,ey]=pt(endRad);
+      const [ax,ay]=pt(angle);
+      const large=sweep*(val/100)>Math.PI?1:0;
+      return `<svg width="180" height="110" viewBox="0 0 180 110">
+        <!-- sfondo grigio -->
+        <path d="M${sx},${sy} A${r},${r} 0 0,1 ${ex},${ey}" fill="none" stroke="rgba(201,168,76,0.12)" stroke-width="11" stroke-linecap="round"/>
+        <!-- arco colorato -->
+        <path d="M${sx},${sy} A${r},${r} 0 ${large},0 ${ax},${ay}" fill="none" stroke="${color}" stroke-width="11" stroke-linecap="round"/>
+        <!-- valore -->
+        <text x="${cx}" y="${cy+4}" text-anchor="middle" font-size="26" font-weight="600" fill="${color}" font-family="Avenir Next,Century Gothic,sans-serif">${val}</text>
+        <text x="${cx}" y="${cy+20}" text-anchor="middle" font-size="10" fill="#aaa" font-family="Helvetica Neue,Arial,sans-serif">/100</text>
       </svg>`;
     }
 
     // ── RADAR ──
     function radarSVG(vals){
       const axes=[{l:'Requisiti',k:'requisiti'},{l:'Innovazione',k:'innovazione'},{l:'Mercato',k:'mercato'},{l:'Team',k:'team'},{l:'Numeri',k:'numeri'},{l:'Impatti',k:'impatti'}];
-      const cx=190,cy=175,r=110,N=axes.length;
+      const cx=175,cy=165,r=105,N=axes.length;
       let grid='';
-      for(let g=1;g<=5;g++){let d='';for(let i=0;i<N;i++){const a=(2*Math.PI/N)*i-Math.PI/2;const rr=r*(g/5);d+=(i===0?'M':'L')+(cx+rr*Math.cos(a)).toFixed(1)+','+(cy+rr*Math.sin(a)).toFixed(1);}grid+=`<path d="${d}Z" fill="none" stroke="rgba(201,168,76,0.12)" stroke-width="1"/>`;}
+      for(let g=1;g<=5;g++){let d='';for(let i=0;i<N;i++){const a=(2*Math.PI/N)*i-Math.PI/2;const rr=r*(g/5);d+=(i===0?'M':'L')+(cx+rr*Math.cos(a)).toFixed(1)+','+(cy+rr*Math.sin(a)).toFixed(1);}grid+=`<path d="${d}Z" fill="none" stroke="rgba(201,168,76,0.12)" stroke-width="1"/>`;} 
       let spokes='';axes.forEach((_,i)=>{const a=(2*Math.PI/N)*i-Math.PI/2;spokes+=`<line x1="${cx}" y1="${cy}" x2="${(cx+r*Math.cos(a)).toFixed(1)}" y2="${(cy+r*Math.sin(a)).toFixed(1)}" stroke="rgba(201,168,76,0.18)" stroke-width="1"/>`;});
       let pts='';axes.forEach(({k},i)=>{const v=vals[k]||0;const a=(2*Math.PI/N)*i-Math.PI/2;pts+=(i===0?'M':'L')+(cx+r*v*Math.cos(a)).toFixed(1)+','+(cy+r*v*Math.sin(a)).toFixed(1);});
       let dots='';axes.forEach(({k},i)=>{const v=vals[k]||0;const a=(2*Math.PI/N)*i-Math.PI/2;dots+=`<circle cx="${(cx+r*v*Math.cos(a)).toFixed(1)}" cy="${(cy+r*v*Math.sin(a)).toFixed(1)}" r="4" fill="${gold}"/>`;});
-      let labels='';axes.forEach(({l,k},i)=>{const a=(2*Math.PI/N)*i-Math.PI/2;const v=vals[k]||0;const lx=cx+(r+28)*Math.cos(a),ly=cy+(r+28)*Math.sin(a);const anchor=Math.cos(a)>0.15?'start':Math.cos(a)<-0.15?'end':'middle';const score=Math.round(v*100);labels+=`<text x="${lx.toFixed(1)}" y="${(ly-5).toFixed(1)}" text-anchor="${anchor}" font-size="9" font-weight="500" fill="#c9a84c" font-family="Avenir Next,sans-serif" letter-spacing="0.1em">${l.toUpperCase()}</text><text x="${lx.toFixed(1)}" y="${(ly+9).toFixed(1)}" text-anchor="${anchor}" font-size="12" font-weight="600" fill="#111" font-family="Avenir Next,sans-serif">${score}</text>`;});
-      return `<svg width="380" height="350" viewBox="0 0 380 350">${grid}${spokes}<path d="${pts}Z" fill="rgba(201,168,76,0.15)" stroke="#c9a84c" stroke-width="2.5"/>${dots}${labels}</svg>`;
+      let labels='';axes.forEach(({l,k},i)=>{const a=(2*Math.PI/N)*i-Math.PI/2;const v=vals[k]||0;const lx=cx+(r+30)*Math.cos(a),ly=cy+(r+30)*Math.sin(a);const anchor=Math.cos(a)>0.15?'start':Math.cos(a)<-0.15?'end':'middle';const score=Math.round(v*100);labels+=`<text x="${lx.toFixed(1)}" y="${(ly-4).toFixed(1)}" text-anchor="${anchor}" font-size="9" font-weight="500" fill="#c9a84c" font-family="Avenir Next,sans-serif" letter-spacing="0.08em">${l.toUpperCase()}</text><text x="${lx.toFixed(1)}" y="${(ly+10).toFixed(1)}" text-anchor="${anchor}" font-size="12" font-weight="600" fill="#111" font-family="Avenir Next,sans-serif">${score}</text>`;});
+      return `<svg width="350" height="330" viewBox="0 0 350 330">${grid}${spokes}<path d="${pts}Z" fill="rgba(201,168,76,0.15)" stroke="#c9a84c" stroke-width="2.5"/>${dots}${labels}</svg>`;
     }
 
     // ── BAR CHART ──
@@ -786,15 +792,15 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       const intensity=Math.round(100-((on+ss)/2));
       const col=intensity<=30?'#0a7f2e':intensity<=60?'#a07820':'#b00020';
       const label=intensity<=30?'Leggero':intensity<=60?'Medio':'Forte';
-      const note=intensity<=30?'Progetto ben strutturato — lavoro su qualità dossier e scelta misura.':intensity<=60?'Serve riallineamento mirato su requisiti, innovazione o numeri.':'Serve ricostruzione sostanziale prima di una candidatura seria.';
+      const note=intensity<=30?'Progetto ben strutturato — il lavoro si concentra sulla qualità del dossier e la scelta della misura.':intensity<=60?'Serve riallineamento mirato su uno o più assi critici prima della candidatura.':'Serve una ricostruzione sostanziale del progetto prima di procedere.';
       return `<div style="border:1px solid ${border};${br};padding:20px;background:#fff;margin-bottom:12px;">
         <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:12px;">Intensit\u00e0 intervento richiesta</div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-          <span style="${fd};font-size:11px;font-weight:500;color:#666">Lavoro AdAstra necessario</span>
-          <span style="${fd};font-size:12px;font-weight:600;color:${col};border:1px solid ${border};border-radius:6px;padding:2px 10px;background:#fff;">${label} \u00b7 ${intensity}/100</span>
+          <span style="${fb};font-size:12px;font-weight:300;color:#555">Lavoro necessario prima della candidatura</span>
+          <span style="${fd};font-size:11px;font-weight:600;color:${col};border:1px solid rgba(0,0,0,0.08);border-radius:6px;padding:2px 10px;background:#fff;">${label} \u00b7 ${intensity}/100</span>
         </div>
-        <div style="height:10px;background:rgba(201,168,76,0.1);border-radius:999px;overflow:hidden;margin-bottom:8px;">
-          <div style="height:100%;width:${intensity}%;background:${col};border-radius:999px;transition:width 1.2s ease;"></div>
+        <div style="height:10px;background:rgba(201,168,76,0.1);border-radius:999px;overflow:hidden;margin-bottom:6px;">
+          <div style="height:100%;width:${intensity}%;background:linear-gradient(90deg,#0a7f2e,${col});border-radius:999px;"></div>
         </div>
         <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
           <span style="${fb};font-size:10px;color:#aaa">Leggero</span>
@@ -809,42 +815,37 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
     function timelineHTML(on,ss){
       const score=(on+ss)/2;
       const steps=[
-        {label:'Oggi',sub:'Profilo analizzato dal panel AI',done:true},
-        {label:'Verifica strategica',sub:'Sessione con team AdAstra — scelta misura e roadmap',done:false,cta:true},
-        {label:'Strutturazione dossier',sub:score>=65?'2–4 settimane — documentazione e piano finanziario':'4–8 settimane — riallineamento requisiti e narrazione',done:false},
-        {label:'Pre-istruttoria',sub:'Simulazione valutazione interna prima del deposito',done:false},
-        {label:'Candidatura',sub:score>=65?'Pronto per la presentazione formale':'Subordinata a correzioni strutturali',done:false}
+        {label:'Oggi',sub:'Profilo analizzato',done:true},
+        {label:'Verifica strategica',sub:'Scelta misura e roadmap',done:false},
+        {label:'Dossier',sub:score>=65?'2–4 settimane':'4–8 settimane',done:false},
+        {label:'Pre-istruttoria',sub:'Simulazione valutazione',done:false},
+        {label:'Candidatura',sub:score>=65?'Pronta':'Subordinata a correzioni',done:false}
       ];
-      const dots=steps.map((s,i)=>{
-        const col=s.done?gold:'rgba(201,168,76,0.25)';
-        const textCol=s.done?'#111':'#888';
-        return `<div style="display:flex;flex-direction:column;align-items:center;flex:1;position:relative;">
-          ${i>0?`<div style="position:absolute;top:10px;left:-50%;width:100%;height:1px;background:${i<=1&&s.done?gold:'rgba(201,168,76,0.2)'};z-index:0;"></div>`:''}
-          <div style="width:20px;height:20px;border-radius:50%;background:${col};border:2px solid ${s.done?gold:'rgba(201,168,76,0.3)'};z-index:1;display:flex;align-items:center;justify-content:center;margin-bottom:8px;">
-            ${s.done?`<span style="font-size:8px;color:#fff;font-weight:700">✓</span>`:''}
+      const items=steps.map((s,i)=>`
+        <div style="display:flex;flex-direction:column;align-items:center;flex:1;position:relative;padding:0 4px;">
+          ${i>0?`<div style="position:absolute;top:10px;right:50%;width:100%;height:1px;background:rgba(201,168,76,0.2);z-index:0;"></div>`:''}
+          <div style="width:22px;height:22px;border-radius:50%;background:${s.done?gold:'#fff'};border:2px solid ${s.done?gold:'rgba(201,168,76,0.3)'};z-index:1;display:flex;align-items:center;justify-content:center;margin-bottom:8px;flex-shrink:0;">
+            ${s.done?`<span style="font-size:9px;color:#fff;font-weight:700">\u2713</span>`:`<span style="font-size:8px;color:rgba(201,168,76,0.5);">${i+1}</span>`}
           </div>
-          <div style="${fd};font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:${textCol};text-align:center;margin-bottom:3px;">${s.label}</div>
+          <div style="${fd};font-size:9px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:${s.done?'#111':'#888'};text-align:center;margin-bottom:3px;">${s.label}</div>
           <div style="${fb};font-size:10px;font-weight:300;color:#aaa;text-align:center;line-height:1.4;">${s.sub}</div>
-          ${s.cta?`<div style="margin-top:6px;padding:3px 8px;border:1px solid ${gold};border-radius:6px;${fd};font-size:8px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:${gold};">Prenota</div>`:''}
-        </div>`;
-      }).join('');
-      return `<div style="border:1px solid ${border};${br};padding:20px;background:#fff;margin-bottom:12px;">
+        </div>`).join('');
+      return `<div style="border:1px solid ${border};${br};padding:20px 16px;background:#fff;margin-bottom:12px;">
         <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:16px;">Timeline verso la candidatura</div>
-        <div style="display:flex;align-items:flex-start;gap:0;position:relative;">${dots}</div>
+        <div style="display:flex;align-items:flex-start;position:relative;">${items}</div>
       </div>`;
     }
 
     // ── RISK MAP ──
     function riskMap(results){
-      const items=results.flatMap(r=>[...(r.critiche||[]),(r.redFlags||[])]).filter(Boolean).slice(0,6);
+      const items=[...new Set(results.flatMap(r=>[...(r.critiche||[]),(r.redFlags||[])]).filter(Boolean))].slice(0,6);
       if(!items.length)return '<p style="font-size:13px;color:#888;font-weight:300">Nessuna criticit\u00e0 dominante identificata.</p>';
       const cols=['#b00020','#b00020','#a07820','#a07820','#0a7f2e','#0a7f2e'];
       const labels=['Critica','Critica','Attenzione','Attenzione','Monitorare','Monitorare'];
+      const bgs=['rgba(176,0,32,0.04)','rgba(176,0,32,0.04)','rgba(160,120,32,0.04)','rgba(160,120,32,0.04)','rgba(10,127,46,0.04)','rgba(10,127,46,0.04)'];
       return `<div style="display:flex;flex-direction:column;gap:8px;">`+
-        items.map((c,i)=>`<div style="display:flex;align-items:flex-start;gap:12px;padding:10px 14px;border-left:3px solid ${cols[i]||'#a07820'};border-radius:0 8px 8px 0;background:${i<2?'rgba(176,0,32,0.04)':i<4?'rgba(160,120,32,0.04)':'rgba(10,127,46,0.04)'};margin-left:4px;">
-          <div style="flex-shrink:0;margin-top:2px;">
-            <span style="${fd};font-size:8px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:${cols[i]||'#a07820'}">${labels[i]||'Monitorare'}</span>
-          </div>
+        items.map((c,i)=>`<div style="display:flex;align-items:flex-start;gap:12px;padding:10px 14px;border-left:3px solid ${cols[i]||'#a07820'};border-radius:0 8px 8px 0;background:${bgs[i]||bgs[4]};">
+          <span style="${fd};font-size:8px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:${cols[i]||'#a07820'};flex-shrink:0;padding-top:2px;min-width:60px;">${labels[i]||'Monitorare'}</span>
           <span style="${fb};font-size:13px;font-weight:300;color:#333;line-height:1.5">${c}</span>
         </div>`).join('')+
       '</div>';
@@ -885,9 +886,9 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
 
     rep.innerHTML=
 
-      // HEADER
+      // HEADER — no AdAstra branding
       `<div style="border:1px solid ${border};${br};padding:20px 24px;background:${goldBg};margin-bottom:12px;">
-        <div style="${fd};font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:8px;">Panel Multi-Agente AI \u2014 Small Due Diligence ON + Smart&Start</div>
+        <div style="${fd};font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:8px;">START ON \u2014 Panel Multi-Agente AI \u2014 Small Due Diligence</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
           <span style="${fd};font-size:10px;font-weight:500;border:1px solid ${border};border-radius:6px;padding:3px 10px;color:${gold};background:#fff;">${safe(synth.verdict)}</span>
           <span style="${fd};font-size:10px;font-weight:500;border:1px solid ${border};border-radius:6px;padding:3px 10px;color:${gold};background:#fff;">${safe(synth.decisione)}</span>
@@ -900,21 +901,21 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
         <div style="border:1px solid ${border};${br};padding:16px;background:#fff;text-align:center;">
           <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:6px;">Score Complessivo</div>
           ${gaugeArc(overall,overallColor)}
-          <div style="${fb};font-size:11px;color:#888;margin-top:2px;">${overall>=70?'Alta coerenza':overall>=50?'Coerenza media':'Coerenza debole'}</div>
+          <div style="${fb};font-size:11px;color:#888;margin-top:4px;">${overall>=70?'Alta coerenza':overall>=50?'Coerenza media':'Coerenza debole'}</div>
         </div>
         <div style="border:1px solid ${border};${br};padding:16px;background:${goldBg};text-align:center;">
           <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:6px;">Score ON</div>
           ${gaugeArc(on,scoreColor(on))}
-          <div style="${fb};font-size:11px;color:#888;margin-top:2px;">${scoreLabel(on)}</div>
+          <div style="${fb};font-size:11px;color:#888;margin-top:4px;">${scoreLabel(on)}</div>
         </div>
         <div style="border:1px solid ${border};${br};padding:16px;background:${goldBg};text-align:center;">
           <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:6px;">Score Smart&amp;Start</div>
           ${gaugeArc(ss,scoreColor(ss))}
-          <div style="${fb};font-size:11px;color:#888;margin-top:2px;">${scoreLabel(ss)}</div>
+          <div style="${fb};font-size:11px;color:#888;margin-top:4px;">${scoreLabel(ss)}</div>
         </div>
       </div>`+
 
-      // CATEGORY SCORES 6 cards
+      // 6 CATEGORY SCORES
       `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;">`+
       catScores.map(c=>{
         const col=c.val>=70?'#0a7f2e':c.val>=50?'#a07820':'#b00020';
@@ -925,10 +926,9 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
           <div style="${fd};font-size:24px;font-weight:600;color:${col};line-height:1">${c.val}</div>
           <div style="${fb};font-size:10px;color:#bbb;margin-top:2px">/100</div>
         </div>`;
-      }).join('')+
-      `</div>`+
+      }).join('')+`</div>`+
 
-      // INTENSITY BAR
+      // INTENSITY
       intensityBar(on,ss)+
 
       // RADAR + BARS
@@ -936,7 +936,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
         <div style="border:1px solid ${border};${br};padding:20px;background:#fff;">
           <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:12px;">Radar maturit\u00e0</div>
-          <div style="display:flex;justify-content:center;overflow:hidden;">${radarSVG(radarVals)}</div>
+          <div style="display:flex;justify-content:center;">${radarSVG(radarVals)}</div>
         </div>
         <div style="border:1px solid ${border};${br};padding:20px;background:#fff;">
           <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:16px;">ON vs Smart&amp;Start per dimensione</div>
@@ -959,13 +959,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       D+'Analisi dei singoli agenti</div>'+
       `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">${cards}</div>`+
 
-      // CTA
-      `<div style="border:1px solid ${border};${br};background:${goldBg};padding:22px 26px;margin-top:10px;">
-        <div style="${fd};font-size:15px;font-weight:600;color:#111;margin-bottom:8px;">Dopo la lettura del panel</div>
-        <div style="${fb};font-size:13px;font-weight:300;color:#555;line-height:1.7;margin-bottom:14px;">Il panel ha identificato punti di forza e criticit\u00e0. Il passo successivo \u00e8 una verifica strategica con il team AdAstra per strutturare la candidatura nel modo pi\u00f9 competitivo.</div>
-        <a href="mailto:inquiry@adastrafinancials.it" style="display:inline-block;padding:13px 26px;border:1px solid ${gold};color:${gold};${fd};font-size:11px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;text-decoration:none;${br};">Verifica Strategica con AdAstra \u2192</a>
-      </div>`+
-
+      // FOOTER — nessun riferimento AdAstra
       `<div style="margin-top:16px;${fb};font-size:11px;font-weight:300;color:#bbb;line-height:1.6;border-left:2px solid ${border};padding-left:12px;">Valutazione generata da panel multi-agente AI (Claude \u2014 Anthropic). Non costituisce garanzia di ammissibilit\u00e0 n\u00e9 impegno da parte degli enti erogatori. Prossimamente: ChatGPT, Gemini, Grok.</div>`;
 
     rep.scrollIntoView({behavior:'smooth',block:'start'});
