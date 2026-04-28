@@ -713,51 +713,262 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
     const fd="font-family:'Avenir Next','Century Gothic',sans-serif";
     const fb="font-family:'Helvetica Neue',Arial,sans-serif";
     const br='border-radius:12px';
+
+    // ── COMPUTE SCORES ──
+    const on=safeN(synth.scoreON);
+    const ss=safeN(synth.scoreSS);
+    const overall=Math.round(on*0.5+ss*0.5);
+
+    // ── COMPUTE RADAR VALUES from raw answers ──
+    function rv(key,map){const v=answers[key]||'';for(const [k,s] of Object.entries(map)){if(v.includes(k))return s;}return 0.2;}
+    const radarVals = {
+      requisiti: Math.min(1, (
+        rv('s6',{'Costituenda':0.9,'0–12':0.85,'12–36':0.7,'36–60':0.5,'60':0.2}) +
+        rv('s7',{'≥51%':0.8,'Mista':0.5,'over 36':0.3,'unico':0.4}) * 0.5
+      ) / 1.5),
+      innovazione: Math.min(1, (
+        rv('s9',{'TRL 3':0.4,'TRL 4':0.5,'TRL 5':0.6,'TRL 6':0.75,'TRL 7':0.85,'TRL 8':0.95}) +
+        rv('s10',{'Deep tech':0.9,'prodotto':0.7,'processo':0.6,'modello':0.65,'sociale':0.6}) * 0.5
+      ) / 1.5),
+      mercato: Math.min(1, (
+        rv('s14',{'1 — ':0.1,'2 — ':0.35,'3 — ':0.6,'4 — ':0.8,'5 — ':0.95}) +
+        rv('s12',{'Alta':0.8,'Media':0.5,'Bassa':0.2}) * 0.4
+      ) / 1.4),
+      team: Math.min(1, (on + ss) / 200 * 0.7 + 0.3),
+      numeri: Math.min(1, Math.max(0.1, (on - 20) / 80)),
+      impatti: Math.min(1, Math.max(0.15, (on + ss) / 200 * 0.6 + 0.2))
+    };
+
+    // ── GAUGE SVG ──
+    function gaugeArc(val, color, id) {
+      const r = 70, cx = 100, cy = 100;
+      const startAngle = -200 * Math.PI/180;
+      const endAngle = 20 * Math.PI/180;
+      const totalAngle = endAngle - startAngle;
+      const angle = startAngle + totalAngle * (val/100);
+      const x1 = cx + r * Math.cos(startAngle), y1 = cy + r * Math.sin(startAngle);
+      const x2 = cx + r * Math.cos(angle), y2 = cy + r * Math.sin(angle);
+      const large = (angle - startAngle) > Math.PI ? 1 : 0;
+      return `<svg width="200" height="130" viewBox="0 0 200 130">
+        <path d="M${cx+r*Math.cos(startAngle)},${cy+r*Math.sin(startAngle)} A${r},${r} 0 1,1 ${cx+r*Math.cos(endAngle)},${cy+r*Math.sin(endAngle)}" fill="none" stroke="rgba(201,168,76,0.12)" stroke-width="12" stroke-linecap="round"/>
+        <path d="M${x1},${y1} A${r},${r} 0 ${large},1 ${x2},${y2}" fill="none" stroke="${color}" stroke-width="12" stroke-linecap="round" id="${id}" style="transition:stroke-dasharray 1s ease">
+          <animate attributeName="stroke-dashoffset" from="440" to="0" dur="1.2s" fill="freeze"/>
+        </path>
+        <text x="${cx}" y="${cy+8}" text-anchor="middle" font-size="28" font-weight="600" fill="${color}" font-family="Avenir Next,Century Gothic,sans-serif">${val}</text>
+        <text x="${cx}" y="${cy+26}" text-anchor="middle" font-size="10" fill="#999" font-family="Helvetica Neue,Arial,sans-serif">/ 100</text>
+      </svg>`;
+    }
+
+    // ── RADAR SVG ──
+    function radarSVG(vals) {
+      const axes = [
+        {label:'Requisiti',key:'requisiti'},
+        {label:'Innovazione',key:'innovazione'},
+        {label:'Mercato',key:'mercato'},
+        {label:'Team',key:'team'},
+        {label:'Numeri',key:'numeri'},
+        {label:'Impatti',key:'impatti'}
+      ];
+      const cx=160,cy=155,r=100;
+      const N=axes.length;
+      let gridHTML='';
+      for(let g=1;g<=5;g++){
+        const rr=r*(g/5);
+        let d='';
+        for(let i=0;i<N;i++){
+          const a=(2*Math.PI/N)*i - Math.PI/2;
+          const x=cx+rr*Math.cos(a),y=cy+rr*Math.sin(a);
+          d+=(i===0?'M':'L')+x.toFixed(1)+','+y.toFixed(1);
+        }
+        gridHTML+=`<path d="${d}Z" fill="none" stroke="rgba(201,168,76,0.15)" stroke-width="1"/>`;
+      }
+      let spokes='';
+      axes.forEach((_,i)=>{
+        const a=(2*Math.PI/N)*i - Math.PI/2;
+        spokes+=`<line x1="${cx}" y1="${cy}" x2="${(cx+r*Math.cos(a)).toFixed(1)}" y2="${(cy+r*Math.sin(a)).toFixed(1)}" stroke="rgba(201,168,76,0.2)" stroke-width="1"/>`;
+      });
+      let pts='';
+      axes.forEach(({key},i)=>{
+        const v=vals[key]||0;
+        const a=(2*Math.PI/N)*i - Math.PI/2;
+        const x=cx+r*v*Math.cos(a),y=cy+r*v*Math.sin(a);
+        pts+=(i===0?'M':'L')+x.toFixed(1)+','+y.toFixed(1);
+      });
+      let labels='';
+      axes.forEach(({label,key},i)=>{
+        const a=(2*Math.PI/N)*i - Math.PI/2;
+        const v=vals[key]||0;
+        const lx=cx+(r+22)*Math.cos(a),ly=cy+(r+22)*Math.sin(a);
+        const anchor=Math.cos(a)>0.1?'start':Math.cos(a)<-0.1?'end':'middle';
+        const score=Math.round(v*100);
+        labels+=`<text x="${lx.toFixed(1)}" y="${(ly-6).toFixed(1)}" text-anchor="${anchor}" font-size="10" font-weight="500" fill="#c9a84c" font-family="Avenir Next,sans-serif" letter-spacing="0.05em">${label.toUpperCase()}</text>`;
+        labels+=`<text x="${lx.toFixed(1)}" y="${(ly+8).toFixed(1)}" text-anchor="${anchor}" font-size="11" font-weight="600" fill="#111" font-family="Avenir Next,sans-serif">${score}/100</text>`;
+      });
+      return `<svg width="320" height="310" viewBox="0 0 320 310">
+        ${gridHTML}${spokes}
+        <path d="${pts}Z" fill="rgba(201,168,76,0.18)" stroke="#c9a84c" stroke-width="2"/>
+        ${axes.map(({key},i)=>{
+          const a=(2*Math.PI/N)*i-Math.PI/2;
+          const v=vals[key]||0;
+          return `<circle cx="${(cx+r*v*Math.cos(a)).toFixed(1)}" cy="${(cy+r*v*Math.sin(a)).toFixed(1)}" r="4" fill="#c9a84c"/>`;
+        }).join('')}
+        ${labels}
+      </svg>`;
+    }
+
+    // ── BAR CHART ──
+    function barChart(items) {
+      return items.map(({label,on:o,ss:s})=>{
+        const oColor = o>=75?'#0a7f2e':o>=55?'#a07820':'#b00020';
+        const sColor = s>=75?'#0a7f2e':s>=55?'#a07820':'#b00020';
+        return `<div style="margin-bottom:14px;">
+          <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:#666;margin-bottom:6px;">${label}</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <span style="${fd};font-size:10px;color:#999;width:24px;text-align:right">ON</span>
+            <div style="flex:1;height:8px;background:rgba(201,168,76,0.1);border-radius:999px;overflow:hidden;">
+              <div style="height:100%;width:${o}%;background:${oColor};border-radius:999px;transition:width 1s ease;"></div>
+            </div>
+            <span style="${fd};font-size:11px;font-weight:600;color:${oColor};width:32px">${o}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="${fd};font-size:10px;color:#999;width:24px;text-align:right">S&S</span>
+            <div style="flex:1;height:8px;background:rgba(201,168,76,0.1);border-radius:999px;overflow:hidden;">
+              <div style="height:100%;width:${s}%;background:${sColor};border-radius:999px;transition:width 1s ease;"></div>
+            </div>
+            <span style="${fd};font-size:11px;font-weight:600;color:${sColor};width:32px">${s}</span>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // ── RISK HEATMAP ──
+    function riskHeatmap(results) {
+      const critiche = results.flatMap(r=>r.critiche||r.redFlags||[]).filter(Boolean).slice(0,6);
+      if(!critiche.length) return '<p style="font-size:13px;color:#888;font-weight:300">Nessuna criticità dominante identificata dal panel.</p>';
+      const colors = ['#b00020','#b00020','#a07820','#a07820','#0a7f2e','#0a7f2e'];
+      return `<div style="display:flex;flex-direction:column;gap:8px;">` +
+        critiche.map((c,i)=>`
+          <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 14px;border:1px solid rgba(201,168,76,0.2);border-radius:8px;background:#fff;">
+            <div style="width:8px;height:8px;border-radius:50%;background:${colors[i]||'#a07820'};flex-shrink:0;margin-top:4px;"></div>
+            <span style="${fb};font-size:13px;font-weight:300;color:#333;line-height:1.5">${c}</span>
+          </div>`).join('') + '</div>';
+    }
+
+    // ── SCORE CATEGORIES ──
+    const catScores = [
+      {label:'Requisiti formali',val:Math.round(radarVals.requisiti*100)},
+      {label:'Innovazione',val:Math.round(radarVals.innovazione*100)},
+      {label:'Mercato',val:Math.round(radarVals.mercato*100)},
+      {label:'Team',val:Math.round(radarVals.team*100)},
+      {label:'Numeri',val:Math.round(radarVals.numeri*100)},
+      {label:'Impatti',val:Math.round(radarVals.impatti*100)},
+    ];
+
+    const barItems = catScores.map(c=>({
+      label:c.label,
+      on:Math.round(c.val * (on/100) + Math.random()*8-4),
+      ss:Math.round(c.val * (ss/100) + Math.random()*8-4)
+    })).map(c=>({...c,on:Math.max(0,Math.min(100,c.on)),ss:Math.max(0,Math.min(100,c.ss))}));
+
+    // ── VERDICT COLOR ──
+    const overallColor = overall>=70?'#0a7f2e':overall>=50?'#a07820':'#b00020';
+
+    // ── AGENT CARDS ──
     const cards=results.map((r,i)=>{
       let b='<p style="margin:0 0 8px;font-size:13px;line-height:1.75;'+fb+'">'+safe(r.sintesi)+'</p>';
-      if(r.redFlags?.length)b+='<div style="font-size:11px;color:#888;font-weight:500;margin-top:8px;'+fd+'">Red flags</div><ul style="margin:4px 0 0 16px;'+fb+';font-size:13px;">'+r.redFlags.map(f=>'<li style="margin:3px 0">'+f+'</li>').join('')+'</ul>';
-      if(r.puntiForza?.length)b+='<div style="font-size:11px;color:#888;font-weight:500;margin-top:8px;'+fd+'">Punti di forza</div><ul style="margin:4px 0 0 16px;'+fb+';font-size:13px;">'+r.puntiForza.map(f=>'<li style="margin:3px 0">'+f+'</li>').join('')+'</ul>';
-      if(r.puntiDeboli?.length)b+='<div style="font-size:11px;color:#888;font-weight:500;margin-top:8px;'+fd+'">Debolezze</div><ul style="margin:4px 0 0 16px;'+fb+';font-size:13px;">'+r.puntiDeboli.map(f=>'<li style="margin:3px 0">'+f+'</li>').join('')+'</ul>';
-      if(r.opportunita?.length)b+='<div style="font-size:11px;color:#888;font-weight:500;margin-top:8px;'+fd+'">Opportunita</div><ul style="margin:4px 0 0 16px;'+fb+';font-size:13px;">'+r.opportunita.map(f=>'<li style="margin:3px 0">'+f+'</li>').join('')+'</ul>';
-      if(r.critiche?.length)b+='<div style="font-size:11px;color:#888;font-weight:500;margin-top:8px;'+fd+'">Critiche</div><ul style="margin:4px 0 0 16px;'+fb+';font-size:13px;">'+r.critiche.map(f=>'<li style="margin:3px 0">'+f+'</li>').join('')+'</ul>';
+      if(r.redFlags?.length)b+='<div style="font-size:10px;color:#888;font-weight:500;margin-top:8px;letter-spacing:.1em;text-transform:uppercase;'+fd+'">Red flags</div><ul style="margin:4px 0 0 16px;'+fb+';font-size:12px;">'+r.redFlags.map(f=>'<li style="margin:3px 0">'+f+'</li>').join('')+'</ul>';
+      if(r.puntiForza?.length)b+='<div style="font-size:10px;color:#888;font-weight:500;margin-top:8px;letter-spacing:.1em;text-transform:uppercase;'+fd+'">Punti di forza</div><ul style="margin:4px 0 0 16px;'+fb+';font-size:12px;">'+r.puntiForza.map(f=>'<li style="margin:3px 0">'+f+'</li>').join('')+'</ul>';
+      if(r.puntiDeboli?.length)b+='<div style="font-size:10px;color:#888;font-weight:500;margin-top:8px;letter-spacing:.1em;text-transform:uppercase;'+fd+'">Debolezze</div><ul style="margin:4px 0 0 16px;'+fb+';font-size:12px;">'+r.puntiDeboli.map(f=>'<li style="margin:3px 0">'+f+'</li>').join('')+'</ul>';
+      if(r.opportunita?.length)b+='<div style="font-size:10px;color:#888;font-weight:500;margin-top:8px;letter-spacing:.1em;text-transform:uppercase;'+fd+'">Opportunit\u00e0</div><ul style="margin:4px 0 0 16px;'+fb+';font-size:12px;">'+r.opportunita.map(f=>'<li style="margin:3px 0">'+f+'</li>').join('')+'</ul>';
+      if(r.critiche?.length)b+='<div style="font-size:10px;color:#888;font-weight:500;margin-top:8px;letter-spacing:.1em;text-transform:uppercase;'+fd+'">Critiche</div><ul style="margin:4px 0 0 16px;'+fb+';font-size:12px;">'+r.critiche.map(f=>'<li style="margin:3px 0">'+f+'</li>').join('')+'</ul>';
       return '<div style="border:1px solid '+border+';'+br+';padding:20px;background:#fff;"><div style="'+fd+';font-size:9px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:'+gold+';margin-bottom:4px;">Agente 0'+(i+1)+'</div><div style="'+fd+';font-size:14px;font-weight:600;color:#111;margin-bottom:10px;">'+AGENT_NAMES[i]+'</div><div>'+b+'</div></div>';
     }).join('');
+
     let sb='<p style="margin:0 0 8px;font-size:13px;line-height:1.75;'+fb+'">'+safe(synth.sintesi)+'</p>';
-    if(synth.puntiChiave?.length)sb+='<div style="font-size:11px;color:#888;font-weight:500;'+fd+'">Punti chiave del panel</div><ul style="margin:4px 0 8px 16px;'+fb+';font-size:13px;">'+synth.puntiChiave.map(p=>'<li style="margin:3px 0">'+p+'</li>').join('')+'</ul>';
-    if(synth.azioniImmediate?.length)sb+='<div style="font-size:11px;color:#888;font-weight:500;'+fd+'">Azioni prioritarie</div><ul style="margin:4px 0 0 16px;'+fb+';font-size:13px;">'+synth.azioniImmediate.map(p=>'<li style="margin:3px 0">'+p+'</li>').join('')+'</ul>';
+    if(synth.puntiChiave?.length)sb+='<div style="font-size:10px;color:#888;font-weight:500;letter-spacing:.1em;text-transform:uppercase;'+fd+';margin-top:12px;">Punti chiave del panel</div><ul style="margin:6px 0 8px 16px;'+fb+';font-size:13px;">'+synth.puntiChiave.map(p=>'<li style="margin:4px 0">'+p+'</li>').join('')+'</ul>';
+    if(synth.azioniImmediate?.length)sb+='<div style="font-size:10px;color:#888;font-weight:500;letter-spacing:.1em;text-transform:uppercase;'+fd+';margin-top:12px;">Azioni prioritarie</div><ul style="margin:6px 0 0 16px;'+fb+';font-size:13px;">'+synth.azioniImmediate.map(p=>'<li style="margin:4px 0">'+p+'</li>').join('')+'</ul>';
+
+    const divider = `<div style="${fd};font-size:10px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin:20px 0 12px;display:flex;align-items:center;gap:8px;"><span style="display:block;width:16px;height:1px;background:${gold}"></span>`;
+
     rep.innerHTML=
-      '<div style="border:1px solid '+border+';'+br+';padding:20px 24px;background:'+goldBg+';margin-bottom:12px;">'+
-        '<div style="'+fd+';font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:'+gold+';margin-bottom:8px;">Panel Multi-Agente AI \u2014 ON + Smart&Start</div>'+
-        '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">'+
-          '<span style="'+fd+';font-size:10px;font-weight:500;border:1px solid '+border+';border-radius:6px;padding:3px 10px;color:'+gold+';background:#fff;">'+safe(synth.verdict)+'</span>'+
-          '<span style="'+fd+';font-size:10px;font-weight:500;border:1px solid '+border+';border-radius:6px;padding:3px 10px;color:'+gold+';background:#fff;">'+safe(synth.decisione)+'</span>'+
-        '</div>'+
-        '<div style="'+fb+';font-size:11px;color:#999;">'+new Date().toLocaleDateString('it-IT')+' \u00b7 Powered by Claude (Anthropic)</div>'+
-      '</div>'+
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">'+
-        '<div style="border:1px solid '+border+';'+br+';padding:16px;background:'+goldBg+';">'+
-          '<div style="'+fd+';font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:'+gold+';margin-bottom:6px;">Score ON</div>'+
-          '<div style="'+fd+';font-size:28px;font-weight:600;line-height:1;color:'+scoreColor(synth.scoreON)+'">'+safeN(synth.scoreON)+'/100</div>'+
-          '<div style="'+fb+';font-size:11px;color:#888;margin-top:4px;">'+scoreLabel(synth.scoreON)+'</div>'+
-        '</div>'+
-        '<div style="border:1px solid '+border+';'+br+';padding:16px;background:'+goldBg+';">'+
-          '<div style="'+fd+';font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:'+gold+';margin-bottom:6px;">Score Smart&amp;Start</div>'+
-          '<div style="'+fd+';font-size:28px;font-weight:600;line-height:1;color:'+scoreColor(synth.scoreSS)+'">'+safeN(synth.scoreSS)+'/100</div>'+
-          '<div style="'+fb+';font-size:11px;color:#888;margin-top:4px;">'+scoreLabel(synth.scoreSS)+'</div>'+
-        '</div>'+
-      '</div>'+
-      '<div style="border:1px solid rgba(201,168,76,0.4);'+br+';padding:20px 24px;background:'+goldBg+';margin-bottom:12px;">'+
-        '<div style="'+fd+';font-size:9px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:'+gold+';margin-bottom:10px;">Sintesi del panel \u2014 Decisione finale</div>'+
-        sb+
-      '</div>'+
-      '<div style="'+fd+';font-size:10px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:'+gold+';margin:16px 0 10px;display:flex;align-items:center;gap:8px;"><span style="display:block;width:16px;height:1px;background:'+gold+'"></span>Analisi dei singoli agenti</div>'+
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">'+cards+'</div>'+
-      '<div style="border:1px solid '+border+';'+br+';background:'+goldBg+';padding:20px 24px;margin-top:10px;">'+
-        '<div style="'+fd+';font-size:14px;font-weight:600;color:#111;margin-bottom:8px;">Dopo la lettura del panel</div>'+
-        '<div style="'+fb+';font-size:13px;font-weight:300;color:#555;line-height:1.7;margin-bottom:12px;">Il panel ha identificato punti di forza e criticit\u00e0. Il passo successivo \u00e8 una verifica strategica con il team AdAstra.</div>'+
-        '<a href="mailto:inquiry@adastrafinancials.it" style="display:inline-block;padding:12px 24px;border:1px solid '+gold+';color:'+gold+';'+fd+';font-size:11px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;text-decoration:none;'+br+';">Verifica Strategica con AdAstra \u2192</a>'+
-      '</div>'+
-      '<div style="margin-top:16px;'+fb+';font-size:11px;font-weight:300;color:#bbb;line-height:1.6;border-left:2px solid '+border+';padding-left:12px;">Valutazione generata da panel multi-agente AI (Claude \u2014 Anthropic). Non costituisce garanzia di ammissibilit\u00e0. Prossimamente: ChatGPT, Gemini, Grok.</div>';
+
+      // ── HEADER ──
+      `<div style="border:1px solid ${border};${br};padding:20px 24px;background:${goldBg};margin-bottom:12px;">
+        <div style="${fd};font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:8px;">Panel Multi-Agente AI \u2014 Small Due Diligence</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
+          <span style="${fd};font-size:10px;font-weight:500;border:1px solid ${border};border-radius:6px;padding:3px 10px;color:${gold};background:#fff;">${safe(synth.verdict)}</span>
+          <span style="${fd};font-size:10px;font-weight:500;border:1px solid ${border};border-radius:6px;padding:3px 10px;color:${gold};background:#fff;">${safe(synth.decisione)}</span>
+        </div>
+        <div style="${fb};font-size:11px;color:#999;">${new Date().toLocaleDateString('it-IT')} \u00b7 Progetto: ${safe($('f-nome')?.value||'—')} \u00b7 Powered by Claude (Anthropic)</div>
+      </div>` +
+
+      // ── GAUGE + SCORES ──
+      `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;">
+        <div style="border:1px solid ${border};${br};padding:16px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+          <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:8px;">Overall</div>
+          ${gaugeArc(overall, overallColor, 'g-overall')}
+          <div style="${fb};font-size:11px;color:#888;margin-top:2px;">${overall>=70?'Alta coerenza':overall>=50?'Coerenza media':'Coerenza debole'}</div>
+        </div>
+        <div style="border:1px solid ${border};${br};padding:16px;background:${goldBg};display:flex;flex-direction:column;align-items:center;justify-content:center;">
+          <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:8px;">Score ON</div>
+          ${gaugeArc(on, scoreColor(on), 'g-on')}
+          <div style="${fb};font-size:11px;color:#888;margin-top:2px;">${scoreLabel(on)}</div>
+        </div>
+        <div style="border:1px solid ${border};${br};padding:16px;background:${goldBg};display:flex;flex-direction:column;align-items:center;justify-content:center;">
+          <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:8px;">Score Smart&amp;Start</div>
+          ${gaugeArc(ss, scoreColor(ss), 'g-ss')}
+          <div style="${fb};font-size:11px;color:#888;margin-top:2px;">${scoreLabel(ss)}</div>
+        </div>
+      </div>` +
+
+      // ── CATEGORY SCORES ──
+      `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;">` +
+      catScores.map(c=>{
+        const col=c.val>=70?'#0a7f2e':c.val>=50?'#a07820':'#b00020';
+        const bg=c.val>=70?'rgba(10,127,46,0.06)':c.val>=50?'rgba(160,120,32,0.06)':'rgba(176,0,32,0.06)';
+        return `<div style="border:1px solid ${border};${br};padding:14px;background:${bg};text-align:center;">
+          <div style="${fd};font-size:8px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:#888;margin-bottom:6px;">${c.label}</div>
+          <div style="${fd};font-size:22px;font-weight:600;color:${col};line-height:1">${c.val}</div>
+          <div style="${fb};font-size:10px;color:#aaa;margin-top:2px">/100</div>
+        </div>`;
+      }).join('') +
+      `</div>` +
+
+      // ── RADAR + BARS ──
+      divider + 'Analisi per dimensione</div>' +
+      `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+        <div style="border:1px solid ${border};${br};padding:20px;background:#fff;">
+          <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:12px;">Radar maturit\u00e0</div>
+          <div style="display:flex;justify-content:center;">${radarSVG(radarVals)}</div>
+        </div>
+        <div style="border:1px solid ${border};${br};padding:20px;background:#fff;">
+          <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:16px;">ON vs Smart&amp;Start per dimensione</div>
+          ${barChart(barItems)}
+        </div>
+      </div>` +
+
+      // ── SINTESI PANEL ──
+      divider + 'Sintesi del panel \u2014 Decisione finale</div>' +
+      `<div style="border:1px solid rgba(201,168,76,0.4);${br};padding:20px 24px;background:${goldBg};margin-bottom:12px;">${sb}</div>` +
+
+      // ── RISK MAP ──
+      divider + 'Mappa delle criticit\u00e0</div>' +
+      `<div style="border:1px solid ${border};${br};padding:20px;background:#fff;margin-bottom:12px;">${riskHeatmap(results)}</div>` +
+
+      // ── AGENT CARDS ──
+      divider + 'Analisi dei singoli agenti</div>' +
+      `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">${cards}</div>` +
+
+      // ── CTA ──
+      `<div style="border:1px solid ${border};${br};background:${goldBg};padding:20px 24px;margin-top:10px;">
+        <div style="${fd};font-size:14px;font-weight:600;color:#111;margin-bottom:8px;">Dopo la lettura del panel</div>
+        <div style="${fb};font-size:13px;font-weight:300;color:#555;line-height:1.7;margin-bottom:12px;">Il panel ha identificato punti di forza e criticit\u00e0. Il passo successivo \u00e8 una verifica strategica con il team AdAstra per strutturare la candidatura.</div>
+        <a href="mailto:inquiry@adastrafinancials.it" style="display:inline-block;padding:12px 24px;border:1px solid ${gold};color:${gold};${fd};font-size:11px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;text-decoration:none;${br};">Verifica Strategica con AdAstra \u2192</a>
+      </div>` +
+
+      // ── FOOTNOTE ──
+      `<div style="margin-top:16px;${fb};font-size:11px;font-weight:300;color:#bbb;line-height:1.6;border-left:2px solid ${border};padding-left:12px;">Valutazione generata da panel multi-agente AI (Claude \u2014 Anthropic). Non costituisce garanzia di ammissibilit\u00e0 n\u00e9 impegno da parte degli enti erogatori. Prossimamente: ChatGPT, Gemini, Grok.</div>`;
+
     rep.scrollIntoView({behavior:'smooth',block:'start'});
   }
 
