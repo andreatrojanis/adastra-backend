@@ -3,1080 +3,736 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>START ON — Pre-verifica Finanziabilità | AdAstra</title>
+<title>START ON — Analisi Finanziabilità | AdAstra</title>
 <style>
-* { box-sizing:border-box; margin:0; padding:0; }
-html, body { min-height:100%; background:#f8f6f2; font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; }
-.page-header { background:#fff; border-bottom:1px solid rgba(201,168,76,0.2); padding:18px 40px; display:flex; align-items:center; justify-content:space-between; }
-.page-logo { font-family:'Avenir Next','Century Gothic',sans-serif; font-size:13px; font-weight:500; letter-spacing:0.25em; text-transform:uppercase; color:#111; text-decoration:none; }
-.page-logo span { color:#c9a84c; }
-.page-back { font-family:'Avenir Next','Century Gothic',sans-serif; font-size:11px; font-weight:500; letter-spacing:0.15em; text-transform:uppercase; color:#999; text-decoration:none; }
-.page-back:hover { color:#c9a84c; }
-.page-main { max-width:720px; margin:0 auto; padding:60px 40px 100px; }
-@media(max-width:600px) { .page-header { padding:16px 20px; } .page-main { padding:40px 20px 80px; } }
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif}
+:root{--gold:#c9a84c;--gold-light:#a07820;--gold-bg:#f0ece6;--border:rgba(201,168,76,0.28);--radius:12px;--fd:'Avenir Next','Century Gothic',Futura,sans-serif;--fb:'Helvetica Neue',Arial,sans-serif}
+.page-header{background:#fff;border-bottom:1px solid var(--border);padding:16px 40px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:var(--fd);font-size:13px;font-weight:500;letter-spacing:.25em;text-transform:uppercase;color:#111;text-decoration:none}
+.logo span{color:var(--gold)}
+.back-link{font-family:var(--fd);font-size:11px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:#999;text-decoration:none}
+.back-link:hover{color:var(--gold)}
+.page-main{max-width:680px;margin:0 auto;padding:48px 24px 100px}
+@media(max-width:600px){.page-header{padding:14px 20px}.page-main{padding:32px 16px 80px}}
+#wiz-prog-label{font-family:var(--fd);font-size:10px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);text-align:right;margin-bottom:6px}
+#wiz-prog-bar{height:3px;background:rgba(201,168,76,0.12);border-radius:2px;margin-bottom:2rem;overflow:hidden}
+#wiz-prog-fill{height:100%;background:var(--gold);border-radius:2px;transition:width .4s ease}
+.wiz-nav{display:flex;align-items:center;margin-bottom:1.5rem}
+#wiz-back{font-family:var(--fd);font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:#999;background:none;border:none;cursor:pointer;padding:0}
+#wiz-back:hover{color:var(--gold)}
+#wiz-back.hidden{visibility:hidden}
+.wiz-screen{display:none}
+.wiz-screen.active{display:block;animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.eyebrow{font-family:var(--fd);font-size:10px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.eyebrow::before{content:'';display:block;width:18px;height:1px;background:var(--gold)}
+.q-title{font-family:var(--fd);font-size:clamp(20px,3vw,28px);font-weight:600;color:#111;line-height:1.15;margin-bottom:8px;letter-spacing:-.02em}
+.q-title em{font-style:normal;font-weight:300;color:var(--gold-light)}
+.q-sub{font-family:var(--fb);font-size:13px;font-weight:300;color:#666;line-height:1.7;margin-bottom:1.5rem;max-width:480px}
+.q-note{font-family:var(--fb);font-size:11px;font-weight:300;color:#aaa;margin-top:6px;line-height:1.5}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{display:flex;align-items:center;padding:14px 18px;border:1px solid var(--border);border-radius:var(--radius);background:#fff;cursor:pointer;transition:all .18s;font-size:14px;font-weight:300;color:#111;gap:10px}
+.opt:hover{border-color:var(--gold);background:var(--gold-bg)}
+.opt.sel{border-color:var(--gold);background:var(--gold-bg)}
+.opt-icon{font-size:14px;color:var(--gold);flex-shrink:0;width:18px;text-align:center;pointer-events:none}
+.opt-text{flex:1;pointer-events:none;line-height:1.3}
+.opt-sub{font-size:11px;color:#999;display:block;margin-top:3px;pointer-events:none}
+.opt-check{width:20px;height:20px;border:1px solid var(--border);border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .18s;pointer-events:none}
+.opt.sel .opt-check{background:var(--gold);border-color:var(--gold);color:#fff}
+.opt-sq{width:20px;height:20px;border:1px solid var(--border);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .18s;pointer-events:none}
+.opt.sel .opt-sq{background:var(--gold);border-color:var(--gold);color:#fff}
+.field-group{display:flex;flex-direction:column;gap:14px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-family:var(--fd);font-size:10px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:#666}
+.field input,.field select,.field textarea{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:10px;background:#fff;font-family:var(--fb);font-size:14px;font-weight:300;color:#111;outline:none;transition:border-color .2s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold)}
+.field textarea{resize:none;min-height:100px;line-height:1.7}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:500px){.field-row{grid-template-columns:1fr}}
+.char-count{font-size:11px;color:#bbb;text-align:right;margin-top:2px}
+.scale-row{display:flex;gap:8px}
+.scl{flex:1;padding:12px 4px;border:1px solid var(--border);border-radius:10px;background:#fff;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:all .18s}
+.scl:hover,.scl.sel{border-color:var(--gold);background:var(--gold-bg)}
+.scl-n{font-family:var(--fd);font-size:18px;font-weight:600;color:#111}
+.scl-l{font-family:var(--fd);font-size:9px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:#999;text-align:center}
+.scale-labels{display:flex;justify-content:space-between;margin-top:6px}
+.scale-labels span{font-size:11px;color:#aaa}
+.inter-box{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin:16px 0}
+.inter-row{display:flex;align-items:flex-start;gap:14px;padding:14px 18px;border-bottom:1px solid var(--border);background:#fff}
+.inter-row:last-child{border-bottom:none}
+.inter-num{font-family:var(--fd);font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--gold);flex-shrink:0;padding-top:2px}
+.inter-txt{font-family:var(--fb);font-size:13px;font-weight:300;color:#444;line-height:1.6}
+.inter-txt strong{font-weight:500;color:#111}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+.stat-card{padding:16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--gold-bg)}
+.stat-val{font-family:var(--fd);font-size:26px;font-weight:600;color:var(--gold);line-height:1;margin-bottom:4px}
+.stat-lbl{font-size:12px;font-weight:300;color:#666;line-height:1.4}
+.wiz-cta{margin-top:1.5rem;display:flex;flex-direction:column;align-items:center;gap:10px}
+.btn-main{width:100%;max-width:380px;padding:15px 28px;background:var(--gold);color:#fff;border:none;border-radius:999px;font-family:var(--fd);font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .22s}
+.btn-main:hover{background:var(--gold-light);transform:translateY(-1px)}
+.btn-main:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.btn-skip{font-size:12px;font-weight:300;color:#bbb;background:none;border:none;cursor:pointer;text-decoration:underline}
+.gate-profile{border:1px solid var(--border);border-radius:var(--radius);padding:18px;background:var(--gold-bg);margin:16px 0;text-align:left}
+.gate-h{font-family:var(--fd);font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+.gate-row{display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;gap:12px}
+.gate-row:last-child{border-bottom:none}
+.gate-lbl{color:#666;font-weight:300;flex-shrink:0}
+.gate-val{color:#111;font-weight:500;font-size:12px;text-align:right}
+.blur-wrap{position:relative}
+.blur-content{filter:blur(5px);pointer-events:none;user-select:none}
+.blur-label{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.blur-label span{font-family:var(--fd);font-size:14px;font-weight:600;color:#111}
+.blur-label small{font-size:12px;color:#666}
+.price-box{border:1px solid var(--gold);border-radius:var(--radius);padding:18px 20px;background:#fff;margin:16px 0;display:flex;align-items:center;justify-content:space-between}
+.price-main{font-family:var(--fd);font-size:36px;font-weight:600;color:#111}
+.price-note{font-size:11px;color:#aaa;margin-top:3px}
+.price-detail{font-size:12px;color:#666;text-align:right;line-height:1.6}
+.platform-note{font-size:11px;color:#bbb;text-align:center;margin-top:8px}
+#wiz-loading{display:none;padding:2rem 0;text-align:center}
+.spinner{width:28px;height:28px;border:2px solid rgba(201,168,76,0.15);border-top-color:var(--gold);border-radius:50%;margin:0 auto 14px;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-title{font-family:var(--fd);font-size:11px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:20px}
+.agents-list{display:flex;flex-direction:column;gap:10px;max-width:380px;margin:0 auto;text-align:left}
+.agent-row{display:flex;align-items:center;gap:10px}
+.agent-dot{width:7px;height:7px;border-radius:50%;background:rgba(201,168,76,0.15);flex-shrink:0;transition:background .3s}
+.agent-dot.active{background:var(--gold);animation:pulse .9s ease-in-out infinite}
+.agent-dot.done{background:#0a7f2e;animation:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.agent-name{font-family:var(--fd);font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:#111;min-width:180px}
+.agent-status{font-size:12px;color:#888}
 </style>
 </head>
 <body>
 <header class="page-header">
-  <a href="https://andreatrojanis1.wixsite.com/website-6" class="page-logo">A D A<span>S</span>T R A</a>
-  <a href="https://andreatrojanis1.wixsite.com/website-6/starton" class="page-back">← Come funziona</a>
+  <a href="https://andreatrojanis1.wixsite.com/website-6" class="logo">A D A<span>S</span>T R A</a>
+  <a href="https://andreatrojanis1.wixsite.com/website-6/starton" class="back-link">← Come funziona</a>
 </header>
 <main class="page-main">
-<div id="aw-wizard" style="max-width:680px;margin:0 auto;">
-<style>
-:root {
-  --gold: #c9a84c;
-  --gold-light: #a07820;
-  --gold-bg: #f0ece6;
-  --border: rgba(201,168,76,0.3);
-  --fd: 'Avenir Next','Avenir','Century Gothic','Futura',sans-serif;
-  --fb: 'Helvetica Neue','Helvetica',Arial,sans-serif;
-  --text: #111;
-  --sub: #666;
-  --r: 12px;
-}
-#aw-wizard * { box-sizing:border-box; margin:0; padding:0; }
-#aw-wizard { font-family:var(--fb); }
+  <div class="wiz-nav"><button id="wiz-back" class="hidden">← Indietro</button></div>
+  <div id="wiz-prog-label">1 / 22</div>
+  <div id="wiz-prog-bar"><div id="wiz-prog-fill" style="width:4%"></div></div>
+  <div id="wiz-screens">
 
-/* PROGRESS */
-#aw-wizard .progress-bar {
-  height:3px;
-  background:rgba(201,168,76,0.15);
-  border-radius:2px;
-  margin-bottom:48px;
-  overflow:hidden;
-}
-#aw-wizard .progress-fill {
-  height:100%;
-  background:var(--gold);
-  border-radius:2px;
-  transition:width 0.5s ease;
-}
-#aw-wizard .progress-label {
-  font-family:var(--fd);
-  font-size:10px;
-  font-weight:500;
-  letter-spacing:0.15em;
-  text-transform:uppercase;
-  color:var(--gold);
-  text-align:right;
-  margin-bottom:8px;
-}
-
-/* SCREEN */
-#aw-wizard .screen {
-  display:none;
-  animation:fadeIn 0.35s ease;
-}
-#aw-wizard .screen.active { display:block; }
-@keyframes fadeIn { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
-
-/* QUESTION */
-#aw-wizard .q-eyebrow {
-  font-family:var(--fd);
-  font-size:10px;
-  font-weight:500;
-  letter-spacing:0.2em;
-  text-transform:uppercase;
-  color:var(--gold);
-  margin-bottom:16px;
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-#aw-wizard .q-eyebrow::before { content:''; display:block; width:20px; height:1px; background:var(--gold); }
-
-#aw-wizard .q-title {
-  font-family:var(--fd);
-  font-size:clamp(22px,3vw,32px);
-  font-weight:600;
-  color:var(--text);
-  line-height:1.15;
-  margin-bottom:10px;
-  letter-spacing:-0.02em;
-}
-#aw-wizard .q-title em { font-style:normal; font-weight:300; color:var(--gold-light); }
-
-#aw-wizard .q-sub {
-  font-family:var(--fb);
-  font-size:14px;
-  font-weight:300;
-  color:var(--sub);
-  line-height:1.7;
-  margin-bottom:32px;
-  max-width:480px;
-}
-
-/* OPTIONS */
-#aw-wizard .options { display:flex; flex-direction:column; gap:10px; }
-#aw-wizard .opt {
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:16px 20px;
-  border:1px solid rgba(201,168,76,0.25);
-  border-radius:var(--r);
-  background:#fff;
-  cursor:pointer;
-  transition:all 0.2s;
-  font-family:var(--fb);
-  font-size:15px;
-  font-weight:300;
-  color:var(--text);
-  gap:12px;
-}
-#aw-wizard .opt:hover { border-color:var(--gold); background:var(--gold-bg); }
-#aw-wizard .opt.selected { border-color:var(--gold); background:var(--gold-bg); }
-#aw-wizard .opt-icon { font-size:18px; flex-shrink:0; }
-#aw-wizard .opt-check {
-  width:22px; height:22px;
-  border:1.5px solid rgba(201,168,76,0.3);
-  border-radius:50%;
-  flex-shrink:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  transition:all 0.2s;
-  background:#fff;
-}
-#aw-wizard .opt.selected .opt-check {
-  background:var(--gold);
-  border-color:var(--gold);
-}
-#aw-wizard .opt.selected .opt-check::after {
-  content:'✓';
-  color:#fff;
-  font-size:12px;
-  font-weight:700;
-}
-
-/* MULTI SELECT */
-#aw-wizard .opt.multi-opt { }
-#aw-wizard .opt-square {
-  width:22px; height:22px;
-  border:1.5px solid rgba(201,168,76,0.3);
-  border-radius:4px;
-  flex-shrink:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  transition:all 0.2s;
-  background:#fff;
-}
-#aw-wizard .opt.selected .opt-square {
-  background:var(--gold);
-  border-color:var(--gold);
-}
-#aw-wizard .opt.selected .opt-square::after {
-  content:'✓';
-  color:#fff;
-  font-size:11px;
-  font-weight:700;
-}
-
-/* TEXTAREA */
-#aw-wizard .q-textarea {
-  width:100%;
-  padding:16px 20px;
-  border:1px solid rgba(201,168,76,0.25);
-  border-radius:var(--r);
-  background:#fff;
-  font-family:var(--fb);
-  font-size:15px;
-  font-weight:300;
-  color:var(--text);
-  line-height:1.7;
-  resize:none;
-  min-height:120px;
-  outline:none;
-  transition:border-color 0.2s;
-}
-#aw-wizard .q-textarea:focus { border-color:var(--gold); }
-#aw-wizard .q-textarea::placeholder { color:#bbb; }
-#aw-wizard .char-count { font-family:var(--fb); font-size:11px; color:#bbb; text-align:right; margin-top:6px; }
-
-/* SCALE */
-#aw-wizard .scale-opts {
-  display:flex;
-  gap:8px;
-  justify-content:center;
-}
-#aw-wizard .scale-opt {
-  flex:1;
-  aspect-ratio:1;
-  max-width:80px;
-  border:1.5px solid rgba(201,168,76,0.2);
-  border-radius:10px;
-  background:#fff;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  transition:all 0.2s;
-  gap:4px;
-}
-#aw-wizard .scale-opt:hover { border-color:var(--gold); background:var(--gold-bg); }
-#aw-wizard .scale-opt.selected { border-color:var(--gold); background:var(--gold-bg); }
-#aw-wizard .scale-emoji { font-size:24px; }
-#aw-wizard .scale-label { font-family:var(--fd); font-size:9px; font-weight:500; letter-spacing:0.1em; text-transform:uppercase; color:var(--sub); }
-#aw-wizard .scale-labels { display:flex; justify-content:space-between; margin-top:8px; }
-#aw-wizard .scale-labels span { font-family:var(--fb); font-size:11px; color:#aaa; }
-
-/* INTERSTITIAL */
-#aw-wizard .interstitial {
-  text-align:center;
-  padding:20px 0;
-}
-#aw-wizard .inter-icon {
-  font-size:48px;
-  margin-bottom:20px;
-  display:block;
-}
-#aw-wizard .inter-title {
-  font-family:var(--fd);
-  font-size:clamp(20px,2.5vw,28px);
-  font-weight:600;
-  color:var(--text);
-  line-height:1.2;
-  margin-bottom:16px;
-  letter-spacing:-0.02em;
-}
-#aw-wizard .inter-title em { font-style:normal; font-weight:300; color:var(--gold-light); }
-#aw-wizard .inter-body {
-  font-family:var(--fb);
-  font-size:15px;
-  font-weight:300;
-  color:var(--sub);
-  line-height:1.8;
-  max-width:440px;
-  margin:0 auto 28px;
-}
-#aw-wizard .inter-stats {
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin:24px 0;
-}
-#aw-wizard .inter-stat {
-  padding:20px;
-  border:1px solid var(--border);
-  border-radius:var(--r);
-  background:var(--gold-bg);
-  text-align:left;
-}
-#aw-wizard .inter-stat-val {
-  font-family:var(--fd);
-  font-size:28px;
-  font-weight:700;
-  color:var(--gold);
-  line-height:1;
-  margin-bottom:4px;
-}
-#aw-wizard .inter-stat-label {
-  font-family:var(--fb);
-  font-size:12px;
-  font-weight:300;
-  color:var(--sub);
-  line-height:1.4;
-}
-#aw-wizard .inter-criteria {
-  text-align:left;
-  border:1px solid var(--border);
-  border-radius:var(--r);
-  overflow:hidden;
-  margin:24px 0;
-}
-#aw-wizard .inter-crit {
-  display:flex;
-  align-items:flex-start;
-  gap:14px;
-  padding:16px 20px;
-  border-bottom:1px solid var(--border);
-  background:#fff;
-}
-#aw-wizard .inter-crit:last-child { border-bottom:none; }
-#aw-wizard .inter-crit-num {
-  font-family:var(--fd);
-  font-size:10px;
-  font-weight:600;
-  letter-spacing:0.1em;
-  color:var(--gold);
-  flex-shrink:0;
-  padding-top:2px;
-}
-#aw-wizard .inter-crit-text {
-  font-family:var(--fb);
-  font-size:13px;
-  font-weight:300;
-  color:#333;
-  line-height:1.6;
-}
-#aw-wizard .inter-crit-text strong { font-weight:600; color:var(--text); }
-
-/* CONTINUE BTN */
-#aw-wizard .continue-wrap {
-  margin-top:32px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:12px;
-}
-#aw-wizard .btn-continue {
-  width:100%;
-  max-width:400px;
-  padding:16px 32px;
-  background:var(--gold);
-  color:#fff;
-  border:none;
-  border-radius:999px;
-  font-family:var(--fd);
-  font-size:13px;
-  font-weight:600;
-  letter-spacing:0.12em;
-  text-transform:uppercase;
-  cursor:pointer;
-  transition:all 0.25s;
-}
-#aw-wizard .btn-continue:hover { background:var(--gold-light); transform:translateY(-1px); box-shadow:0 8px 24px rgba(201,168,76,0.3); }
-#aw-wizard .btn-continue:disabled { opacity:0.4; cursor:not-allowed; transform:none; box-shadow:none; }
-#aw-wizard .btn-skip {
-  font-family:var(--fb);
-  font-size:12px;
-  font-weight:300;
-  color:#bbb;
-  background:none;
-  border:none;
-  cursor:pointer;
-  text-decoration:underline;
-}
-#aw-wizard .btn-skip:hover { color:var(--sub); }
-
-/* BACK */
-#aw-wizard .nav-top {
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  margin-bottom:32px;
-}
-#aw-wizard .btn-back {
-  font-family:var(--fd);
-  font-size:11px;
-  font-weight:500;
-  letter-spacing:0.1em;
-  text-transform:uppercase;
-  color:var(--sub);
-  background:none;
-  border:none;
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  gap:6px;
-  padding:0;
-}
-#aw-wizard .btn-back:hover { color:var(--gold); }
-#aw-wizard .btn-back.hidden { visibility:hidden; }
-
-/* INPUT TEXT */
-#aw-wizard .q-input {
-  width:100%;
-  padding:16px 20px;
-  border:1px solid rgba(201,168,76,0.25);
-  border-radius:var(--r);
-  background:#fff;
-  font-family:var(--fb);
-  font-size:15px;
-  font-weight:300;
-  color:var(--text);
-  outline:none;
-  transition:border-color 0.2s;
-  height:52px;
-}
-#aw-wizard .q-input:focus { border-color:var(--gold); }
-
-/* GATE */
-#aw-wizard .gate-screen {
-  text-align:center;
-  padding:20px 0;
-}
-#aw-wizard .gate-profile {
-  border:1px solid var(--border);
-  border-radius:var(--r);
-  padding:24px;
-  background:var(--gold-bg);
-  margin:24px 0;
-  text-align:left;
-}
-#aw-wizard .gate-profile-title {
-  font-family:var(--fd);
-  font-size:10px;
-  font-weight:600;
-  letter-spacing:0.15em;
-  text-transform:uppercase;
-  color:var(--gold);
-  margin-bottom:12px;
-}
-#aw-wizard .gate-row {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:8px 0;
-  border-bottom:1px solid var(--border);
-  font-family:var(--fb);
-  font-size:13px;
-}
-#aw-wizard .gate-row:last-child { border-bottom:none; }
-#aw-wizard .gate-row-label { color:var(--sub); font-weight:300; }
-#aw-wizard .gate-row-val { color:var(--text); font-weight:500; font-family:var(--fd); }
-#aw-wizard .gate-blur {
-  filter:blur(5px);
-  pointer-events:none;
-  user-select:none;
-}
-#aw-wizard .price-tag {
-  border:1px solid var(--gold);
-  border-radius:var(--r);
-  padding:20px 24px;
-  background:#fff;
-  margin:20px 0;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-}
-#aw-wizard .price-main {
-  font-family:var(--fd);
-  font-size:36px;
-  font-weight:700;
-  color:var(--text);
-}
-#aw-wizard .price-detail {
-  font-family:var(--fb);
-  font-size:12px;
-  font-weight:300;
-  color:var(--sub);
-  text-align:right;
-  line-height:1.5;
-}
-#aw-wizard .price-note {
-  font-family:var(--fb);
-  font-size:11px;
-  color:#aaa;
-  margin-top:8px;
-}
-</style>
-
-<!-- NAV -->
-<div class="nav-top">
-  <button class="btn-back hidden" id="aw-back">← Indietro</button>
-  <div style="flex:1;"></div>
-</div>
-
-<!-- PROGRESS -->
-<div class="progress-label" id="aw-prog-label">1 / 20</div>
-<div class="progress-bar"><div class="progress-fill" id="aw-prog-fill" style="width:5%"></div></div>
-
-<!-- SCREENS -->
-<div id="aw-screens">
-
-  <!-- 1 — INTRO -->
-  <div class="screen active" data-step="1" data-type="single">
-    <div class="q-eyebrow">Il tuo progetto</div>
-    <div class="q-title">Che tipo di progetto<br>vuoi <em>finanziare?</em></div>
-    <div class="q-sub">Seleziona quello che descrive meglio la tua situazione attuale.</div>
-    <div class="options">
-      <div class="opt" data-val="Tecnologia / Innovazione digitale"><span class="opt-icon">◈</span><span style="flex:1;">Tecnologia / Innovazione digitale</span><span class="opt-check"></span></div>
-      <div class="opt" data-val="Industria / Produzione"><span class="opt-icon">⬡</span><span style="flex:1;">Industria / Produzione</span><span class="opt-check"></span></div>
-      <div class="opt" data-val="Servizi alle imprese"><span class="opt-icon">○</span><span style="flex:1;">Servizi alle imprese</span><span class="opt-check"></span></div>
-      <div class="opt" data-val="Turismo / Ospitalità"><span class="opt-icon">◇</span><span style="flex:1;">Turismo / Ospitalità</span><span class="opt-check"></span></div>
-      <div class="opt" data-val="Agroalimentare"><span class="opt-icon">△</span><span style="flex:1;">Agroalimentare</span><span class="opt-check"></span></div>
-      <div class="opt" data-val="Altro"><span class="opt-icon">□</span><span style="flex:1;">Altro settore</span><span class="opt-check"></span></div>
-    </div>
-  </div>
-
-  <!-- 2 — STATO IMPRESA -->
-  <div class="screen" data-step="2" data-type="single">
-    <div class="q-eyebrow">L'impresa</div>
-    <div class="q-title">A che punto è<br>la tua <em>impresa?</em></div>
-    <div class="q-sub">L'anzianità è uno dei criteri formali più importanti per i bandi Invitalia.</div>
-    <div class="options">
-      <div class="opt" data-val="Costituenda — non ancora fondata"><span class="opt-icon">◈</span><span style="flex:1;">Non ancora fondata — idea in fase di strutturazione</span><span class="opt-check"></span></div>
-      <div class="opt" data-val="0–36 mesi"><span class="opt-icon">⬡</span><span style="flex:1;">Attiva da meno di 3 anni</span><span class="opt-check"></span></div>
-      <div class="opt" data-val="36–60 mesi"><span class="opt-icon">○</span><span style="flex:1;">Attiva da 3 a 5 anni</span><span class="opt-check"></span></div>
-      <div class="opt" data-val="Oltre 60 mesi"><span class="opt-icon">◇</span><span style="flex:1;">Attiva da oltre 5 anni</span><span class="opt-check"></span></div>
-    </div>
-  </div>
-
-  <!-- 3 — INTERSTITIAL -->
-  <div class="screen" data-step="3" data-type="interstitial">
-    <div class="interstitial">
-      <span class="inter-icon">◈</span>
-      <div class="inter-title">Cosa valuta davvero<br><em>Invitalia</em></div>
-      <div class="inter-body">I bandi non si vincono sull'ammissibilità. Si vincono su criteri, punteggi e qualità dell'impostazione. Ecco i 4 assi su cui ti valuteremo.</div>
-      <div class="inter-criteria">
-        <div class="inter-crit"><span class="inter-crit-num">01</span><span class="inter-crit-text"><strong>Aderenza al bando</strong> — Il progetto rispetta i requisiti formali e si posiziona nelle categorie premiate?</span></div>
-        <div class="inter-crit"><span class="inter-crit-num">02</span><span class="inter-crit-text"><strong>Narrazione ampliata</strong> — Il progetto sa raccontarsi oltre il prodotto? Ha una visione di impatto?</span></div>
-        <div class="inter-crit"><span class="inter-crit-num">03</span><span class="inter-crit-text"><strong>Scalabilità</strong> — Il modello è replicabile oltre il mercato locale? Può crescere?</span></div>
-        <div class="inter-crit"><span class="inter-crit-num">04</span><span class="inter-crit-text"><strong>Impatti territoriali</strong> — Genera occupazione, inclusione, sviluppo? Questi sono i driver politici che pesano.</span></div>
+    <!-- S1 -->
+    <div class="wiz-screen active" data-step="1" data-type="text-fields">
+      <div class="eyebrow">Il progetto</div>
+      <div class="q-title">Parliamo del tuo<br><em>progetto.</em></div>
+      <div class="q-sub">Iniziamo dai fondamentali. Ogni risposta pesa sulla valutazione finale.</div>
+      <div class="field-group">
+        <div class="field"><label>Nome del progetto</label><input type="text" id="f-nome" placeholder="es. PredictAI — manutenzione predittiva per PMI"></div>
+        <div class="field"><label>Descrizione sintetica <span style="color:#bbb;font-size:10px;font-family:var(--fb)">max 300 caratteri</span></label><textarea id="f-desc" maxlength="300" placeholder="In 3 righe: cosa fai, per chi, e perché qualcuno dovrebbe pagare per averlo."></textarea><div class="char-count"><span id="cc-desc">0</span>/300</div></div>
       </div>
     </div>
-  </div>
 
-  <!-- 4 — COMPAGINE -->
-  <div class="screen" data-step="4" data-type="single">
-    <div class="q-eyebrow">Il team</div>
-    <div class="q-title">Com'è composta<br>la tua <em>compagine?</em></div>
-    <div class="q-sub">La struttura societaria influenza direttamente l'accesso a ON e Smart&Start.</div>
-    <div class="options">
-      <div class="opt" data-val="≥51% under 36 e/o donne"><span class="opt-icon">◈</span><span style="flex:1;">Maggioranza under 36 e/o donne (≥51%)</span><span class="opt-check"></span></div>
-      <div class="opt" data-val="Mista — meno del 51% under 36/donne"><span class="opt-icon">⬡</span><span style="flex:1;">Mista — meno del 51% under 36 o donne</span><span class="opt-check"></span></div>
-      <div class="opt" data-val="Prevalenza over 36, non femminile"><span class="opt-icon">○</span><span style="flex:1;">Prevalenza over 36, non femminile</span><span class="opt-check"></span></div>
-      <div class="opt" data-val="Socio unico"><span class="opt-icon">◇</span><span style="flex:1;">Socio unico</span><span class="opt-check"></span></div>
-    </div>
-  </div>
-
-  <!-- 5 — STARTUP INNOVATIVA -->
-  <div class="screen" data-step="5" data-type="single">
-    <div class="q-eyebrow">Requisiti formali</div>
-    <div class="q-title">Il progetto è iscrivibile<br>come <em>startup innovativa?</em></div>
-    <div class="q-sub">La startup innovativa è requisito fondamentale per Smart&Start. Per ON è un elemento premiante.</div>
-    <div class="options">
-      <div class="opt" data-val="Sì / molto probabile"><span class="opt-icon">◈</span><span style="flex:1;">Sì — il progetto ha chiari requisiti di innovazione</span><span class="opt-check"></span></div>
-      <div class="opt" data-val="Forse — da verificare"><span class="opt-icon">⬡</span><span style="flex:1;">Forse — da verificare con un esperto</span><span class="opt-check"></span></div>
-      <div class="opt" data-val="No / improbabile"><span class="opt-icon">○</span><span style="flex:1;">No / improbabile</span><span class="opt-check"></span></div>
-      <div class="opt" data-val="Non lo so"><span class="opt-icon">◇</span><span style="flex:1;">Non lo so ancora</span><span class="opt-check"></span></div>
-    </div>
-  </div>
-
-  <!-- 6 — PROBLEMA -->
-  <div class="screen" data-step="6" data-type="text">
-    <div class="q-eyebrow">La narrazione</div>
-    <div class="q-title">Quale <em>problema concreto</em><br>risolve il tuo progetto?</div>
-    <div class="q-sub">Non descrivere il prodotto — descrivi il problema che esiste nel mercato e che tu stai risolvendo. Questo è il cuore della narrazione per Invitalia.</div>
-    <textarea class="q-textarea" id="ta-problema" maxlength="400" placeholder="es. Le PMI italiane non hanno accesso a strumenti di pre-verifica per la finanza agevolata — perdono mesi e risorse su candidature non competitive..."></textarea>
-    <div class="char-count"><span id="cc-problema">0</span>/400</div>
-  </div>
-
-  <!-- 7 — SOLUZIONE -->
-  <div class="screen" data-step="7" data-type="text">
-    <div class="q-eyebrow">La narrazione</div>
-    <div class="q-title">Come lo risolvi<br>in modo <em>distintivo?</em></div>
-    <div class="q-sub">Perché la tua soluzione è diversa da quello che esiste già? Cosa la rende unica o difficilmente replicabile?</div>
-    <textarea class="q-textarea" id="ta-soluzione" maxlength="400" placeholder="es. Sviluppiamo un sistema multi-agente AI che analizza i criteri reali dei bandi Invitalia — non un template generico ma una valutazione contestuale basata su 4 specialisti AI indipendenti..."></textarea>
-    <div class="char-count"><span id="cc-soluzione">0</span>/400</div>
-  </div>
-
-  <!-- 8 — INTERSTITIAL MERCATO -->
-  <div class="screen" data-step="8" data-type="interstitial">
-    <div class="interstitial">
-      <span class="inter-icon">⬡</span>
-      <div class="inter-title">Perché la <em>scalabilità</em><br>cambia tutto</div>
-      <div class="inter-body">Un progetto locale vale meno di un progetto replicabile. Invitalia premia i modelli che possono crescere — perché l'impatto moltiplicato è quello che la politica vuole finanziare.</div>
-      <div class="inter-stats">
-        <div class="inter-stat"><div class="inter-stat-val">3x</div><div class="inter-stat-label">punteggio medio per progetti ad alta scalabilità su Smart&Start</div></div>
-        <div class="inter-stat"><div class="inter-stat-val">68%</div><div class="inter-stat-label">dei progetti rigettati ha scalabilità dichiarata ma non dimostrata</div></div>
+    <!-- S2 -->
+    <div class="wiz-screen" data-step="2" data-type="single" data-key="settore">
+      <div class="eyebrow">Il progetto</div>
+      <div class="q-title">Qual è il <em>settore</em><br>del progetto?</div>
+      <div class="q-sub">Scegli la natura vera del progetto, non quella che suona meglio.</div>
+      <div class="opts">
+        <div class="opt" data-v="Tecnologia / Innovazione digitale"><span class="opt-icon">◈</span><span class="opt-text">Tecnologia / Innovazione digitale</span><span class="opt-check"></span></div>
+        <div class="opt" data-v="Industria / Produzione"><span class="opt-icon">⬡</span><span class="opt-text">Industria / Produzione</span><span class="opt-check"></span></div>
+        <div class="opt" data-v="Servizi alle imprese"><span class="opt-icon">○</span><span class="opt-text">Servizi alle imprese</span><span class="opt-check"></span></div>
+        <div class="opt" data-v="Turismo / Ospitalità / Cultura"><span class="opt-icon">◇</span><span class="opt-text">Turismo / Ospitalità / Cultura</span><span class="opt-check"></span></div>
+        <div class="opt" data-v="Agroalimentare / Agricoltura"><span class="opt-icon">△</span><span class="opt-text">Agroalimentare / Agricoltura</span><span class="opt-check"></span></div>
+        <div class="opt" data-v="Healthcare / Life Sciences"><span class="opt-icon">□</span><span class="opt-text">Healthcare / Life Sciences</span><span class="opt-check"></span></div>
+        <div class="opt" data-v="Altro"><span class="opt-icon">◻</span><span class="opt-text">Altro settore</span><span class="opt-check"></span></div>
       </div>
     </div>
-  </div>
 
-  <!-- 9 — SCALABILITÀ -->
-  <div class="screen" data-step="9" data-type="single">
-    <div class="q-eyebrow">Scalabilità</div>
-    <div class="q-title">Quanto è replicabile<br>il tuo <em>modello?</em></div>
-    <div class="q-sub">Sii onesto. Una scalabilità sovrastimata è una delle cause principali di rigetto in istruttoria.</div>
-    <div class="options">
-      <div class="opt" data-val="Alta — il modello è replicabile a scala nazionale/internazionale senza costi proporzionali"><span class="opt-icon">◈</span><span style="flex:1;">Alta — replicabile a scala nazionale o internazionale</span><span class="opt-check"></span></div>
-      <div class="opt" data-val="Media — crescita possibile ma richiede investimenti proporzionali"><span class="opt-icon">⬡</span><span style="flex:1;">Media — crescita possibile con investimenti proporzionali</span><span class="opt-check"></span></div>
-      <div class="opt" data-val="Bassa — progetto prevalentemente locale o di nicchia"><span class="opt-icon">○</span><span style="flex:1;">Bassa — progetto prevalentemente locale o di nicchia</span><span class="opt-check"></span></div>
-    </div>
-  </div>
-
-  <!-- 10 — MERCATO -->
-  <div class="screen" data-step="10" data-type="text">
-    <div class="q-eyebrow">Il mercato</div>
-    <div class="q-title">Chi è il tuo <em>cliente ideale</em><br>e quanti ce ne sono?</div>
-    <div class="q-sub">Descrivi chi compra, perché compra, e dai un'idea della dimensione del mercato — anche approssimativa. Invitalia valuta la concretezza della domanda.</div>
-    <textarea class="q-textarea" id="ta-mercato" maxlength="400" placeholder="es. PMI e startup italiane che vogliono accedere a fondi pubblici senza consulenti costosi. Mercato potenziale: ~200.000 imprese/anno che presentano domande a Invitalia. Target iniziale: startup in fase pre-seed nelle regioni del Sud..."></textarea>
-    <div class="char-count"><span id="cc-mercato">0</span>/400</div>
-  </div>
-
-  <!-- 11 — VANTAGGIO COMPETITIVO -->
-  <div class="screen" data-step="11" data-type="text">
-    <div class="q-eyebrow">Il vantaggio competitivo</div>
-    <div class="q-title">Perché nessuno<br>lo fa <em>già così?</em></div>
-    <div class="q-sub">Cosa ti protegge dalla concorrenza? Tecnologia proprietaria, IP, rete, effetti di rete, prima mossa? Sii specifico — le risposte vaghe vengono penalizzate.</div>
-    <textarea class="q-textarea" id="ta-vantaggio" maxlength="400" placeholder="es. Il sistema multi-agente è basato su prompt engineering proprietario calibrato sui criteri reali Invitalia. Nessun competitor usa AI specializzata sul mercato italiano della finanza agevolata. Vantaggio: 18 mesi di sviluppo + dataset proprietario di bandi..."></textarea>
-    <div class="char-count"><span id="cc-vantaggio">0</span>/400</div>
-  </div>
-
-  <!-- 12 — TRL -->
-  <div class="screen" data-step="12" data-type="single">
-    <div class="q-eyebrow">Maturità tecnologica</div>
-    <div class="q-title">A che punto è davvero<br>il tuo <em>progetto?</em></div>
-    <div class="q-sub">Il TRL misura quanto il progetto è reale vs teorico. Sii onesto — Invitalia verifica.</div>
-    <div class="options">
-      <div class="opt" data-val="TRL 3–4 — idea validata o primo prototipo"><span class="opt-icon">◈</span><span style="flex:1;">TRL 3–4 — idea validata o primo prototipo interno</span><span class="opt-check"></span></div>
-      <div class="opt" data-val="TRL 5–6 — prototipo testato o avanzato"><span class="opt-icon">⬡</span><span style="flex:1;">TRL 5–6 — prototipo testato o avanzato</span><span class="opt-check"></span></div>
-      <div class="opt" data-val="TRL 7–8 — quasi pronto o prodotto completo"><span class="opt-icon">○</span><span style="flex:1;">TRL 7–8 — quasi pronto al mercato o prodotto completo</span><span class="opt-check"></span></div>
-      <div class="opt" data-val="TRL 9 — già sul mercato"><span class="opt-icon">◇</span><span style="flex:1;">TRL 9 — già operativo sul mercato</span><span class="opt-check"></span></div>
-    </div>
-  </div>
-
-  <!-- 13 — INTERSTITIAL IMPATTI -->
-  <div class="screen" data-step="13" data-type="interstitial">
-    <div class="interstitial">
-      <span class="inter-icon">○</span>
-      <div class="inter-title">Gli impatti che<br>la <em>politica premia</em></div>
-      <div class="inter-body">I fondi pubblici non sono neutri — premiano i progetti che generano effetti collaterali positivi per la società. Saperli identificare e comunicare fa la differenza tra un progetto ordinario e uno competitivo.</div>
-      <div class="inter-criteria">
-        <div class="inter-crit"><span class="inter-crit-num">◈</span><span class="inter-crit-text"><strong>Occupazione giovanile</strong> — Ogni posto di lavoro under 36 vale punti reali in graduatoria.</span></div>
-        <div class="inter-crit"><span class="inter-crit-num">⬡</span><span class="inter-crit-text"><strong>Transizione digitale e green</strong> — Le priorità PNRR sono mandatorie, non opzionali.</span></div>
-        <div class="inter-crit"><span class="inter-crit-num">○</span><span class="inter-crit-text"><strong>Sviluppo territoriale</strong> — Progetti nel Sud o aree interne attivano premialità automatiche.</span></div>
-        <div class="inter-crit"><span class="inter-crit-num">◇</span><span class="inter-crit-text"><strong>Parità di genere</strong> — Imprenditoria femminile è una priorità trasversale di tutti i bandi.</span></div>
+    <!-- S3 -->
+    <div class="wiz-screen" data-step="3" data-type="text-fields">
+      <div class="eyebrow">Il progetto</div>
+      <div class="q-title">Localizzazione e<br><em>investimento.</em></div>
+      <div class="q-sub">La sede influenza direttamente le premialità disponibili.</div>
+      <div class="field-group">
+        <div class="field-row">
+          <div class="field"><label>Regione</label><select id="f-regione"><option value="">Seleziona...</option></select></div>
+          <div class="field"><label>Provincia</label><select id="f-provincia" disabled><option value="">Prima la regione</option></select></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Comune</label><input type="text" id="f-comune" placeholder="es. Bari"></div>
+          <div class="field"><label>Cratere sismico Centro Italia</label><select id="f-cratere"><option value="no">No</option><option value="si">Sì — comune nel cratere</option></select></div>
+        </div>
+        <div class="field"><label>Investimento totale previsto (€)</label><input type="number" id="f-investimento" min="10000" step="1000" placeholder="es. 350000"><div class="q-note">Inserisci il costo totale reale per far partire o crescere il progetto.</div></div>
       </div>
     </div>
-  </div>
 
-  <!-- 14 — IMPATTI -->
-  <div class="screen" data-step="14" data-type="multi">
-    <div class="q-eyebrow">Impatti del progetto</div>
-    <div class="q-title">Quali impatti reali<br>genera il <em>tuo progetto?</em></div>
-    <div class="q-sub">Seleziona tutti quelli autenticamente presenti — non quelli che "suonano bene". La coerenza tra impatti dichiarati e progetto reale viene verificata in istruttoria.</div>
-    <div class="options">
-      <div class="opt multi-opt" data-val="Digitale — trasformazione digitale di processi o mercati"><span class="opt-icon">◈</span><span style="flex:1;">Digitale — trasformazione digitale di processi o mercati</span><span class="opt-square"></span></div>
-      <div class="opt multi-opt" data-val="Green — transizione energetica o riduzione emissioni"><span class="opt-icon">⬡</span><span style="flex:1;">Green — transizione energetica o riduzione emissioni</span><span class="opt-square"></span></div>
-      <div class="opt multi-opt" data-val="Occupazione — creazione di posti di lavoro qualificati"><span class="opt-icon">○</span><span style="flex:1;">Occupazione — creazione di posti di lavoro qualificati</span><span class="opt-square"></span></div>
-      <div class="opt multi-opt" data-val="Inclusione sociale — accesso a servizi o opportunità per fasce deboli"><span class="opt-icon">◇</span><span style="flex:1;">Inclusione sociale — accesso per fasce deboli</span><span class="opt-square"></span></div>
-      <div class="opt multi-opt" data-val="Parità di genere — imprenditoria femminile o servizi dedicati"><span class="opt-icon">△</span><span style="flex:1;">Parità di genere — imprenditoria femminile</span><span class="opt-square"></span></div>
-      <div class="opt multi-opt" data-val="Sviluppo territoriale — impatto su area geografica specifica"><span class="opt-icon">□</span><span style="flex:1;">Sviluppo territoriale — impatto su area geografica</span><span class="opt-square"></span></div>
+    <!-- S4 -->
+    <div class="wiz-screen" data-step="4" data-type="text-fields">
+      <div class="eyebrow">Il progetto</div>
+      <div class="q-title">Modello di business<br>e <em>sostenibilità.</em></div>
+      <div class="q-sub">Invitalia vuole capire come generi ricavi e quando il progetto si regge da solo.</div>
+      <div class="field-group">
+        <div class="field"><label>Modello di revenue</label><select id="f-revenue"><option value="">Seleziona...</option><option value="SaaS / abbonamento">SaaS / abbonamento ricorrente</option><option value="Licenza software">Licenza software</option><option value="Vendita prodotto fisico">Vendita prodotto fisico</option><option value="Servizio / consulenza">Servizio / consulenza</option><option value="Marketplace / commissioni">Marketplace / commissioni</option><option value="Freemium con upgrade">Freemium con upgrade premium</option><option value="B2G / contratti pubblici">B2G / contratti pubblici</option><option value="Misto">Modello misto</option></select></div>
+        <div class="field"><label>Break-even stimato</label><select id="f-breakeven"><option value="">Seleziona...</option><option value="Meno di 12 mesi">Meno di 12 mesi</option><option value="12–24 mesi">12–24 mesi</option><option value="24–36 mesi">24–36 mesi</option><option value="Oltre 36 mesi">Oltre 36 mesi</option><option value="Non ancora stimato">Non ancora stimato</option></select></div>
+        <div class="field"><label>Export / internazionalizzazione prevista</label><select id="f-export"><option value="No — solo mercato italiano">No — solo mercato italiano</option><option value="Sì — Europa nei primi 3 anni">Sì — Europa nei primi 3 anni</option><option value="Sì — mercati extra-UE">Sì — mercati extra-UE</option><option value="Già attivo su mercati esteri">Già attivo su mercati esteri</option></select></div>
+      </div>
     </div>
-  </div>
 
-  <!-- 15 — LOCALIZZAZIONE -->
-  <div class="screen" data-step="15" data-type="single">
-    <div class="q-eyebrow">Localizzazione</div>
-    <div class="q-title">Dove sarà localizzata<br>l'<em>impresa?</em></div>
-    <div class="q-sub">La localizzazione attiva automaticamente premialità specifiche su Smart&Start e alcune misure PNRR.</div>
-    <div class="options">
-      <div class="opt" data-val="Sud Italia (Puglia, Campania, Sicilia, Calabria, Sardegna, Basilicata, Molise, Abruzzo)"><span class="opt-icon">◈</span><span style="flex:1;">Sud Italia — attiva bonus fondo perduto Smart&Start</span><span class="opt-check"></span></div>
-      <div class="opt" data-val="Centro Italia"><span class="opt-icon">⬡</span><span style="flex:1;">Centro Italia</span><span class="opt-check"></span></div>
-      <div class="opt" data-val="Nord Italia"><span class="opt-icon">○</span><span style="flex:1;">Nord Italia</span><span class="opt-check"></span></div>
-      <div class="opt" data-val="Area sismica Centro Italia (cratere)"><span class="opt-icon">◇</span><span style="flex:1;">Area sismica Centro Italia — premialità specifica</span><span class="opt-check"></span></div>
+    <!-- S5 interstitial -->
+    <div class="wiz-screen" data-step="5" data-type="interstitial">
+      <div class="eyebrow">L'impresa</div>
+      <div class="q-title">Ora parliamo<br>della tua <em>impresa.</em></div>
+      <div class="q-sub">Questi dati determinano l'accesso formale ai bandi. Conta la realtà, non l'ottimismo.</div>
+      <div class="inter-box">
+        <div class="inter-row"><span class="inter-num">01</span><span class="inter-txt"><strong>Anzianità</strong> — Oltre 60 mesi chiude quasi tutte le porte su ON.</span></div>
+        <div class="inter-row"><span class="inter-num">02</span><span class="inter-txt"><strong>Compagine</strong> — La struttura societaria influenza punteggi e accesso.</span></div>
+        <div class="inter-row"><span class="inter-num">03</span><span class="inter-txt"><strong>Startup innovativa</strong> — Requisito hard per Smart&Start. Premiante per ON.</span></div>
+        <div class="inter-row"><span class="inter-num">04</span><span class="inter-txt"><strong>De minimis</strong> — Aiuti di Stato già ricevuti possono ridurre l'accesso.</span></div>
+      </div>
     </div>
-  </div>
 
-  <!-- 16 — TRAZIONE -->
-  <div class="screen" data-step="16" data-type="scale">
-    <div class="q-eyebrow">Trazione di mercato</div>
-    <div class="q-title">Quanto è <em>validato</em><br>il tuo mercato?</div>
-    <div class="q-sub">Invitalia premia i progetti con segnali reali di domanda — non le idee prive di riscontro.</div>
-    <div class="scale-opts">
-      <div class="scale-opt" data-val="1 — Nessuna validazione, solo idea"><div class="scale-emoji">◇</div><div class="scale-label">Zero</div></div>
-      <div class="scale-opt" data-val="2 — Interesse informale da potenziali clienti"><div class="scale-emoji">○</div><div class="scale-label">Interesse</div></div>
-      <div class="scale-opt" data-val="3 — LOI o lettere di intento formali"><div class="scale-emoji">⬡</div><div class="scale-label">LOI</div></div>
-      <div class="scale-opt" data-val="4 — Pilot attivi o primi contratti"><div class="scale-emoji">◈</div><div class="scale-label">Pilot</div></div>
-      <div class="scale-opt" data-val="5 — Ricavi o clienti paganti"><div class="scale-emoji">△</div><div class="scale-label">Ricavi</div></div>
+    <!-- S6 -->
+    <div class="wiz-screen" data-step="6" data-type="single" data-key="anzianita">
+      <div class="eyebrow">L'impresa</div>
+      <div class="q-title">Anzianità<br>dell'<em>impresa.</em></div>
+      <div class="q-sub">Conta dalla data di iscrizione al Registro Imprese, non dall'idea.</div>
+      <div class="opts">
+        <div class="opt" data-v="Costituenda — non ancora fondata"><span class="opt-icon">◈</span><span class="opt-text">Costituenda — non ancora fondata<span class="opt-sub">Massima flessibilità su entrambi i bandi</span></span><span class="opt-check"></span></div>
+        <div class="opt" data-v="0–12 mesi"><span class="opt-icon">⬡</span><span class="opt-text">Attiva da meno di 12 mesi<span class="opt-sub">Accesso ottimale — anzianità minima</span></span><span class="opt-check"></span></div>
+        <div class="opt" data-v="12–36 mesi"><span class="opt-icon">○</span><span class="opt-text">Attiva da 12 a 36 mesi<span class="opt-sub">Buona posizione per entrambi i bandi</span></span><span class="opt-check"></span></div>
+        <div class="opt" data-v="36–60 mesi"><span class="opt-icon">◇</span><span class="opt-text">Attiva da 36 a 60 mesi<span class="opt-sub">Lettura più critica — richiede progetto forte</span></span><span class="opt-check"></span></div>
+        <div class="opt" data-v="Oltre 60 mesi"><span class="opt-icon">△</span><span class="opt-text">Attiva da oltre 60 mesi<span class="opt-sub">ON molto difficile — Smart&Start da valutare</span></span><span class="opt-check"></span></div>
+      </div>
     </div>
-    <div class="scale-labels"><span>Nessuna prova</span><span>Ricavi reali</span></div>
-  </div>
 
-  <!-- 17 — TEAM -->
-  <div class="screen" data-step="17" data-type="text">
-    <div class="q-eyebrow">Il team</div>
-    <div class="q-title">Chi eseguirà<br>il <em>progetto?</em></div>
-    <div class="q-sub">Descrivi i soci fondatori e le figure chiave — ruolo, background rilevante, anni di esperienza nel settore. Il team è uno dei criteri più pesanti in istruttoria.</div>
-    <textarea class="q-textarea" id="ta-team" maxlength="500" placeholder="es. Andrea Trojanis — 15 anni in finanza agevolata, ha gestito operazioni per €40M di fondi pubblici. Edoardo Fabbri Nitti — specialista Invitalia con 8 anni di esperienza su bandi ON e Smart&Start. Terzo socio tecnico: sviluppatore AI con background in NLP..."></textarea>
-    <div class="char-count"><span id="cc-team">0</span>/500</div>
-  </div>
+    <!-- S7 -->
+    <div class="wiz-screen" data-step="7" data-type="single" data-key="compagine">
+      <div class="eyebrow">L'impresa</div>
+      <div class="q-title">Composizione<br>della <em>compagine.</em></div>
+      <div class="q-sub">Conta la struttura reale dei soci — quote, età, genere.</div>
+      <div class="opts">
+        <div class="opt" data-v="≥51% under 36 e/o donne"><span class="opt-icon">◈</span><span class="opt-text">Maggioranza under 36 e/o donne ≥51%<span class="opt-sub">Profilo più premiato da entrambi i bandi</span></span><span class="opt-check"></span></div>
+        <div class="opt" data-v="Mista — meno del 51% under 36 / donne"><span class="opt-icon">⬡</span><span class="opt-text">Mista — meno del 51% under 36 o donne<span class="opt-sub">Posizione discreta, non ottimale</span></span><span class="opt-check"></span></div>
+        <div class="opt" data-v="Prevalenza over 36, non femminile"><span class="opt-icon">○</span><span class="opt-text">Prevalenza over 36, non femminile<span class="opt-sub">Accesso possibile ma senza bonus compagine</span></span><span class="opt-check"></span></div>
+        <div class="opt" data-v="Socio unico"><span class="opt-icon">◇</span><span class="opt-text">Socio unico<span class="opt-sub">Verifica compatibilità con la forma giuridica richiesta</span></span><span class="opt-check"></span></div>
+      </div>
+    </div>
 
-  <!-- 18 — INVESTIMENTO -->
-  <div class="screen" data-step="18" data-type="text">
-    <div class="q-eyebrow">Il piano finanziario</div>
-    <div class="q-title">Come utilizzeresti<br>i <em>fondi ottenuti?</em></div>
-    <div class="q-sub">Descrivi le voci principali di spesa previste — sviluppo, team, marketing, attrezzature, consulenze. La coerenza tra investimento dichiarato e piano di spesa è cruciale.</div>
-    <textarea class="q-textarea" id="ta-investimento" maxlength="400" placeholder="es. €300k totali: 40% sviluppo piattaforma AI (software proprietario), 30% team (2 sviluppatori + 1 product manager), 20% go-to-market (marketing digitale + primo anno commerciale), 10% consulenze legali e brevettazione IP..."></textarea>
-    <div class="char-count"><span id="cc-investimento">0</span>/400</div>
-  </div>
+    <!-- S8 -->
+    <div class="wiz-screen" data-step="8" data-type="text-fields">
+      <div class="eyebrow">L'impresa</div>
+      <div class="q-title">Requisiti formali<br>e <em>solidità finanziaria.</em></div>
+      <div class="q-sub">Tre elementi che i valutatori controllano subito.</div>
+      <div class="field-group">
+        <div class="field"><label>Startup innovativa — iscritta o iscrivibile?</label><select id="f-startup"><option value="Sì / molto probabile">Sì / molto probabile — requisiti chiari</option><option value="Forse — da verificare">Forse — da verificare con un esperto</option><option value="No / improbabile">No / improbabile</option></select><div class="q-note">Requisito hard per Smart&Start. Premiante per ON.</div></div>
+        <div class="field"><label>De minimis e aiuti di Stato</label><select id="f-deminimis"><option value="Non verificato — da controllare">Non verificato — da controllare</option><option value="Verificato — nessun problema">Verificato — nessun problema</option><option value="Verificato — parzialmente utilizzato">Verificato — parzialmente utilizzato</option><option value="Critico — plafond quasi esaurito">Critico — plafond quasi esaurito</option></select></div>
+        <div class="field"><label>Fideiussione disponibile</label><select id="f-fideiussione"><option value="Non ancora valutata">Non ancora valutata</option><option value="Sì — disponibile">Sì — disponibile</option><option value="Da strutturare">Da strutturare con garanzie terze</option><option value="No — non disponibile">No — non disponibile</option></select><div class="q-note">Smart&Start richiede garanzia fideiussoria sul finanziamento agevolato.</div></div>
+        <div class="field"><label>Fatturato attuale</label><select id="f-fatturato"><option value="Impresa non ancora costituita">Impresa non ancora costituita</option><option value="Zero — pre-revenue">Zero — pre-revenue</option><option value="Sotto 50k">Sotto €50.000</option><option value="50k–200k">€50.000 – €200.000</option><option value="200k–500k">€200.000 – €500.000</option><option value="Oltre 500k">Oltre €500.000</option></select></div>
+        <div class="field-row">
+          <div class="field"><label>Capitale iniziale disponibile (€)</label><input type="number" id="f-capitale" min="0" step="1000" placeholder="es. 60000"></div>
+          <div class="field"><label>Co-investitori / business angel</label><select id="f-coinvestitori"><option value="No">No</option><option value="In trattativa">In trattativa</option><option value="Sì — confermati">Sì — confermati</option></select></div>
+        </div>
+      </div>
+    </div>
 
-  <!-- 19 — RISCHIO -->
-  <div class="screen" data-step="19" data-type="text">
-    <div class="q-eyebrow">Analisi critica</div>
-    <div class="q-title">Qual è il rischio principale<br>che potrebbe <em>bloccare il progetto?</em></div>
-    <div class="q-sub">Questa è la domanda più importante. Chi sa identificare i propri rischi è credibile. Chi non li vede è ingenuo. I valutatori Invitalia apprezzano l'autoconsapevolezza.</div>
-    <textarea class="q-textarea" id="ta-rischio" maxlength="400" placeholder="es. Il rischio principale è l'adozione — le PMI italiane sono tradizionalmente diffidenti verso strumenti digitali per decisioni finanziarie. Mitigazione: onboarding guidato, partnership con commercialisti come canale di distribuzione..."></textarea>
-    <div class="char-count"><span id="cc-rischio">0</span>/400</div>
-  </div>
+    <!-- S9 -->
+    <div class="wiz-screen" data-step="9" data-type="single" data-key="trl">
+      <div class="eyebrow">L'innovazione</div>
+      <div class="q-title">A che punto è davvero<br>il tuo <em>progetto?</em></div>
+      <div class="q-sub">Il TRL misura la maturità tecnologica reale. I valutatori verificano.</div>
+      <div class="opts">
+        <div class="opt" data-v="TRL 3 — idea iniziale validata"><span class="opt-icon">◈</span><span class="opt-text">TRL 3 — idea iniziale validata<span class="opt-sub">Proof of concept teorico, non ancora testato</span></span><span class="opt-check"></span></div>
+        <div class="opt" data-v="TRL 4 — primo prototipo interno"><span class="opt-icon">⬡</span><span class="opt-text">TRL 4 — primo prototipo interno<span class="opt-sub">Funziona in laboratorio o ambiente controllato</span></span><span class="opt-check"></span></div>
+        <div class="opt" data-v="TRL 5 — prototipo testato in ambiente reale"><span class="opt-icon">○</span><span class="opt-text">TRL 5 — prototipo testato in ambiente reale<span class="opt-sub">Validato fuori dal laboratorio</span></span><span class="opt-check"></span></div>
+        <div class="opt" data-v="TRL 6 — prototipo avanzato e dimostrato"><span class="opt-icon">◇</span><span class="opt-text">TRL 6 — prototipo avanzato e dimostrato<span class="opt-sub">Dimostrazioni complete in ambiente rappresentativo</span></span><span class="opt-check"></span></div>
+        <div class="opt" data-v="TRL 7 — quasi pronto al mercato"><span class="opt-icon">△</span><span class="opt-text">TRL 7 — quasi pronto al mercato<span class="opt-sub">Sistema completato e qualificato</span></span><span class="opt-check"></span></div>
+        <div class="opt" data-v="TRL 8-9 — prodotto completo o già sul mercato"><span class="opt-icon">□</span><span class="opt-text">TRL 8-9 — prodotto completo / già sul mercato<span class="opt-sub">Prodotto finale testato e commercializzabile</span></span><span class="opt-check"></span></div>
+      </div>
+    </div>
 
-  <!-- 20 — GATE -->
-  <div class="screen" data-step="20" data-type="gate">
-    <div class="gate-screen">
-      <div class="q-eyebrow" style="justify-content:center;">Il tuo profilo</div>
-      <div class="q-title" style="text-align:center;">Il tuo profilo di<br><em>finanziabilità è pronto.</em></div>
-      <div class="q-sub" style="text-align:center;margin:12px auto 0;">Il panel di 4 agenti AI ha raccolto abbastanza dati per produrre una valutazione contestuale e specifica per il tuo progetto.</div>
+    <!-- S10 -->
+    <div class="wiz-screen" data-step="10" data-type="single" data-key="tipo-innovazione">
+      <div class="eyebrow">L'innovazione</div>
+      <div class="q-title">Che tipo di<br><em>innovazione</em> porti?</div>
+      <div class="q-sub">Il tipo di innovazione determina il profilo del bando più adatto.</div>
+      <div class="opts">
+        <div class="opt" data-v="Innovazione di prodotto — nuovo prodotto o servizio"><span class="opt-icon">◈</span><span class="opt-text">Innovazione di prodotto<span class="opt-sub">Nuovo prodotto o servizio non esistente sul mercato</span></span><span class="opt-check"></span></div>
+        <div class="opt" data-v="Innovazione di processo — nuovo modo di produrre"><span class="opt-icon">⬡</span><span class="opt-text">Innovazione di processo<span class="opt-sub">Nuovo modo di produrre o erogare servizi esistenti</span></span><span class="opt-check"></span></div>
+        <div class="opt" data-v="Innovazione di modello di business"><span class="opt-icon">○</span><span class="opt-text">Innovazione di modello di business<span class="opt-sub">Nuovo modo di creare, distribuire o catturare valore</span></span><span class="opt-check"></span></div>
+        <div class="opt" data-v="Innovazione sociale — impatto su fasce deboli o territori"><span class="opt-icon">◇</span><span class="opt-text">Innovazione sociale<span class="opt-sub">Impatto misurabile su fasce deboli o territori svantaggiati</span></span><span class="opt-check"></span></div>
+        <div class="opt" data-v="Deep tech — ricerca applicata o biotech"><span class="opt-icon">△</span><span class="opt-text">Deep tech — ricerca applicata o biotech<span class="opt-sub">Frontiera tecnologica, lunga gestazione, alto impatto</span></span><span class="opt-check"></span></div>
+      </div>
+    </div>
 
+    <!-- S11 -->
+    <div class="wiz-screen" data-step="11" data-type="text-fields">
+      <div class="eyebrow">L'innovazione</div>
+      <div class="q-title">Proprietà intellettuale<br>e <em>tecnologia.</em></div>
+      <div class="q-sub">Questi elementi definiscono la difendibilità del vantaggio competitivo.</div>
+      <div class="field-group">
+        <div class="field"><label>Brevetti / IP / marchi</label><select id="f-ip"><option value="Assente — nessuna protezione">Assente — nessuna protezione formale</option><option value="In corso di deposito">In corso di deposito</option><option value="Depositato — in esame">Depositato — in esame</option><option value="Concesso — attivo">Concesso — attivo</option></select></div>
+        <div class="field"><label>Software / tecnologia proprietaria</label><select id="f-techprop"><option value="No — tecnologia di terzi">No — tecnologia interamente di terzi</option><option value="Parziale — mix proprietario e terzi">Parziale — mix proprietario e terzi</option><option value="Sì — tecnologia proprietaria">Sì — tecnologia proprietaria</option></select></div>
+        <div class="field"><label>Componente R&D</label><select id="f-rd"><option value="No — applicazione commerciale">No — applicazione commerciale senza R&D</option><option value="Media — elementi innovativi">Media — sviluppo con elementi innovativi</option><option value="Alta — ricerca applicata o di base">Alta — ricerca applicata o di base</option></select></div>
+        <div class="field"><label>Partnership universitarie o pubblicazioni</label><select id="f-universita"><option value="No">No</option><option value="In corso di definizione">In corso di definizione</option><option value="Sì — accordo o pubblicazioni attivi">Sì — accordo o pubblicazioni attivi</option></select><div class="q-note">Smart&Start premia significativamente i legami con il mondo della ricerca.</div></div>
+      </div>
+    </div>
+
+    <!-- S12 -->
+    <div class="wiz-screen" data-step="12" data-type="single" data-key="scala">
+      <div class="eyebrow">Il mercato</div>
+      <div class="q-title">Quanto è replicabile<br>il tuo <em>modello?</em></div>
+      <div class="q-sub">Una scalabilità sovrastimata è causa frequente di rigetto. Sii onesto.</div>
+      <div class="opts">
+        <div class="opt" data-v="Alta — replicabile a scala nazionale o internazionale"><span class="opt-icon">◈</span><span class="opt-text">Alta — replicabile a scala nazionale/internazionale<span class="opt-sub">Crescita senza costi proporzionali</span></span><span class="opt-check"></span></div>
+        <div class="opt" data-v="Media — crescita possibile con investimenti proporzionali"><span class="opt-icon">⬡</span><span class="opt-text">Media — crescita con investimenti proporzionali<span class="opt-sub">Replicabile ma richiede risorse aggiuntive</span></span><span class="opt-check"></span></div>
+        <div class="opt" data-v="Bassa — progetto prevalentemente locale o di nicchia"><span class="opt-icon">○</span><span class="opt-text">Bassa — progetto prevalentemente locale o di nicchia<span class="opt-sub">Radicato nel territorio — scalabilità limitata</span></span><span class="opt-check"></span></div>
+      </div>
+    </div>
+
+    <!-- S13 -->
+    <div class="wiz-screen" data-step="13" data-type="text-fields">
+      <div class="eyebrow">Il mercato</div>
+      <div class="q-title">Mercato e<br><em>competitor.</em></div>
+      <div class="q-sub">Chi è il tuo cliente e chi fa già quello che vuoi fare tu.</div>
+      <div class="field-group">
+        <div class="field"><label>Mercato target</label><textarea id="f-mercato" maxlength="400" placeholder="Chi compra, perché compra, dimensione stimata. es. PMI manifatturiere italiane. Mercato potenziale ~80.000 imprese. TAM €2B."></textarea><div class="char-count"><span id="cc-mercato">0</span>/400</div></div>
+        <div class="field"><label>Competitor e differenziazione</label><textarea id="f-competitor" maxlength="400" placeholder="Chi fa già questo? Perché sei diverso? Cosa ti rende difficilmente replicabile?"></textarea><div class="char-count"><span id="cc-competitor">0</span>/400</div></div>
+      </div>
+    </div>
+
+    <!-- S14 -->
+    <div class="wiz-screen" data-step="14" data-type="scale" data-key="trazione">
+      <div class="eyebrow">Il mercato</div>
+      <div class="q-title">Quanto è <em>validato</em><br>il tuo mercato?</div>
+      <div class="q-sub">Invitalia premia i segnali reali di domanda. Idea senza riscontro significa rischio rigetto.</div>
+      <div class="scale-row">
+        <div class="scl" data-v="1 — Nessuna validazione"><div class="scl-n">1</div><div class="scl-l">Zero</div></div>
+        <div class="scl" data-v="2 — Interesse informale da potenziali clienti"><div class="scl-n">2</div><div class="scl-l">Interesse</div></div>
+        <div class="scl" data-v="3 — LOI o lettere di intento formali"><div class="scl-n">3</div><div class="scl-l">LOI</div></div>
+        <div class="scl" data-v="4 — Pilot attivi o primi contratti"><div class="scl-n">4</div><div class="scl-l">Pilot</div></div>
+        <div class="scl" data-v="5 — Ricavi o clienti paganti"><div class="scl-n">5</div><div class="scl-l">Ricavi</div></div>
+      </div>
+      <div class="scale-labels"><span>Nessuna prova</span><span>Ricavi reali</span></div>
+    </div>
+
+    <!-- S15 -->
+    <div class="wiz-screen" data-step="15" data-type="text-fields">
+      <div class="eyebrow">Il mercato</div>
+      <div class="q-title">Evidenze di<br><em>mercato.</em></div>
+      <div class="q-sub">Numeri concreti. Più specifico sei, più credibile sei.</div>
+      <div class="field-group">
+        <div class="field-row">
+          <div class="field"><label>LOI / pilot / contratti (numero)</label><input type="number" id="f-loi" min="0" max="100" placeholder="es. 3"></div>
+          <div class="field"><label>Ricavi mensili attuali (€)</label><input type="number" id="f-ricavi" min="0" step="100" placeholder="es. 5000"><div class="q-note">0 se pre-revenue</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S16 -->
+    <div class="wiz-screen" data-step="16" data-type="text-fields">
+      <div class="eyebrow">Il team</div>
+      <div class="q-title">Chi eseguirà<br>il <em>progetto?</em></div>
+      <div class="q-sub">Il team è uno dei criteri più pesanti in istruttoria. Un progetto forte con team debole non passa.</div>
+      <div class="field-group">
+        <div class="field"><label>Descrizione del team</label><textarea id="f-team" maxlength="500" placeholder="Ruolo, anni esperienza, track record. es. Mario Rossi — CEO, 12 anni industria manifatturiera. Laura Bianchi — CTO, ex R&D Fiat."></textarea><div class="char-count"><span id="cc-team">0</span>/500</div></div>
+        <div class="field-row">
+          <div class="field"><label>Esperienza cumulata (anni)</label><input type="number" id="f-esperienza" min="0" max="100" placeholder="es. 25"><div class="q-note">Somma anni rilevanti di tutti i soci</div></div>
+          <div class="field"><label>Team tecnico qualificato</label><select id="f-teamtech"><option value="No — solo commerciale">No — competenze solo commerciali</option><option value="Parziale — un profilo tecnico">Parziale — un profilo tecnico</option><option value="Sì — team tecnico strutturato">Sì — team tecnico strutturato</option></select></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Advisor o incubatore</label><select id="f-advisor"><option value="No">No</option><option value="Advisor informale">Advisor informale</option><option value="Advisor formale">Advisor formale con accordo</option><option value="Incubatore / acceleratore">Incubatore / acceleratore</option></select></div>
+          <div class="field"><label>Personale previsto a 36 mesi</label><select id="f-personale"><option value="Solo i soci fondatori">Solo i soci fondatori</option><option value="1–3 dipendenti">1–3 dipendenti</option><option value="4–10 dipendenti">4–10 dipendenti</option><option value="Oltre 10 dipendenti">Oltre 10 dipendenti</option></select></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S17 -->
+    <div class="wiz-screen" data-step="17" data-type="text-fields">
+      <div class="eyebrow">Piano finanziario</div>
+      <div class="q-title">Come utilizzerai<br>i <em>fondi ottenuti?</em></div>
+      <div class="q-sub">La coerenza tra investimento e piano di spesa viene verificata in istruttoria.</div>
+      <div class="field-group">
+        <div class="field-row">
+          <div class="field"><label>Macchinari / attrezzature (%)</label><input type="number" id="f-mac" min="0" max="100" placeholder="0"></div>
+          <div class="field"><label>Software / brevetti / know-how (%)</label><input type="number" id="f-soft" min="0" max="100" placeholder="0"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Opere murarie / adeguamenti (%)</label><input type="number" id="f-opere" min="0" max="100" placeholder="0"></div>
+          <div class="field"><label>Consulenze / formazione (%)</label><input type="number" id="f-cons" min="0" max="100" placeholder="0"></div>
+        </div>
+        <div class="field"><label>Altro — autoveicoli, immobili, spese generali (%)</label><input type="number" id="f-altro" min="0" max="100" placeholder="0"></div>
+        <div id="spese-msg" class="q-note"></div>
+      </div>
+    </div>
+
+    <!-- S18 -->
+    <div class="wiz-screen" data-step="18" data-type="text-fields">
+      <div class="eyebrow">Piano finanziario</div>
+      <div class="q-title">Rischi e<br><em>dipendenze critiche.</em></div>
+      <div class="q-sub">Chi sa identificare i propri rischi è credibile. I valutatori apprezzano l'autoconsapevolezza.</div>
+      <div class="field-group">
+        <div class="field"><label>Rischio principale</label><textarea id="f-rischio" maxlength="400" placeholder="es. Adozione lenta da PMI verso strumenti digitali. Mitigazione: partnership con commercialisti come canale distributivo."></textarea><div class="char-count"><span id="cc-rischio">0</span>/400</div></div>
+        <div class="field"><label>Dipendenze critiche</label><textarea id="f-dipendenze" maxlength="300" placeholder="es. Dipendenza da API OpenAI per il core. Piano B: modelli open source in house."></textarea><div class="char-count"><span id="cc-dipendenze">0</span>/300</div></div>
+      </div>
+    </div>
+
+    <!-- S19 -->
+    <div class="wiz-screen" data-step="19" data-type="multi" data-key="impatti">
+      <div class="eyebrow">Impatti</div>
+      <div class="q-title">Quali impatti reali<br>genera il <em>progetto?</em></div>
+      <div class="q-sub">Seleziona solo quelli autenticamente presenti. La coerenza viene verificata in istruttoria.</div>
+      <div class="opts">
+        <div class="opt" data-v="Digitale"><span class="opt-icon">◈</span><span class="opt-text">Digitale — trasformazione digitale di processi o mercati</span><span class="opt-sq"></span></div>
+        <div class="opt" data-v="Green / transizione energetica"><span class="opt-icon">⬡</span><span class="opt-text">Green — transizione energetica o riduzione emissioni</span><span class="opt-sq"></span></div>
+        <div class="opt" data-v="Economia circolare"><span class="opt-icon">○</span><span class="opt-text">Economia circolare — riuso, riciclo, filiere sostenibili</span><span class="opt-sq"></span></div>
+        <div class="opt" data-v="Occupazione qualificata"><span class="opt-icon">◇</span><span class="opt-text">Occupazione — creazione posti di lavoro qualificati</span><span class="opt-sq"></span></div>
+        <div class="opt" data-v="Inclusione sociale"><span class="opt-icon">△</span><span class="opt-text">Inclusione sociale — accesso per fasce deboli</span><span class="opt-sq"></span></div>
+        <div class="opt" data-v="Parità di genere"><span class="opt-icon">□</span><span class="opt-text">Parità di genere — imprenditoria femminile</span><span class="opt-sq"></span></div>
+        <div class="opt" data-v="Sviluppo territoriale"><span class="opt-icon">◻</span><span class="opt-text">Sviluppo territoriale — impatto su area geografica specifica</span><span class="opt-sq"></span></div>
+      </div>
+    </div>
+
+    <!-- S20 -->
+    <div class="wiz-screen" data-step="20" data-type="multi" data-key="documenti">
+      <div class="eyebrow">Documenti</div>
+      <div class="q-title">Quali documenti hai<br><em>già disponibili?</em></div>
+      <div class="q-sub">Più il progetto è documentato, più appare credibile all'istruttore.</div>
+      <div class="opts">
+        <div class="opt" data-v="Business plan"><span class="opt-icon">◈</span><span class="opt-text">Business plan strutturato</span><span class="opt-sq"></span></div>
+        <div class="opt" data-v="Preventivi fornitori"><span class="opt-icon">⬡</span><span class="opt-text">Preventivi fornitori per le spese previste</span><span class="opt-sq"></span></div>
+        <div class="opt" data-v="CV del team"><span class="opt-icon">○</span><span class="opt-text">CV aggiornati dei soci / figure chiave</span><span class="opt-sq"></span></div>
+        <div class="opt" data-v="LOI / accordi commerciali firmati"><span class="opt-icon">◇</span><span class="opt-text">LOI / pre-accordi commerciali firmati</span><span class="opt-sq"></span></div>
+        <div class="opt" data-v="Visura / statuto / atto costitutivo"><span class="opt-icon">△</span><span class="opt-text">Visura / statuto / bozza atto costitutivo</span><span class="opt-sq"></span></div>
+        <div class="opt" data-v="Demo / mockup / prototipo funzionante"><span class="opt-icon">□</span><span class="opt-text">Demo / mockup / prototipo funzionante</span><span class="opt-sq"></span></div>
+        <div class="opt" data-v="Permessi / autorizzazioni settore"><span class="opt-icon">◻</span><span class="opt-text">Permessi / autorizzazioni specifiche del settore</span><span class="opt-sq"></span></div>
+        <div class="opt" data-v="Brevetti o certificazioni depositati"><span class="opt-icon">✦</span><span class="opt-text">Brevetti o certificazioni depositati</span><span class="opt-sq"></span></div>
+      </div>
+    </div>
+
+    <!-- S21 interstitial -->
+    <div class="wiz-screen" data-step="21" data-type="interstitial">
+      <div class="eyebrow">Quasi pronti</div>
+      <div class="q-title">Il panel AI sta per<br><em>analizzare il tuo progetto.</em></div>
+      <div class="q-sub">Hai risposto a 20 domande su 6 dimensioni critiche. Ecco cosa succede ora.</div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-val">4</div><div class="stat-lbl">Agenti AI specializzati analizzano in parallelo</div></div>
+        <div class="stat-card"><div class="stat-val">6</div><div class="stat-lbl">Dimensioni: requisiti, innovazione, mercato, team, numeri, impatti</div></div>
+        <div class="stat-card"><div class="stat-val">2</div><div class="stat-lbl">Bandi analizzati: Invitalia ON e Smart&Start</div></div>
+        <div class="stat-card"><div class="stat-val">€99</div><div class="stat-lbl">Una tantum, nessun abbonamento</div></div>
+      </div>
+      <div class="inter-box">
+        <div class="inter-row"><span class="inter-num">01</span><span class="inter-txt"><strong>Valutatore Formale</strong> — Compliance, requisiti hard, esclusioni automatiche.</span></div>
+        <div class="inter-row"><span class="inter-num">02</span><span class="inter-txt"><strong>Analista Strategico</strong> — Business case, narrazione, scalabilità, trazione.</span></div>
+        <div class="inter-row"><span class="inter-num">03</span><span class="inter-txt"><strong>Esperto Territoriale</strong> — Impatti, premialità geografiche, driver politici.</span></div>
+        <div class="inter-row"><span class="inter-num">04</span><span class="inter-txt"><strong>Devil's Advocate</strong> — Cerca tutto quello che può bloccare la candidatura.</span></div>
+      </div>
+    </div>
+
+    <!-- S22 GATE -->
+    <div class="wiz-screen" data-step="22" data-type="gate">
+      <div class="eyebrow" style="justify-content:center">Il tuo profilo</div>
+      <div class="q-title" style="text-align:center">Profilo di finanziabilità<br><em>completato.</em></div>
+      <div class="q-sub" style="text-align:center;margin:8px auto 0">Il panel ha raccolto abbastanza dati per una valutazione contestuale e specifica.</div>
       <div class="gate-profile">
-        <div class="gate-profile-title">Riepilogo progetto</div>
-        <div class="gate-row"><span class="gate-row-label">Settore</span><span class="gate-row-val" id="gs-settore">—</span></div>
-        <div class="gate-row"><span class="gate-row-label">Stato impresa</span><span class="gate-row-val" id="gs-anz">—</span></div>
-        <div class="gate-row"><span class="gate-row-label">Localizzazione</span><span class="gate-row-val" id="gs-loc">—</span></div>
-        <div class="gate-row"><span class="gate-row-label">Scalabilità</span><span class="gate-row-val" id="gs-scala">—</span></div>
-        <div class="gate-row"><span class="gate-row-label">Trazione</span><span class="gate-row-val" id="gs-traz">—</span></div>
+        <div class="gate-h">Riepilogo progetto</div>
+        <div class="gate-row"><span class="gate-lbl">Progetto</span><span class="gate-val" id="gs-nome">—</span></div>
+        <div class="gate-row"><span class="gate-lbl">Settore</span><span class="gate-val" id="gs-settore">—</span></div>
+        <div class="gate-row"><span class="gate-lbl">Sede</span><span class="gate-val" id="gs-sede">—</span></div>
+        <div class="gate-row"><span class="gate-lbl">Investimento</span><span class="gate-val" id="gs-inv">—</span></div>
+        <div class="gate-row"><span class="gate-lbl">Anzianità</span><span class="gate-val" id="gs-anz">—</span></div>
+        <div class="gate-row"><span class="gate-lbl">TRL</span><span class="gate-val" id="gs-trl">—</span></div>
+        <div class="gate-row"><span class="gate-lbl">Scalabilità</span><span class="gate-val" id="gs-scala">—</span></div>
+        <div class="gate-row"><span class="gate-lbl">Trazione</span><span class="gate-val" id="gs-traz">—</span></div>
       </div>
-
-      <div style="position:relative;">
-        <div class="gate-profile gate-blur">
-          <div class="gate-profile-title">Valutazione panel AI</div>
-          <div class="gate-row"><span class="gate-row-label">Score ON</span><span class="gate-row-val">72/100 — Coerenza media</span></div>
-          <div class="gate-row"><span class="gate-row-label">Score Smart&Start</span><span class="gate-row-val">85/100 — Alta coerenza</span></div>
-          <div class="gate-row"><span class="gate-row-label">Verdict</span><span class="gate-row-val">PREVALENZA SMART&START</span></div>
-          <div class="gate-row"><span class="gate-row-label">Decisione</span><span class="gate-row-val">GO CON CORREZIONI</span></div>
+      <div class="blur-wrap">
+        <div class="blur-content">
+          <div class="gate-profile">
+            <div class="gate-h">Valutazione panel AI</div>
+            <div class="gate-row"><span class="gate-lbl">Score ON</span><span class="gate-val">74/100 — Coerenza media</span></div>
+            <div class="gate-row"><span class="gate-lbl">Score Smart&Start</span><span class="gate-val">81/100 — Alta coerenza</span></div>
+            <div class="gate-row"><span class="gate-lbl">Verdict</span><span class="gate-val">PREVALENZA SMART&START</span></div>
+            <div class="gate-row"><span class="gate-lbl">Decisione</span><span class="gate-val">GO CON CORREZIONI</span></div>
+          </div>
         </div>
-        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;">
-          <div style="font-family:var(--fd);font-size:13px;font-weight:600;color:var(--text);">Sblocca il report completo</div>
-          <div style="font-family:var(--fb);font-size:12px;color:var(--sub);">Score, decisione operativa, red flags, correzioni</div>
-        </div>
-      </div>
-
-      <div class="price-tag">
-        <div>
-          <div class="price-main">€99</div>
-          <div class="price-note">una tantum · nessun abbonamento</div>
-        </div>
-        <div class="price-detail">
-          Report completo<br>Panel 4 agenti AI<br>Decisione operativa
+        <div class="blur-label">
+          <span>Sblocca il report completo</span>
+          <small>Score · Decisione · Red flags · Correzioni</small>
         </div>
       </div>
+      <div class="price-box">
+        <div><div class="price-main">€99</div><div class="price-note">una tantum · nessun abbonamento</div></div>
+        <div class="price-detail">Panel 4 agenti AI<br>Score ON + Smart&Start<br>Decisione operativa</div>
+      </div>
+      <div class="platform-note">Powered by Claude (Anthropic) · Prossimamente: ChatGPT, Gemini, Grok</div>
     </div>
+
+  </div><!-- end screens -->
+
+  <div id="wiz-loading">
+    <div class="spinner"></div>
+    <div class="loading-title">Panel AI in elaborazione</div>
+    <div class="agents-list" id="wiz-agents"></div>
   </div>
-
-</div>
-
-<!-- CONTINUE -->
-<div class="continue-wrap">
-  <button class="btn-continue" id="aw-continue">Continua →</button>
-  <button class="btn-skip" id="aw-skip" style="display:none;">Salta questa domanda</button>
-</div>
+  <div id="wiz-report"></div>
+  <div class="wiz-cta" id="wiz-cta">
+    <button class="btn-main" id="wiz-continue">Continua →</button>
+    <button class="btn-skip" id="wiz-skip" style="display:none">Salta questa domanda</button>
+  </div>
+</main>
 
 <script>
 (function(){
-  const ROOT = document.getElementById('aw-wizard');
-  const $ = id => ROOT.querySelector('#'+id);
-  const $$ = sel => Array.from(ROOT.querySelectorAll(sel));
-
-  const TOTAL = 20;
+  const VERCEL_URL = 'https://adastra-backend-sigma.vercel.app/api/analyze';
+  const AGENT_NAMES = ['Valutatore Formale','Analista Strategico','Esperto Territoriale',"Devil's Advocate",'Sintetizzatore'];
+  const TOTAL = 22;
   let current = 1;
   const answers = {};
 
-  function getScreen(step){ return ROOT.querySelector(`.screen[data-step="${step}"]`); }
-  function getType(step){ return getScreen(step).dataset.type; }
+  const $ = id => document.getElementById(id);
+
+  const RP = {"Abruzzo":["AQ","CH","PE","TE"],"Basilicata":["MT","PZ"],"Calabria":["CS","CZ","KR","RC","VV"],"Campania":["AV","BN","CE","NA","SA"],"Emilia-Romagna":["BO","FC","FE","MO","PR","PC","RA","RE","RN"],"Friuli Venezia Giulia":["GO","PN","TS","UD"],"Lazio":["FR","LT","RI","RM","VT"],"Liguria":["GE","IM","SP","SV"],"Lombardia":["BG","BS","CO","CR","LC","LO","MB","MI","MN","PV","SO","VA"],"Marche":["AN","AP","FM","MC","PU"],"Molise":["CB","IS"],"Piemonte":["AL","AT","BI","CN","NO","TO","VB","VC"],"Puglia":["BA","BAT","BR","FG","LE","TA"],"Sardegna":["CA","NU","OR","SS","SU"],"Sicilia":["AG","CL","CT","EN","ME","PA","RG","SR","TP"],"Toscana":["AR","FI","GR","LI","LU","MS","PI","PO","PT","SI"],"Trentino-Alto Adige":["BZ","TN"],"Umbria":["PG","TR"],"Valle d'Aosta":["AO"],"Veneto":["BL","PD","RO","TV","VE","VI","VR"]};
+  const SUD = new Set(["Abruzzo","Basilicata","Calabria","Campania","Molise","Puglia","Sardegna","Sicilia"]);
+
+  function initRegioni(){
+    const sel = $('f-regione');
+    if(!sel) return;
+    Object.keys(RP).sort((a,b)=>a.localeCompare(b,'it')).forEach(r=>{
+      const o=document.createElement('option');o.value=r;o.textContent=r;sel.appendChild(o);
+    });
+    sel.addEventListener('change',()=>{
+      const prov=$('f-provincia');prov.innerHTML='';
+      const reg=sel.value;
+      if(!reg||!RP[reg]){prov.disabled=true;const o=document.createElement('option');o.textContent='Prima la regione';prov.appendChild(o);return;}
+      prov.disabled=false;
+      RP[reg].forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;prov.appendChild(o);});
+    });
+  }
+
+  function getScreen(s){return document.querySelector('.wiz-screen[data-step="'+s+'"]');}
+  function getType(s){return getScreen(s).dataset.type;}
 
   function updateProgress(){
-    const pct = Math.round((current/TOTAL)*100);
-    $('aw-prog-fill').style.width = pct+'%';
-    $('aw-prog-label').textContent = current+' / '+TOTAL;
+    const pct=Math.round((current/TOTAL)*100);
+    $('wiz-prog-fill').style.width=pct+'%';
+    $('wiz-prog-label').textContent=current+' / '+TOTAL;
   }
 
   function updateNav(){
-    const back = $('aw-back');
-    if(current <= 1) back.classList.add('hidden');
-    else back.classList.remove('hidden');
-
-    const skip = $('aw-skip');
-    const type = getType(current);
-    if(type === 'text') skip.style.display = 'block';
-    else skip.style.display = 'none';
+    const back=$('wiz-back');
+    current<=1?back.classList.add('hidden'):back.classList.remove('hidden');
+    const type=getType(current);
+    $('wiz-skip').style.display=(type==='text-fields')?'block':'none';
+    $('wiz-cta').style.display='flex';
   }
 
-  function updateContinueBtn(){
-    const type = getType(current);
-    const btn = $('aw-continue');
-
-    if(type === 'interstitial'){
-      btn.textContent = 'Continua →';
-      btn.disabled = false;
-      return;
-    }
-    if(type === 'gate'){
-      btn.textContent = 'Sblocca Report — €99';
-      btn.disabled = false;
-      return;
-    }
-    if(type === 'text'){
-      btn.textContent = 'Continua →';
-      btn.disabled = false;
-      return;
-    }
-    if(type === 'multi'){
-      const sel = $$('.screen.active .opt.selected');
-      btn.disabled = sel.length === 0;
-      btn.textContent = 'Continua →';
-      return;
-    }
-    // single or scale
-    btn.disabled = !answers['step_'+current];
-    btn.textContent = 'Continua →';
+  function updateBtn(){
+    const type=getType(current);const btn=$('wiz-continue');
+    if(type==='interstitial'||type==='text-fields'){btn.textContent='Continua →';btn.disabled=false;return;}
+    if(type==='gate'){btn.textContent='Sblocca Report — €99';btn.disabled=false;return;}
+    if(type==='multi'){btn.disabled=document.querySelectorAll('.wiz-screen.active .opt.sel').length===0;btn.textContent='Continua →';return;}
+    btn.disabled=!answers['s'+current];btn.textContent='Continua →';
   }
 
   function goTo(step){
     getScreen(current).classList.remove('active');
-    current = step;
+    current=step;
     getScreen(current).classList.add('active');
-    updateProgress();
-    updateNav();
-    updateContinueBtn();
-
-    // Populate gate
-    if(current === 20){
-      $('gs-settore').textContent = answers['step_1'] || '—';
-      $('gs-anz').textContent = answers['step_2'] || '—';
-      $('gs-loc').textContent = answers['step_15'] || '—';
-      $('gs-scala').textContent = (answers['step_9']||'—').split('—')[0].trim();
-      $('gs-traz').textContent = (answers['step_16']||'—').split('—')[0].trim();
-    }
+    if(current===22)populateGate();
+    updateProgress();updateNav();updateBtn();
+    window.scrollTo({top:0,behavior:'smooth'});
   }
 
-  // Single select
-  ROOT.addEventListener('click', e => {
-    const opt = e.target.closest('.opt');
-    if(!opt) return;
-    const screen = opt.closest('.screen');
-    if(!screen || !screen.classList.contains('active')) return;
-    const type = screen.dataset.type;
-    const step = parseInt(screen.dataset.step);
+  function populateGate(){
+    const reg=$('f-regione')?.value||'';
+    const prov=$('f-provincia')?.value||'';
+    const comune=$('f-comune')?.value||'';
+    const sede=[comune,prov?'('+prov+')':null,reg].filter(Boolean).join(' ')||'—';
+    const inv=$('f-investimento')?.value;
+    $('gs-nome').textContent=$('f-nome')?.value||'—';
+    $('gs-settore').textContent=answers['s2']||'—';
+    $('gs-sede').textContent=sede;
+    $('gs-inv').textContent=inv?'€ '+parseInt(inv).toLocaleString('it-IT'):'—';
+    $('gs-anz').textContent=answers['s6']||'—';
+    $('gs-trl').textContent=answers['s9']||'—';
+    $('gs-scala').textContent=(answers['s12']||'—').split(' —')[0];
+    $('gs-traz').textContent=(answers['s14']||'—').split(' —')[0];
+  }
 
-    if(type === 'multi'){
-      opt.classList.toggle('selected');
-      const vals = $$('.screen.active .opt.selected').map(o=>o.dataset.val);
-      answers['step_'+step] = vals.join(' | ');
-      updateContinueBtn();
-      return;
+  document.addEventListener('click',e=>{
+    const opt=e.target.closest('.opt');
+    if(!opt)return;
+    const sc=opt.closest('.wiz-screen');
+    if(!sc||!sc.classList.contains('active'))return;
+    const type=sc.dataset.type;
+    const step=parseInt(sc.dataset.step);
+    if(type==='multi'){
+      opt.classList.toggle('sel');
+      answers['s'+step]=Array.from(sc.querySelectorAll('.opt.sel')).map(o=>o.dataset.v).join(' | ');
+      updateBtn();return;
     }
-
-    if(type === 'scale'){
-      $$('.screen.active .scale-opt').forEach(o=>o.classList.remove('selected'));
-      opt.classList.add('selected');
-      answers['step_'+step] = opt.dataset.val;
-      updateContinueBtn();
-      // Auto advance after short delay
-      setTimeout(()=>{ if(current < TOTAL) goTo(current+1); }, 400);
-      return;
-    }
-
-    if(type === 'single'){
-      $$('.screen.active .opt').forEach(o=>o.classList.remove('selected'));
-      opt.classList.add('selected');
-      answers['step_'+step] = opt.dataset.val;
-      updateContinueBtn();
-      // Auto advance after short delay
-      setTimeout(()=>{ if(current < TOTAL) goTo(current+1); }, 400);
-    }
+    Array.from(sc.querySelectorAll('.opt')).forEach(o=>o.classList.remove('sel'));
+    opt.classList.add('sel');
+    answers['s'+step]=opt.dataset.v;
+    updateBtn();
+    if(type==='single')setTimeout(()=>{if(current<TOTAL)goTo(current+1);},380);
   });
 
-  // Scale opts click
-  ROOT.addEventListener('click', e => {
-    const so = e.target.closest('.scale-opt');
-    if(!so) return;
-    const screen = so.closest('.screen');
-    if(!screen || !screen.classList.contains('active')) return;
-    $$('.screen.active .scale-opt').forEach(o=>o.classList.remove('selected'));
-    so.classList.add('selected');
-    answers['step_'+current] = so.dataset.val;
-    updateContinueBtn();
-    setTimeout(()=>{ if(current < TOTAL) goTo(current+1); }, 400);
+  document.addEventListener('click',e=>{
+    const scl=e.target.closest('.scl');
+    if(!scl)return;
+    const sc=scl.closest('.wiz-screen');
+    if(!sc||!sc.classList.contains('active'))return;
+    Array.from(sc.querySelectorAll('.scl')).forEach(s=>s.classList.remove('sel'));
+    scl.classList.add('sel');
+    answers['s'+current]=scl.dataset.v;
+    updateBtn();
+    setTimeout(()=>{if(current<TOTAL)goTo(current+1);},380);
   });
 
-  // Textarea char counts
-  ['problema','soluzione','mercato','vantaggio','team','investimento','rischio'].forEach(key=>{
-    const ta = $('ta-'+key);
-    const cc = $('cc-'+key);
-    if(!ta || !cc) return;
-    ta.addEventListener('input',()=>{
-      cc.textContent = ta.value.length;
-      answers['text_'+key] = ta.value;
+  [['f-desc','cc-desc'],['f-mercato','cc-mercato'],['f-competitor','cc-competitor'],['f-team','cc-team'],['f-rischio','cc-rischio'],['f-dipendenze','cc-dipendenze']].forEach(([fid,cid])=>{
+    const el=$(fid);const cc=$(cid);
+    if(el&&cc)el.addEventListener('input',()=>{cc.textContent=el.value.length;});
+  });
+
+  ['f-mac','f-soft','f-opere','f-cons','f-altro'].forEach(id=>{
+    const el=$(id);
+    if(el)el.addEventListener('input',()=>{
+      const tot=['f-mac','f-soft','f-opere','f-cons','f-altro'].reduce((a,i)=>a+(parseFloat($(i)?.value||0)||0),0);
+      const msg=$('spese-msg');
+      if(msg)msg.textContent=Math.abs(tot-100)>2?'Totale: '+tot.toFixed(0)+'% — punta a 100%':'Totale: '+tot.toFixed(0)+'% ✓';
     });
   });
 
-  // Continue
-  $('aw-continue').addEventListener('click',()=>{
-    const type = getType(current);
-
-    if(type === 'gate'){
-      generateReport();
-      return;
-    }
-
-    if(type === 'text'){
-      // Save text
-      const tas = getScreen(current).querySelectorAll('textarea');
-      tas.forEach(ta=>{ if(ta.id) answers['text_'+ta.id.replace('ta-','')] = ta.value; });
-    }
-
-    if(current < TOTAL) goTo(current+1);
+  $('wiz-continue').addEventListener('click',async()=>{
+    if(getType(current)==='gate'){await generateReport();return;}
+    if(current<TOTAL)goTo(current+1);
   });
+  $('wiz-skip').addEventListener('click',()=>{if(current<TOTAL)goTo(current+1);});
+  $('wiz-back').addEventListener('click',()=>{if(current>1)goTo(current-1);});
 
-  // Skip
-  $('aw-skip').addEventListener('click',()=>{
-    if(current < TOTAL) goTo(current+1);
-  });
-
-  // Back
-  $('aw-back').addEventListener('click',()=>{
-    if(current > 1) goTo(current-1);
-  });
-
-  // Init
-  updateProgress();
-  updateNav();
-  updateContinueBtn();
-
-  // ==================
-  // AI REPORT ENGINE
-  // ==================
-  const NETLIFY_URL = 'https://adastra-backend-sigma.vercel.app/api/analyze';
-  const AGENT_NAMES = ['Valutatore Formale','Analista Strategico','Esperto Territoriale',"Devil's Advocate",'Sintetizzatore'];
-
-  function safe(v){ return (v !== undefined && v !== null && v !== '') ? String(v) : '—'; }
-  function safeN(v){ return (typeof v === 'number' && !isNaN(v)) ? v : 0; }
-
-  // Dati hardcoded per test — verranno sostituiti con i dati del wizard
-  function getTestData(){
-    return {
-      settore: answers['step_1'] || 'Tecnologia / Innovazione digitale',
-      impresa: answers['step_2'] || 'Costituenda',
-      compagine: answers['step_4'] || 'Mista',
-      startup: answers['step_5'] || 'Forse da verificare',
-      scala: answers['step_9'] || 'Alta',
-      trl: answers['step_12'] || 'TRL 6',
-      impatti: answers['step_14'] || 'Digitale, Occupazione',
-      localizzazione: answers['step_15'] || 'Centro Italia',
-      trazione: answers['step_16'] || '3 - LOI',
-      problema: answers['text_problema'] || 'Le PMI italiane perdono risorse su candidature non competitive per mancanza di strumenti di pre-verifica.',
-      soluzione: answers['text_soluzione'] || 'Sistema multi-agente AI che analizza i criteri reali dei bandi Invitalia con 4 specialisti indipendenti.',
-      mercato: answers['text_mercato'] || 'PMI e startup italiane. Mercato potenziale 200.000 imprese/anno.',
-      vantaggio: answers['text_vantaggio'] || 'Prompt engineering proprietario calibrato su criteri Invitalia. Nessun competitor specializzato.',
-      team: answers['text_team'] || 'Andrea Trojanis 15 anni finanza agevolata. Edoardo Fabbri Nitti specialista Invitalia.',
-      rischio: answers['text_rischio'] || 'Adozione lenta da parte delle PMI italiane verso strumenti digitali finanziari.'
-    };
+  function projectSummary(){
+    const reg=$('f-regione')?.value||'—';
+    const prov=$('f-provincia')?.value||'';
+    const isSud=SUD.has(reg);
+    return 'PROGETTO: '+($('f-nome')?.value||'—')+
+      '\nDESCRIZIONE: '+($('f-desc')?.value||'—')+
+      '\nSETTORE: '+(answers['s2']||'—')+
+      '\nREGIONE: '+reg+(prov?' ('+prov+')':'')+' — '+(isSud?'SUD ITALIA (premialita Smart&Start attiva)':'Centro/Nord')+
+      '\nCOMUNE: '+($('f-comune')?.value||'—')+
+      '\nCRATERE SISMICO: '+($('f-cratere')?.value||'no')+
+      '\nINVESTIMENTO: €'+parseInt($('f-investimento')?.value||0).toLocaleString('it-IT')+
+      '\nMODELLO REVENUE: '+($('f-revenue')?.value||'—')+
+      '\nBREAK-EVEN: '+($('f-breakeven')?.value||'—')+
+      '\nEXPORT: '+($('f-export')?.value||'—')+
+      '\nANZIANITA IMPRESA: '+(answers['s6']||'—')+
+      '\nCOMPAGINE: '+(answers['s7']||'—')+
+      '\nSTARTUP INNOVATIVA: '+($('f-startup')?.value||'—')+
+      '\nDE MINIMIS: '+($('f-deminimis')?.value||'—')+
+      '\nFIDEIUSSIONE: '+($('f-fideiussione')?.value||'—')+
+      '\nFATTURATOCORRENTE: '+($('f-fatturato')?.value||'—')+
+      '\nCAPITALE INIZIALE: €'+parseInt($('f-capitale')?.value||0).toLocaleString('it-IT')+
+      '\nCO-INVESTITORI: '+($('f-coinvestitori')?.value||'—')+
+      '\nTRL: '+(answers['s9']||'—')+
+      '\nTIPO INNOVAZIONE: '+(answers['s10']||'—')+
+      '\nIP / BREVETTI: '+($('f-ip')?.value||'—')+
+      '\nTECNOLOGIA PROPRIETARIA: '+($('f-techprop')?.value||'—')+
+      '\nR&D: '+($('f-rd')?.value||'—')+
+      '\nPARTNERSHIP UNIVERSITARIE: '+($('f-universita')?.value||'—')+
+      '\nSCALABILITA: '+(answers['s12']||'—')+
+      '\nMERCATO TARGET: '+($('f-mercato')?.value||'—')+
+      '\nCOMPETITOR E DIFFERENZIAZIONE: '+($('f-competitor')?.value||'—')+
+      '\nTRAZIONE: '+(answers['s14']||'—')+
+      '\nLOI / PILOT / CONTRATTI: '+($('f-loi')?.value||'0')+
+      '\nRICAVI MENSILI: €'+parseInt($('f-ricavi')?.value||0).toLocaleString('it-IT')+
+      '\nTEAM: '+($('f-team')?.value||'—')+
+      '\nESPERIENZA CUMULATA: '+($('f-esperienza')?.value||'0')+' anni'+
+      '\nTEAM TECNICO: '+($('f-teamtech')?.value||'—')+
+      '\nADVISOR / INCUBATORE: '+($('f-advisor')?.value||'—')+
+      '\nPERSONALE 36 MESI: '+($('f-personale')?.value||'—')+
+      '\nSPESE: Macchinari '+($('f-mac')?.value||'0')+'% Software '+($('f-soft')?.value||'0')+'% Opere '+($('f-opere')?.value||'0')+'% Consulenze '+($('f-cons')?.value||'0')+'% Altro '+($('f-altro')?.value||'0')+'%'+
+      '\nRISCHIO PRINCIPALE: '+($('f-rischio')?.value||'—')+
+      '\nDIPENDENZE CRITICHE: '+($('f-dipendenze')?.value||'—')+
+      '\nIMPATTI: '+(answers['s19']||'Nessuno selezionato')+
+      '\nDOCUMENTI DISPONIBILI: '+(answers['s20']||'Nessuno');
   }
 
   function buildPrompts(){
-    var d = getTestData();
-    var s = Object.entries(d).map(function(e){ return e[0].toUpperCase()+': '+e[1]; }).join('\n');
-    var istr = 'Rispondi SOLO con JSON valido. Nessun testo prima o dopo. Solo JSON puro.';
+    const s=projectSummary();
+    const j='Rispondi SOLO con JSON valido. Nessun testo prima o dopo. Nessun markdown.';
     return [
-      'Sei un valutatore Invitalia esperto. Analizza questo progetto per bandi ON e Smart&Start.\n'+s+'\n\n'+istr+'\nEsempio formato: {"scoreON":72,"scoreSS":81,"sintesi":"Il progetto presenta...","redFlags":["Punto critico 1"]}',
-      'Sei un analista strategico startup. Valuta business case, narrazione e scalabilita.\n'+s+'\n\n'+istr+'\nEsempio: {"scoreON":68,"scoreSS":75,"sintesi":"Il business case...","puntiForza":["Forza 1"],"puntiDeboli":["Debolezza 1"]}',
-      'Sei esperto sviluppo territoriale italiano. Valuta impatti occupazionali e politici.\n'+s+'\n\n'+istr+'\nEsempio: {"scoreON":70,"scoreSS":78,"sintesi":"Il valore territoriale...","opportunita":["Opportunita 1"]}',
-      'Sei devil advocate severo. Identifica rischi reali di rigetto Invitalia.\n'+s+'\n\n'+istr+'\nEsempio: {"scoreON":58,"scoreSS":65,"sintesi":"Le criticita principali...","critiche":["Critica 1","Critica 2"]}'
+      'Sei un valutatore senior Invitalia con 15 anni di esperienza su bandi ON e Smart&Start. Analizza questo progetto in modo specifico e contestuale.\n'+s+'\n\n'+j+'\n{"scoreON":75,"scoreSS":80,"sintesi":"analisi specifica in 3-4 righe","redFlags":["criticita 1","criticita 2","criticita 3"]}',
+      'Sei un analista strategico di startup. Valuta business case, narrazione, scalabilita e trazione di mercato.\n'+s+'\n\n'+j+'\n{"scoreON":70,"scoreSS":75,"sintesi":"analisi strategica specifica in 3-4 righe","puntiForza":["forza 1","forza 2","forza 3"],"puntiDeboli":["debolezza 1","debolezza 2"]}',
+      'Sei un esperto di sviluppo territoriale italiano. Valuta impatti occupazionali, localizzazione e driver politici per Invitalia.\n'+s+'\n\n'+j+'\n{"scoreON":65,"scoreSS":70,"sintesi":"analisi territoriale specifica in 3-4 righe","opportunita":["opportunita 1","opportunita 2","opportunita 3"]}',
+      'Sei un devil advocate severo. Trova tutto quello che puo bloccare questa candidatura su Invitalia. Sii critico e specifico.\n'+s+'\n\n'+j+'\n{"scoreON":55,"scoreSS":60,"sintesi":"critiche specifiche e severe in 3-4 righe","critiche":["critica 1","critica 2","critica 3","critica 4"]}'
     ];
   }
 
   function buildSynthPrompt(results){
-    var d = getTestData();
-    var s = Object.entries(d).map(function(e){ return e[0].toUpperCase()+': '+e[1]; }).join('\n');
-    var summaries = results.map(function(r,i){
-      return 'AGENTE '+(i+1)+' '+AGENT_NAMES[i]+': scoreON='+safeN(r.scoreON)+' scoreSS='+safeN(r.scoreSS)+'. '+safe(r.sintesi);
-    }).join('\n');
-    return 'Sintetizzatore panel AI. Pesi: Valutatore 25%, Analista 35%, Territoriale 20%, Advocate 20%.\n\nPROGETTO:\n'+s+'\n\nANALISI:\n'+summaries+'\n\nRispondi SOLO JSON:\n{"scoreON":72,"scoreONLabel":"Coerenza media","scoreSS":78,"scoreSSLabel":"Alta coerenza","verdict":"PREVALENZA SMART&START","decisione":"GO CON CORREZIONI","sintesi":"Sintesi autorevole del panel...","puntiChiave":["Punto 1","Punto 2"],"azioniImmediate":["Azione 1"]}';
+    const summaries=results.map((r,i)=>'AGENTE '+(i+1)+' '+AGENT_NAMES[i]+': ON='+(r.scoreON||0)+' SS='+(r.scoreSS||0)+'. '+(r.sintesi||'')).join('\n');
+    return 'Sei il sintetizzatore finale di un panel di 4 esperti AI su bandi Invitalia ON e Smart&Start.\n\nPROGETTO:\n'+projectSummary()+'\n\nANALISI PANEL:\n'+summaries+'\n\nPesi: Valutatore 25%, Analista 35%, Territoriale 20%, Advocate 20%.\nRispondi SOLO con JSON valido:\n{"scoreON":72,"scoreONLabel":"Coerenza media","scoreSS":78,"scoreSSLabel":"Alta coerenza","verdict":"PREVALENZA SMART&START","decisione":"GO CON CORREZIONI","sintesi":"sintesi autorevole e specifica in 4-6 righe","puntiChiave":["punto 1","punto 2","punto 3"],"azioniImmediate":["azione 1","azione 2","azione 3"]}';
   }
 
-  async function callNetlify(prompts){
-    var res = await fetch(NETLIFY_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompts:prompts})});
-    var text = await res.text();
-    var data;
-    try { data = JSON.parse(text); } catch(e) { throw new Error('Non JSON ('+res.status+'): '+text.substring(0,300)); }
-    if(!data.results) throw new Error('Nessun results: '+JSON.stringify(data).substring(0,200));
+  async function callVercel(prompts){
+    const res=await fetch(VERCEL_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompts})});
+    const text=await res.text();
+    let data;try{data=JSON.parse(text);}catch(e){throw new Error('Risposta non JSON ('+res.status+'): '+text.substring(0,200));}
+    if(!data.results)throw new Error('Nessun results: '+JSON.stringify(data).substring(0,200));
     return data.results;
   }
 
-  function scoreColor(s){ return safeN(s)>=75?'#0a7f2e':safeN(s)>=55?'#a07820':'#b00020'; }
-  function scoreLabel(s){ return safeN(s)>=75?'Alta coerenza':safeN(s)>=55?'Coerenza media':'Coerenza debole'; }
+  function safe(v){return(v!==undefined&&v!==null&&v!=='')?String(v):'—';}
+  function safeN(v){return(typeof v==='number'&&!isNaN(v))?v:0;}
+  function scoreColor(s){return safeN(s)>=75?'#0a7f2e':safeN(s)>=55?'#a07820':'#b00020';}
+  function scoreLabel(s){return safeN(s)>=75?'Alta coerenza':safeN(s)>=55?'Coerenza media':'Coerenza debole';}
 
   async function generateReport(){
-    ROOT.querySelector('.continue-wrap').style.display='none';
-    ROOT.querySelector('#aw-screens').style.display='none';
-    ROOT.querySelector('.nav-top').style.display='none';
-    ROOT.querySelector('.progress-bar').style.display='none';
-    ROOT.querySelector('.progress-label').style.display='none';
-
-    var gold='#c9a84c';var goldBg='#f0ece6';var border='rgba(201,168,76,0.25)';
-    var fd="font-family:'Avenir Next','Century Gothic',Futura,sans-serif";
-    var fb="font-family:'Helvetica Neue',Arial,sans-serif";
-
-    var loadDiv=document.createElement('div');
-    loadDiv.style.cssText='padding:40px 0;text-align:center;';
-    loadDiv.innerHTML=
-      '<div id="aw-spin" style="width:28px;height:28px;border:2px solid rgba(201,168,76,0.15);border-top-color:'+gold+';border-radius:50%;margin:0 auto 14px;"></div>'+
-      '<div style="'+fd+';font-size:11px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:'+gold+';margin-bottom:20px;">Panel AI in elaborazione</div>'+
-      '<div id="aw-aw" style="max-width:380px;margin:0 auto;text-align:left;display:flex;flex-direction:column;gap:10px;"></div>';
-    ROOT.appendChild(loadDiv);
-
-    var spinEl=ROOT.querySelector('#aw-spin');
-    var frame=0;
-    var spinTimer=setInterval(function(){
-      frame+=10;
-      spinEl.style.transform='rotate('+frame+'deg)';
-    },20);
-
-    var aw=ROOT.querySelector('#aw-aw');
-    AGENT_NAMES.forEach(function(name,i){
-      var row=document.createElement('div');
-      row.style.cssText='display:flex;align-items:center;gap:10px;';
-      row.innerHTML='<div id="d'+i+'" style="width:7px;height:7px;border-radius:50%;background:rgba(201,168,76,0.15);flex-shrink:0;transition:background .3s;"></div>'+
-        '<span style="'+fd+';font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:#111;min-width:180px;">'+name+'</span>'+
-        '<span id="s'+i+'" style="font-size:12px;color:#888;">In attesa...</span>';
-      aw.appendChild(row);
+    $('wiz-cta').style.display='none';
+    $('wiz-screens').style.display='none';
+    document.querySelector('.wiz-nav').style.display='none';
+    $('wiz-prog-bar').style.display='none';
+    $('wiz-prog-label').style.display='none';
+    $('wiz-loading').style.display='block';
+    const agWrap=$('wiz-agents');
+    AGENT_NAMES.forEach((name,i)=>{
+      const row=document.createElement('div');row.className='agent-row';
+      row.innerHTML='<div class="agent-dot" id="ad'+i+'"></div><span class="agent-name">'+name+'</span><span class="agent-status" id="as'+i+'">In attesa...</span>';
+      agWrap.appendChild(row);
     });
-
-    function dot(i,state){ var d=ROOT.querySelector('#d'+i);if(d)d.style.background=state==='done'?'#0a7f2e':gold; }
-    function stt(i,t){ var s=ROOT.querySelector('#s'+i);if(s)s.textContent=t; }
-
+    function dot(i,st){const d=document.getElementById('ad'+i);if(d)d.className='agent-dot'+(st==='active'?' active':st==='done'?' done':'');}
+    function stt(i,t){const s=document.getElementById('as'+i);if(s)s.textContent=t;}
     try{
-      [0,1,2,3].forEach(function(i){dot(i,'a');stt(i,'Analisi in corso...');});
-      var results=await callNetlify(buildPrompts());
-      [0,1,2,3].forEach(function(i){dot(i,'done');stt(i,'Completato ✓');});
-      dot(4,'a');stt(4,'Integrazione...');
-      var synth=(await callNetlify([buildSynthPrompt(results)]))[0];
-      dot(4,'done');stt(4,'Completato ✓');
-      clearInterval(spinTimer);
-      setTimeout(function(){renderReport(results,synth);},500);
+      [0,1,2,3].forEach(i=>{dot(i,'active');stt(i,'Analisi in corso...');});
+      const results=await callVercel(buildPrompts());
+      [0,1,2,3].forEach(i=>{dot(i,'done');stt(i,'Completato \u2713');});
+      dot(4,'active');stt(4,'Integrazione...');
+      const synth=(await callVercel([buildSynthPrompt(results)]))[0];
+      dot(4,'done');stt(4,'Completato \u2713');
+      setTimeout(()=>renderReport(results,synth),500);
     }catch(err){
-      clearInterval(spinTimer);
-      loadDiv.innerHTML='<div style="padding:2rem;text-align:center;font-size:14px;color:#b00020;">Errore: '+err.message+'</div>';
+      $('wiz-loading').innerHTML='<div style="padding:2rem;text-align:center;font-size:14px;color:#b00020;">Errore: '+err.message+'</div>';
     }
   }
 
   function renderReport(results,synth){
-    var loadEl=ROOT.querySelector('#aw-aw');
-    if(loadEl&&loadEl.parentNode)loadEl.parentNode.style.display='none';
-
-    var gold='#c9a84c';var goldBg='#f0ece6';var border='rgba(201,168,76,0.25)';
-    var fd="font-family:'Avenir Next','Century Gothic',sans-serif";
-    var fb="font-family:'Helvetica Neue',Arial,sans-serif";
-    var br='border-radius:12px';
-
-    var cards=results.map(function(r,i){
-      var b='<p style="margin:0 0 8px;font-size:13px;line-height:1.75;'+fb+'">'+safe(r.sintesi)+'</p>';
-      if(r.redFlags&&r.redFlags.length)b+='<ul style="margin:4px 0 0 16px;'+fb+';font-size:13px;">'+r.redFlags.map(function(f){return'<li style="margin:3px 0;">'+f+'</li>';}).join('')+'</ul>';
-      if(r.puntiForza&&r.puntiForza.length)b+='<div style="font-size:11px;color:#888;margin-top:8px;font-weight:500;'+fd+'">Punti di forza</div><ul style="margin:4px 0 0 16px;'+fb+';font-size:13px;">'+r.puntiForza.map(function(f){return'<li style="margin:3px 0;">'+f+'</li>';}).join('')+'</ul>';
-      if(r.puntiDeboli&&r.puntiDeboli.length)b+='<div style="font-size:11px;color:#888;margin-top:8px;font-weight:500;'+fd+'">Debolezze</div><ul style="margin:4px 0 0 16px;'+fb+';font-size:13px;">'+r.puntiDeboli.map(function(f){return'<li style="margin:3px 0;">'+f+'</li>';}).join('')+'</ul>';
-      if(r.opportunita&&r.opportunita.length)b+='<ul style="margin:4px 0 0 16px;'+fb+';font-size:13px;">'+r.opportunita.map(function(f){return'<li style="margin:3px 0;">'+f+'</li>';}).join('')+'</ul>';
-      if(r.critiche&&r.critiche.length)b+='<ul style="margin:4px 0 0 16px;'+fb+';font-size:13px;">'+r.critiche.map(function(f){return'<li style="margin:3px 0;">'+f+'</li>';}).join('')+'</ul>';
-      return '<div style="border:1px solid '+border+';'+br+';padding:20px;background:#fff;"><div style="'+fd+';font-size:9px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:'+gold+';margin-bottom:4px;">Agente 0'+(i+1)+'</div><div style="'+fd+';font-size:14px;font-weight:600;color:#111;margin-bottom:10px;">'+AGENT_NAMES[i]+'</div>'+b+'</div>';
+    $('wiz-loading').style.display='none';
+    const rep=$('wiz-report');
+    const gold='#c9a84c';const goldBg='#f0ece6';const border='rgba(201,168,76,0.25)';
+    const fd="font-family:'Avenir Next','Century Gothic',sans-serif";
+    const fb="font-family:'Helvetica Neue',Arial,sans-serif";
+    const br='border-radius:12px';
+    const cards=results.map((r,i)=>{
+      let b='<p style="margin:0 0 8px;font-size:13px;line-height:1.75;'+fb+'">'+safe(r.sintesi)+'</p>';
+      if(r.redFlags?.length)b+='<div style="font-size:11px;color:#888;font-weight:500;margin-top:8px;'+fd+'">Red flags</div><ul style="margin:4px 0 0 16px;'+fb+';font-size:13px;">'+r.redFlags.map(f=>'<li style="margin:3px 0">'+f+'</li>').join('')+'</ul>';
+      if(r.puntiForza?.length)b+='<div style="font-size:11px;color:#888;font-weight:500;margin-top:8px;'+fd+'">Punti di forza</div><ul style="margin:4px 0 0 16px;'+fb+';font-size:13px;">'+r.puntiForza.map(f=>'<li style="margin:3px 0">'+f+'</li>').join('')+'</ul>';
+      if(r.puntiDeboli?.length)b+='<div style="font-size:11px;color:#888;font-weight:500;margin-top:8px;'+fd+'">Debolezze</div><ul style="margin:4px 0 0 16px;'+fb+';font-size:13px;">'+r.puntiDeboli.map(f=>'<li style="margin:3px 0">'+f+'</li>').join('')+'</ul>';
+      if(r.opportunita?.length)b+='<div style="font-size:11px;color:#888;font-weight:500;margin-top:8px;'+fd+'">Opportunita</div><ul style="margin:4px 0 0 16px;'+fb+';font-size:13px;">'+r.opportunita.map(f=>'<li style="margin:3px 0">'+f+'</li>').join('')+'</ul>';
+      if(r.critiche?.length)b+='<div style="font-size:11px;color:#888;font-weight:500;margin-top:8px;'+fd+'">Critiche</div><ul style="margin:4px 0 0 16px;'+fb+';font-size:13px;">'+r.critiche.map(f=>'<li style="margin:3px 0">'+f+'</li>').join('')+'</ul>';
+      return '<div style="border:1px solid '+border+';'+br+';padding:20px;background:#fff;"><div style="'+fd+';font-size:9px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:'+gold+';margin-bottom:4px;">Agente 0'+(i+1)+'</div><div style="'+fd+';font-size:14px;font-weight:600;color:#111;margin-bottom:10px;">'+AGENT_NAMES[i]+'</div><div>'+b+'</div></div>';
     }).join('');
-
-    var sb='<p style="margin:0 0 8px;font-size:13px;line-height:1.75;'+fb+'">'+safe(synth.sintesi)+'</p>';
-    if(synth.puntiChiave&&synth.puntiChiave.length)sb+='<div style="font-size:11px;color:#888;font-weight:500;'+fd+'">Punti chiave</div><ul style="margin:4px 0 8px 16px;'+fb+';font-size:13px;">'+synth.puntiChiave.map(function(p){return'<li style="margin:3px 0;">'+p+'</li>';}).join('')+'</ul>';
-    if(synth.azioniImmediate&&synth.azioniImmediate.length)sb+='<div style="font-size:11px;color:#888;font-weight:500;'+fd+'">Azioni prioritarie</div><ul style="margin:4px 0 0 16px;'+fb+';font-size:13px;">'+synth.azioniImmediate.map(function(p){return'<li style="margin:3px 0;">'+p+'</li>';}).join('')+'</ul>';
-
-    var rep=document.createElement('div');
+    let sb='<p style="margin:0 0 8px;font-size:13px;line-height:1.75;'+fb+'">'+safe(synth.sintesi)+'</p>';
+    if(synth.puntiChiave?.length)sb+='<div style="font-size:11px;color:#888;font-weight:500;'+fd+'">Punti chiave del panel</div><ul style="margin:4px 0 8px 16px;'+fb+';font-size:13px;">'+synth.puntiChiave.map(p=>'<li style="margin:3px 0">'+p+'</li>').join('')+'</ul>';
+    if(synth.azioniImmediate?.length)sb+='<div style="font-size:11px;color:#888;font-weight:500;'+fd+'">Azioni prioritarie</div><ul style="margin:4px 0 0 16px;'+fb+';font-size:13px;">'+synth.azioniImmediate.map(p=>'<li style="margin:3px 0">'+p+'</li>').join('')+'</ul>';
     rep.innerHTML=
       '<div style="border:1px solid '+border+';'+br+';padding:20px 24px;background:'+goldBg+';margin-bottom:12px;">'+
-        '<div style="'+fd+';font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:'+gold+';margin-bottom:8px;">Panel Multi-Agente AI — ON + Smart&Start</div>'+
+        '<div style="'+fd+';font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:'+gold+';margin-bottom:8px;">Panel Multi-Agente AI \u2014 ON + Smart&Start</div>'+
         '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">'+
           '<span style="'+fd+';font-size:10px;font-weight:500;border:1px solid '+border+';border-radius:6px;padding:3px 10px;color:'+gold+';background:#fff;">'+safe(synth.verdict)+'</span>'+
           '<span style="'+fd+';font-size:10px;font-weight:500;border:1px solid '+border+';border-radius:6px;padding:3px 10px;color:'+gold+';background:#fff;">'+safe(synth.decisione)+'</span>'+
         '</div>'+
-        '<div style="'+fb+';font-size:11px;color:#999;">'+new Date().toLocaleDateString('it-IT')+' · Powered by Claude (Anthropic)</div>'+
+        '<div style="'+fb+';font-size:11px;color:#999;">'+new Date().toLocaleDateString('it-IT')+' \u00b7 Powered by Claude (Anthropic)</div>'+
       '</div>'+
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">'+
         '<div style="border:1px solid '+border+';'+br+';padding:16px;background:'+goldBg+';">'+
@@ -1091,26 +747,25 @@ html, body { min-height:100%; background:#f8f6f2; font-family:'Helvetica Neue',H
         '</div>'+
       '</div>'+
       '<div style="border:1px solid rgba(201,168,76,0.4);'+br+';padding:20px 24px;background:'+goldBg+';margin-bottom:12px;">'+
-        '<div style="'+fd+';font-size:9px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:'+gold+';margin-bottom:10px;">Sintesi del panel — Decisione finale</div>'+
+        '<div style="'+fd+';font-size:9px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:'+gold+';margin-bottom:10px;">Sintesi del panel \u2014 Decisione finale</div>'+
         sb+
       '</div>'+
-      '<div style="'+fd+';font-size:10px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:'+gold+';margin:16px 0 10px;display:flex;align-items:center;gap:8px;"><span style="display:block;width:16px;height:1px;background:'+gold+';"></span>Analisi dei singoli agenti</div>'+
+      '<div style="'+fd+';font-size:10px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:'+gold+';margin:16px 0 10px;display:flex;align-items:center;gap:8px;"><span style="display:block;width:16px;height:1px;background:'+gold+'"></span>Analisi dei singoli agenti</div>'+
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">'+cards+'</div>'+
       '<div style="border:1px solid '+border+';'+br+';background:'+goldBg+';padding:20px 24px;margin-top:10px;">'+
         '<div style="'+fd+';font-size:14px;font-weight:600;color:#111;margin-bottom:8px;">Dopo la lettura del panel</div>'+
-        '<div style="'+fb+';font-size:13px;font-weight:300;color:#555;line-height:1.7;margin-bottom:12px;">Il panel ha identificato punti di forza e criticità. Il passo successivo è una verifica strategica con il team AdAstra.</div>'+
-        '<a href="mailto:inquiry@adastrafinancials.it" style="display:inline-block;padding:12px 24px;border:1px solid '+gold+';color:'+gold+';'+fd+';font-size:11px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;text-decoration:none;border-radius:12px;">Verifica Strategica con AdAstra →</a>'+
+        '<div style="'+fb+';font-size:13px;font-weight:300;color:#555;line-height:1.7;margin-bottom:12px;">Il panel ha identificato punti di forza e criticit\u00e0. Il passo successivo \u00e8 una verifica strategica con il team AdAstra.</div>'+
+        '<a href="mailto:inquiry@adastrafinancials.it" style="display:inline-block;padding:12px 24px;border:1px solid '+gold+';color:'+gold+';'+fd+';font-size:11px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;text-decoration:none;'+br+';">Verifica Strategica con AdAstra \u2192</a>'+
       '</div>'+
-      '<div style="margin-top:16px;'+fb+';font-size:11px;font-weight:300;color:#bbb;line-height:1.6;border-left:2px solid '+border+';padding-left:12px;">Valutazione generata da panel multi-agente AI (Claude — Anthropic). Non costituisce garanzia di ammissibilità. Prossimamente: ChatGPT, Gemini, Grok.</div>';
-
-    ROOT.appendChild(rep);
+      '<div style="margin-top:16px;'+fb+';font-size:11px;font-weight:300;color:#bbb;line-height:1.6;border-left:2px solid '+border+';padding-left:12px;">Valutazione generata da panel multi-agente AI (Claude \u2014 Anthropic). Non costituisce garanzia di ammissibilit\u00e0. Prossimamente: ChatGPT, Gemini, Grok.</div>';
     rep.scrollIntoView({behavior:'smooth',block:'start'});
   }
 
+  initRegioni();
+  updateProgress();
+  updateNav();
+  updateBtn();
 })();
 </script>
-</div>
-
-</main>
 </body>
 </html>
