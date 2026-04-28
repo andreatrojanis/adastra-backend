@@ -714,148 +714,144 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
     const fb="font-family:'Helvetica Neue',Arial,sans-serif";
     const br='border-radius:12px';
 
-    // ── COMPUTE SCORES ──
     const on=safeN(synth.scoreON);
     const ss=safeN(synth.scoreSS);
     const overall=Math.round(on*0.5+ss*0.5);
 
-    // ── COMPUTE RADAR VALUES from raw answers ──
+    // ── RADAR VALUES ──
     function rv(key,map){const v=answers[key]||'';for(const [k,s] of Object.entries(map)){if(v.includes(k))return s;}return 0.2;}
-    const radarVals = {
-      requisiti: Math.min(1, (
-        rv('s6',{'Costituenda':0.9,'0–12':0.85,'12–36':0.7,'36–60':0.5,'60':0.2}) +
-        rv('s7',{'≥51%':0.8,'Mista':0.5,'over 36':0.3,'unico':0.4}) * 0.5
-      ) / 1.5),
-      innovazione: Math.min(1, (
-        rv('s9',{'TRL 3':0.4,'TRL 4':0.5,'TRL 5':0.6,'TRL 6':0.75,'TRL 7':0.85,'TRL 8':0.95}) +
-        rv('s10',{'Deep tech':0.9,'prodotto':0.7,'processo':0.6,'modello':0.65,'sociale':0.6}) * 0.5
-      ) / 1.5),
-      mercato: Math.min(1, (
-        rv('s14',{'1 — ':0.1,'2 — ':0.35,'3 — ':0.6,'4 — ':0.8,'5 — ':0.95}) +
-        rv('s12',{'Alta':0.8,'Media':0.5,'Bassa':0.2}) * 0.4
-      ) / 1.4),
-      team: Math.min(1, (on + ss) / 200 * 0.7 + 0.3),
-      numeri: Math.min(1, Math.max(0.1, (on - 20) / 80)),
-      impatti: Math.min(1, Math.max(0.15, (on + ss) / 200 * 0.6 + 0.2))
+    const radarVals={
+      requisiti:Math.min(1,(rv('s6',{'Costituenda':0.9,'0–12':0.85,'12–36':0.7,'36–60':0.5,'60':0.2})+rv('s7',{'≥51%':0.8,'Mista':0.5,'over 36':0.3,'unico':0.4})*0.5)/1.5),
+      innovazione:Math.min(1,(rv('s9',{'TRL 3':0.4,'TRL 4':0.5,'TRL 5':0.6,'TRL 6':0.75,'TRL 7':0.85,'TRL 8':0.95})+rv('s10',{'Deep tech':0.9,'prodotto':0.7,'processo':0.6,'modello':0.65,'sociale':0.6})*0.5)/1.5),
+      mercato:Math.min(1,(rv('s14',{'1 — ':0.1,'2 — ':0.35,'3 — ':0.6,'4 — ':0.8,'5 — ':0.95})+rv('s12',{'Alta':0.8,'Media':0.5,'Bassa':0.2})*0.4)/1.4),
+      team:Math.min(1,Math.max(0.1,(on+ss)/200*0.7+0.3)),
+      numeri:Math.min(1,Math.max(0.1,(on-20)/80)),
+      impatti:Math.min(1,Math.max(0.15,(on+ss)/200*0.6+0.2))
     };
 
-    // ── GAUGE SVG ──
-    function gaugeArc(val, color, id) {
-      const r = 70, cx = 100, cy = 100;
-      const startAngle = -200 * Math.PI/180;
-      const endAngle = 20 * Math.PI/180;
-      const totalAngle = endAngle - startAngle;
-      const angle = startAngle + totalAngle * (val/100);
-      const x1 = cx + r * Math.cos(startAngle), y1 = cy + r * Math.sin(startAngle);
-      const x2 = cx + r * Math.cos(angle), y2 = cy + r * Math.sin(angle);
-      const large = (angle - startAngle) > Math.PI ? 1 : 0;
-      return `<svg width="200" height="130" viewBox="0 0 200 130">
-        <path d="M${cx+r*Math.cos(startAngle)},${cy+r*Math.sin(startAngle)} A${r},${r} 0 1,1 ${cx+r*Math.cos(endAngle)},${cy+r*Math.sin(endAngle)}" fill="none" stroke="rgba(201,168,76,0.12)" stroke-width="12" stroke-linecap="round"/>
-        <path d="M${x1},${y1} A${r},${r} 0 ${large},1 ${x2},${y2}" fill="none" stroke="${color}" stroke-width="12" stroke-linecap="round" id="${id}" style="transition:stroke-dasharray 1s ease">
-          <animate attributeName="stroke-dashoffset" from="440" to="0" dur="1.2s" fill="freeze"/>
-        </path>
-        <text x="${cx}" y="${cy+8}" text-anchor="middle" font-size="28" font-weight="600" fill="${color}" font-family="Avenir Next,Century Gothic,sans-serif">${val}</text>
-        <text x="${cx}" y="${cy+26}" text-anchor="middle" font-size="10" fill="#999" font-family="Helvetica Neue,Arial,sans-serif">/ 100</text>
+    // ── GAUGE ──
+    function gaugeArc(val,color){
+      const r=60,cx=90,cy=90;
+      const startAngle=210*Math.PI/180;
+      const endAngle=330*Math.PI/180;
+      const totalAngle=(2*Math.PI)-(endAngle-startAngle);
+      const angle=startAngle+totalAngle*(val/100);
+      function pt(a){return{x:(cx+r*Math.cos(a)).toFixed(2),y:(cy+r*Math.sin(a)).toFixed(2)};}
+      const s=pt(startAngle),e=pt(endAngle),ea=pt(angle);
+      const large=(angle-startAngle+2*Math.PI)%(2*Math.PI)>Math.PI?1:0;
+      return `<svg width="180" height="120" viewBox="0 0 180 120">
+        <path d="M${s.x},${s.y} A${r},${r} 0 1,1 ${e.x},${e.y}" fill="none" stroke="rgba(201,168,76,0.12)" stroke-width="10" stroke-linecap="round"/>
+        <path d="M${s.x},${s.y} A${r},${r} 0 ${large},1 ${ea.x},${ea.y}" fill="none" stroke="${color}" stroke-width="10" stroke-linecap="round"/>
+        <text x="${cx}" y="${cy+6}" text-anchor="middle" font-size="26" font-weight="600" fill="${color}" font-family="Avenir Next,Century Gothic,sans-serif">${val}</text>
+        <text x="${cx}" y="${cy+22}" text-anchor="middle" font-size="10" fill="#aaa" font-family="Helvetica Neue,Arial,sans-serif">/100</text>
       </svg>`;
     }
 
-    // ── RADAR SVG ──
-    function radarSVG(vals) {
-      const axes = [
-        {label:'Requisiti',key:'requisiti'},
-        {label:'Innovazione',key:'innovazione'},
-        {label:'Mercato',key:'mercato'},
-        {label:'Team',key:'team'},
-        {label:'Numeri',key:'numeri'},
-        {label:'Impatti',key:'impatti'}
-      ];
-      const cx=160,cy=155,r=100;
-      const N=axes.length;
-      let gridHTML='';
-      for(let g=1;g<=5;g++){
-        const rr=r*(g/5);
-        let d='';
-        for(let i=0;i<N;i++){
-          const a=(2*Math.PI/N)*i - Math.PI/2;
-          const x=cx+rr*Math.cos(a),y=cy+rr*Math.sin(a);
-          d+=(i===0?'M':'L')+x.toFixed(1)+','+y.toFixed(1);
-        }
-        gridHTML+=`<path d="${d}Z" fill="none" stroke="rgba(201,168,76,0.15)" stroke-width="1"/>`;
-      }
-      let spokes='';
-      axes.forEach((_,i)=>{
-        const a=(2*Math.PI/N)*i - Math.PI/2;
-        spokes+=`<line x1="${cx}" y1="${cy}" x2="${(cx+r*Math.cos(a)).toFixed(1)}" y2="${(cy+r*Math.sin(a)).toFixed(1)}" stroke="rgba(201,168,76,0.2)" stroke-width="1"/>`;
-      });
-      let pts='';
-      axes.forEach(({key},i)=>{
-        const v=vals[key]||0;
-        const a=(2*Math.PI/N)*i - Math.PI/2;
-        const x=cx+r*v*Math.cos(a),y=cy+r*v*Math.sin(a);
-        pts+=(i===0?'M':'L')+x.toFixed(1)+','+y.toFixed(1);
-      });
-      let labels='';
-      axes.forEach(({label,key},i)=>{
-        const a=(2*Math.PI/N)*i - Math.PI/2;
-        const v=vals[key]||0;
-        const lx=cx+(r+22)*Math.cos(a),ly=cy+(r+22)*Math.sin(a);
-        const anchor=Math.cos(a)>0.1?'start':Math.cos(a)<-0.1?'end':'middle';
-        const score=Math.round(v*100);
-        labels+=`<text x="${lx.toFixed(1)}" y="${(ly-6).toFixed(1)}" text-anchor="${anchor}" font-size="10" font-weight="500" fill="#c9a84c" font-family="Avenir Next,sans-serif" letter-spacing="0.05em">${label.toUpperCase()}</text>`;
-        labels+=`<text x="${lx.toFixed(1)}" y="${(ly+8).toFixed(1)}" text-anchor="${anchor}" font-size="11" font-weight="600" fill="#111" font-family="Avenir Next,sans-serif">${score}/100</text>`;
-      });
-      return `<svg width="320" height="310" viewBox="0 0 320 310">
-        ${gridHTML}${spokes}
-        <path d="${pts}Z" fill="rgba(201,168,76,0.18)" stroke="#c9a84c" stroke-width="2"/>
-        ${axes.map(({key},i)=>{
-          const a=(2*Math.PI/N)*i-Math.PI/2;
-          const v=vals[key]||0;
-          return `<circle cx="${(cx+r*v*Math.cos(a)).toFixed(1)}" cy="${(cy+r*v*Math.sin(a)).toFixed(1)}" r="4" fill="#c9a84c"/>`;
-        }).join('')}
-        ${labels}
-      </svg>`;
+    // ── RADAR ──
+    function radarSVG(vals){
+      const axes=[{l:'Requisiti',k:'requisiti'},{l:'Innovazione',k:'innovazione'},{l:'Mercato',k:'mercato'},{l:'Team',k:'team'},{l:'Numeri',k:'numeri'},{l:'Impatti',k:'impatti'}];
+      const cx=190,cy=175,r=110,N=axes.length;
+      let grid='';
+      for(let g=1;g<=5;g++){let d='';for(let i=0;i<N;i++){const a=(2*Math.PI/N)*i-Math.PI/2;const rr=r*(g/5);d+=(i===0?'M':'L')+(cx+rr*Math.cos(a)).toFixed(1)+','+(cy+rr*Math.sin(a)).toFixed(1);}grid+=`<path d="${d}Z" fill="none" stroke="rgba(201,168,76,0.12)" stroke-width="1"/>`;}
+      let spokes='';axes.forEach((_,i)=>{const a=(2*Math.PI/N)*i-Math.PI/2;spokes+=`<line x1="${cx}" y1="${cy}" x2="${(cx+r*Math.cos(a)).toFixed(1)}" y2="${(cy+r*Math.sin(a)).toFixed(1)}" stroke="rgba(201,168,76,0.18)" stroke-width="1"/>`;});
+      let pts='';axes.forEach(({k},i)=>{const v=vals[k]||0;const a=(2*Math.PI/N)*i-Math.PI/2;pts+=(i===0?'M':'L')+(cx+r*v*Math.cos(a)).toFixed(1)+','+(cy+r*v*Math.sin(a)).toFixed(1);});
+      let dots='';axes.forEach(({k},i)=>{const v=vals[k]||0;const a=(2*Math.PI/N)*i-Math.PI/2;dots+=`<circle cx="${(cx+r*v*Math.cos(a)).toFixed(1)}" cy="${(cy+r*v*Math.sin(a)).toFixed(1)}" r="4" fill="${gold}"/>`;});
+      let labels='';axes.forEach(({l,k},i)=>{const a=(2*Math.PI/N)*i-Math.PI/2;const v=vals[k]||0;const lx=cx+(r+28)*Math.cos(a),ly=cy+(r+28)*Math.sin(a);const anchor=Math.cos(a)>0.15?'start':Math.cos(a)<-0.15?'end':'middle';const score=Math.round(v*100);labels+=`<text x="${lx.toFixed(1)}" y="${(ly-5).toFixed(1)}" text-anchor="${anchor}" font-size="9" font-weight="500" fill="#c9a84c" font-family="Avenir Next,sans-serif" letter-spacing="0.1em">${l.toUpperCase()}</text><text x="${lx.toFixed(1)}" y="${(ly+9).toFixed(1)}" text-anchor="${anchor}" font-size="12" font-weight="600" fill="#111" font-family="Avenir Next,sans-serif">${score}</text>`;});
+      return `<svg width="380" height="350" viewBox="0 0 380 350">${grid}${spokes}<path d="${pts}Z" fill="rgba(201,168,76,0.15)" stroke="#c9a84c" stroke-width="2.5"/>${dots}${labels}</svg>`;
     }
 
     // ── BAR CHART ──
-    function barChart(items) {
+    function barChart(items){
       return items.map(({label,on:o,ss:s})=>{
-        const oColor = o>=75?'#0a7f2e':o>=55?'#a07820':'#b00020';
-        const sColor = s>=75?'#0a7f2e':s>=55?'#a07820':'#b00020';
-        return `<div style="margin-bottom:14px;">
-          <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:#666;margin-bottom:6px;">${label}</div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-            <span style="${fd};font-size:10px;color:#999;width:24px;text-align:right">ON</span>
-            <div style="flex:1;height:8px;background:rgba(201,168,76,0.1);border-radius:999px;overflow:hidden;">
-              <div style="height:100%;width:${o}%;background:${oColor};border-radius:999px;transition:width 1s ease;"></div>
-            </div>
-            <span style="${fd};font-size:11px;font-weight:600;color:${oColor};width:32px">${o}</span>
+        const oc=o>=75?'#0a7f2e':o>=55?'#a07820':'#b00020';
+        const sc=s>=75?'#0a7f2e':s>=55?'#a07820':'#b00020';
+        return `<div style="margin-bottom:12px;">
+          <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:#666;margin-bottom:5px;">${label}</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+            <span style="${fd};font-size:9px;color:#aaa;width:20px;text-align:right;flex-shrink:0">ON</span>
+            <div style="flex:1;height:7px;background:rgba(201,168,76,0.1);border-radius:999px;overflow:hidden;"><div style="height:100%;width:${o}%;background:${oc};border-radius:999px;"></div></div>
+            <span style="${fd};font-size:11px;font-weight:600;color:${oc};width:28px">${o}</span>
           </div>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span style="${fd};font-size:10px;color:#999;width:24px;text-align:right">S&S</span>
-            <div style="flex:1;height:8px;background:rgba(201,168,76,0.1);border-radius:999px;overflow:hidden;">
-              <div style="height:100%;width:${s}%;background:${sColor};border-radius:999px;transition:width 1s ease;"></div>
-            </div>
-            <span style="${fd};font-size:11px;font-weight:600;color:${sColor};width:32px">${s}</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="${fd};font-size:9px;color:#aaa;width:20px;text-align:right;flex-shrink:0">S&S</span>
+            <div style="flex:1;height:7px;background:rgba(201,168,76,0.1);border-radius:999px;overflow:hidden;"><div style="height:100%;width:${s}%;background:${sc};border-radius:999px;"></div></div>
+            <span style="${fd};font-size:11px;font-weight:600;color:${sc};width:28px">${s}</span>
           </div>
         </div>`;
       }).join('');
     }
 
-    // ── RISK HEATMAP ──
-    function riskHeatmap(results) {
-      const critiche = results.flatMap(r=>r.critiche||r.redFlags||[]).filter(Boolean).slice(0,6);
-      if(!critiche.length) return '<p style="font-size:13px;color:#888;font-weight:300">Nessuna criticità dominante identificata dal panel.</p>';
-      const colors = ['#b00020','#b00020','#a07820','#a07820','#0a7f2e','#0a7f2e'];
-      return `<div style="display:flex;flex-direction:column;gap:8px;">` +
-        critiche.map((c,i)=>`
-          <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 14px;border:1px solid rgba(201,168,76,0.2);border-radius:8px;background:#fff;">
-            <div style="width:8px;height:8px;border-radius:50%;background:${colors[i]||'#a07820'};flex-shrink:0;margin-top:4px;"></div>
-            <span style="${fb};font-size:13px;font-weight:300;color:#333;line-height:1.5">${c}</span>
-          </div>`).join('') + '</div>';
+    // ── INTENSITY BAR ──
+    function intensityBar(on,ss){
+      const intensity=Math.round(100-((on+ss)/2));
+      const col=intensity<=30?'#0a7f2e':intensity<=60?'#a07820':'#b00020';
+      const label=intensity<=30?'Leggero':intensity<=60?'Medio':'Forte';
+      const note=intensity<=30?'Progetto ben strutturato — lavoro su qualità dossier e scelta misura.':intensity<=60?'Serve riallineamento mirato su requisiti, innovazione o numeri.':'Serve ricostruzione sostanziale prima di una candidatura seria.';
+      return `<div style="border:1px solid ${border};${br};padding:20px;background:#fff;margin-bottom:12px;">
+        <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:12px;">Intensit\u00e0 intervento richiesta</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <span style="${fd};font-size:11px;font-weight:500;color:#666">Lavoro AdAstra necessario</span>
+          <span style="${fd};font-size:12px;font-weight:600;color:${col};border:1px solid ${border};border-radius:6px;padding:2px 10px;background:#fff;">${label} \u00b7 ${intensity}/100</span>
+        </div>
+        <div style="height:10px;background:rgba(201,168,76,0.1);border-radius:999px;overflow:hidden;margin-bottom:8px;">
+          <div style="height:100%;width:${intensity}%;background:${col};border-radius:999px;transition:width 1.2s ease;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+          <span style="${fb};font-size:10px;color:#aaa">Leggero</span>
+          <span style="${fb};font-size:10px;color:#aaa">Medio</span>
+          <span style="${fb};font-size:10px;color:#aaa">Forte</span>
+        </div>
+        <div style="${fb};font-size:12px;font-weight:300;color:#555;line-height:1.6;border-left:2px solid ${border};padding-left:10px;">${note}</div>
+      </div>`;
     }
 
-    // ── SCORE CATEGORIES ──
-    const catScores = [
+    // ── TIMELINE ──
+    function timelineHTML(on,ss){
+      const score=(on+ss)/2;
+      const steps=[
+        {label:'Oggi',sub:'Profilo analizzato dal panel AI',done:true},
+        {label:'Verifica strategica',sub:'Sessione con team AdAstra — scelta misura e roadmap',done:false,cta:true},
+        {label:'Strutturazione dossier',sub:score>=65?'2–4 settimane — documentazione e piano finanziario':'4–8 settimane — riallineamento requisiti e narrazione',done:false},
+        {label:'Pre-istruttoria',sub:'Simulazione valutazione interna prima del deposito',done:false},
+        {label:'Candidatura',sub:score>=65?'Pronto per la presentazione formale':'Subordinata a correzioni strutturali',done:false}
+      ];
+      const dots=steps.map((s,i)=>{
+        const col=s.done?gold:'rgba(201,168,76,0.25)';
+        const textCol=s.done?'#111':'#888';
+        return `<div style="display:flex;flex-direction:column;align-items:center;flex:1;position:relative;">
+          ${i>0?`<div style="position:absolute;top:10px;left:-50%;width:100%;height:1px;background:${i<=1&&s.done?gold:'rgba(201,168,76,0.2)'};z-index:0;"></div>`:''}
+          <div style="width:20px;height:20px;border-radius:50%;background:${col};border:2px solid ${s.done?gold:'rgba(201,168,76,0.3)'};z-index:1;display:flex;align-items:center;justify-content:center;margin-bottom:8px;">
+            ${s.done?`<span style="font-size:8px;color:#fff;font-weight:700">✓</span>`:''}
+          </div>
+          <div style="${fd};font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:${textCol};text-align:center;margin-bottom:3px;">${s.label}</div>
+          <div style="${fb};font-size:10px;font-weight:300;color:#aaa;text-align:center;line-height:1.4;">${s.sub}</div>
+          ${s.cta?`<div style="margin-top:6px;padding:3px 8px;border:1px solid ${gold};border-radius:6px;${fd};font-size:8px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:${gold};">Prenota</div>`:''}
+        </div>`;
+      }).join('');
+      return `<div style="border:1px solid ${border};${br};padding:20px;background:#fff;margin-bottom:12px;">
+        <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:16px;">Timeline verso la candidatura</div>
+        <div style="display:flex;align-items:flex-start;gap:0;position:relative;">${dots}</div>
+      </div>`;
+    }
+
+    // ── RISK MAP ──
+    function riskMap(results){
+      const items=results.flatMap(r=>[...(r.critiche||[]),(r.redFlags||[])]).filter(Boolean).slice(0,6);
+      if(!items.length)return '<p style="font-size:13px;color:#888;font-weight:300">Nessuna criticit\u00e0 dominante identificata.</p>';
+      const cols=['#b00020','#b00020','#a07820','#a07820','#0a7f2e','#0a7f2e'];
+      const labels=['Critica','Critica','Attenzione','Attenzione','Monitorare','Monitorare'];
+      return `<div style="display:flex;flex-direction:column;gap:8px;">`+
+        items.map((c,i)=>`<div style="display:flex;align-items:flex-start;gap:12px;padding:10px 14px;border-left:3px solid ${cols[i]||'#a07820'};border-radius:0 8px 8px 0;background:${i<2?'rgba(176,0,32,0.04)':i<4?'rgba(160,120,32,0.04)':'rgba(10,127,46,0.04)'};margin-left:4px;">
+          <div style="flex-shrink:0;margin-top:2px;">
+            <span style="${fd};font-size:8px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:${cols[i]||'#a07820'}">${labels[i]||'Monitorare'}</span>
+          </div>
+          <span style="${fb};font-size:13px;font-weight:300;color:#333;line-height:1.5">${c}</span>
+        </div>`).join('')+
+      '</div>';
+    }
+
+    // ── CATEGORY SCORES ──
+    const catScores=[
       {label:'Requisiti formali',val:Math.round(radarVals.requisiti*100)},
       {label:'Innovazione',val:Math.round(radarVals.innovazione*100)},
       {label:'Mercato',val:Math.round(radarVals.mercato*100)},
@@ -864,109 +860,112 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       {label:'Impatti',val:Math.round(radarVals.impatti*100)},
     ];
 
-    const barItems = catScores.map(c=>({
+    const barItems=catScores.map(c=>({
       label:c.label,
-      on:Math.round(c.val * (on/100) + Math.random()*8-4),
-      ss:Math.round(c.val * (ss/100) + Math.random()*8-4)
-    })).map(c=>({...c,on:Math.max(0,Math.min(100,c.on)),ss:Math.max(0,Math.min(100,c.ss))}));
+      on:Math.min(100,Math.max(0,Math.round(c.val*(on/100)+Math.random()*10-5))),
+      ss:Math.min(100,Math.max(0,Math.round(c.val*(ss/100)+Math.random()*10-5)))
+    }));
 
-    // ── VERDICT COLOR ──
-    const overallColor = overall>=70?'#0a7f2e':overall>=50?'#a07820':'#b00020';
+    const overallColor=overall>=70?'#0a7f2e':overall>=50?'#a07820':'#b00020';
 
     // ── AGENT CARDS ──
     const cards=results.map((r,i)=>{
       let b='<p style="margin:0 0 8px;font-size:13px;line-height:1.75;'+fb+'">'+safe(r.sintesi)+'</p>';
-      if(r.redFlags?.length)b+='<div style="font-size:10px;color:#888;font-weight:500;margin-top:8px;letter-spacing:.1em;text-transform:uppercase;'+fd+'">Red flags</div><ul style="margin:4px 0 0 16px;'+fb+';font-size:12px;">'+r.redFlags.map(f=>'<li style="margin:3px 0">'+f+'</li>').join('')+'</ul>';
-      if(r.puntiForza?.length)b+='<div style="font-size:10px;color:#888;font-weight:500;margin-top:8px;letter-spacing:.1em;text-transform:uppercase;'+fd+'">Punti di forza</div><ul style="margin:4px 0 0 16px;'+fb+';font-size:12px;">'+r.puntiForza.map(f=>'<li style="margin:3px 0">'+f+'</li>').join('')+'</ul>';
-      if(r.puntiDeboli?.length)b+='<div style="font-size:10px;color:#888;font-weight:500;margin-top:8px;letter-spacing:.1em;text-transform:uppercase;'+fd+'">Debolezze</div><ul style="margin:4px 0 0 16px;'+fb+';font-size:12px;">'+r.puntiDeboli.map(f=>'<li style="margin:3px 0">'+f+'</li>').join('')+'</ul>';
-      if(r.opportunita?.length)b+='<div style="font-size:10px;color:#888;font-weight:500;margin-top:8px;letter-spacing:.1em;text-transform:uppercase;'+fd+'">Opportunit\u00e0</div><ul style="margin:4px 0 0 16px;'+fb+';font-size:12px;">'+r.opportunita.map(f=>'<li style="margin:3px 0">'+f+'</li>').join('')+'</ul>';
-      if(r.critiche?.length)b+='<div style="font-size:10px;color:#888;font-weight:500;margin-top:8px;letter-spacing:.1em;text-transform:uppercase;'+fd+'">Critiche</div><ul style="margin:4px 0 0 16px;'+fb+';font-size:12px;">'+r.critiche.map(f=>'<li style="margin:3px 0">'+f+'</li>').join('')+'</ul>';
-      return '<div style="border:1px solid '+border+';'+br+';padding:20px;background:#fff;"><div style="'+fd+';font-size:9px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:'+gold+';margin-bottom:4px;">Agente 0'+(i+1)+'</div><div style="'+fd+';font-size:14px;font-weight:600;color:#111;margin-bottom:10px;">'+AGENT_NAMES[i]+'</div><div>'+b+'</div></div>';
+      const sections=[['Red flags','redFlags'],['Punti di forza','puntiForza'],['Debolezze','puntiDeboli'],['Opportunit\u00e0','opportunita'],['Critiche','critiche']];
+      sections.forEach(([lbl,key])=>{if(r[key]?.length)b+=`<div style="font-size:9px;color:#888;font-weight:500;letter-spacing:.12em;text-transform:uppercase;${fd};margin-top:10px;">${lbl}</div><ul style="margin:4px 0 0 16px;${fb};font-size:12px;line-height:1.6;">`+r[key].map(f=>`<li style="margin:3px 0">${f}</li>`).join('')+'</ul>';});
+      return `<div style="border:1px solid ${border};${br};padding:20px;background:#fff;"><div style="${fd};font-size:8px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:${gold};margin-bottom:4px;">Agente 0${i+1}</div><div style="${fd};font-size:14px;font-weight:600;color:#111;margin-bottom:10px;">${AGENT_NAMES[i]}</div><div>${b}</div></div>`;
     }).join('');
 
-    let sb='<p style="margin:0 0 8px;font-size:13px;line-height:1.75;'+fb+'">'+safe(synth.sintesi)+'</p>';
-    if(synth.puntiChiave?.length)sb+='<div style="font-size:10px;color:#888;font-weight:500;letter-spacing:.1em;text-transform:uppercase;'+fd+';margin-top:12px;">Punti chiave del panel</div><ul style="margin:6px 0 8px 16px;'+fb+';font-size:13px;">'+synth.puntiChiave.map(p=>'<li style="margin:4px 0">'+p+'</li>').join('')+'</ul>';
-    if(synth.azioniImmediate?.length)sb+='<div style="font-size:10px;color:#888;font-weight:500;letter-spacing:.1em;text-transform:uppercase;'+fd+';margin-top:12px;">Azioni prioritarie</div><ul style="margin:6px 0 0 16px;'+fb+';font-size:13px;">'+synth.azioniImmediate.map(p=>'<li style="margin:4px 0">'+p+'</li>').join('')+'</ul>';
+    // ── SINTESI ──
+    let sb=`<p style="margin:0 0 10px;font-size:14px;line-height:1.8;${fb};color:#111">${safe(synth.sintesi)}</p>`;
+    if(synth.puntiChiave?.length)sb+=`<div style="${fd};font-size:9px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:#888;margin:14px 0 6px;">Punti chiave del panel</div><ul style="margin:0 0 10px 16px;${fb};font-size:13px;line-height:1.7;">`+synth.puntiChiave.map(p=>`<li style="margin:4px 0">${p}</li>`).join('')+'</ul>';
+    if(synth.azioniImmediate?.length)sb+=`<div style="${fd};font-size:9px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:#888;margin:14px 0 6px;">Azioni prioritarie</div><ul style="margin:0 0 0 16px;${fb};font-size:13px;line-height:1.7;">`+synth.azioniImmediate.map(p=>`<li style="margin:4px 0">${p}</li>`).join('')+'</ul>';
 
-    const divider = `<div style="${fd};font-size:10px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin:20px 0 12px;display:flex;align-items:center;gap:8px;"><span style="display:block;width:16px;height:1px;background:${gold}"></span>`;
+    const D=`<div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin:20px 0 12px;display:flex;align-items:center;gap:8px;"><span style="display:block;width:16px;height:1px;background:${gold}"></span>`;
 
     rep.innerHTML=
 
-      // ── HEADER ──
+      // HEADER
       `<div style="border:1px solid ${border};${br};padding:20px 24px;background:${goldBg};margin-bottom:12px;">
-        <div style="${fd};font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:8px;">Panel Multi-Agente AI \u2014 Small Due Diligence</div>
+        <div style="${fd};font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:8px;">Panel Multi-Agente AI \u2014 Small Due Diligence ON + Smart&Start</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
           <span style="${fd};font-size:10px;font-weight:500;border:1px solid ${border};border-radius:6px;padding:3px 10px;color:${gold};background:#fff;">${safe(synth.verdict)}</span>
           <span style="${fd};font-size:10px;font-weight:500;border:1px solid ${border};border-radius:6px;padding:3px 10px;color:${gold};background:#fff;">${safe(synth.decisione)}</span>
         </div>
-        <div style="${fb};font-size:11px;color:#999;">${new Date().toLocaleDateString('it-IT')} \u00b7 Progetto: ${safe($('f-nome')?.value||'—')} \u00b7 Powered by Claude (Anthropic)</div>
-      </div>` +
+        <div style="${fb};font-size:11px;color:#999;">${new Date().toLocaleDateString('it-IT')} \u00b7 ${safe($('f-nome')?.value||'Progetto')} \u00b7 Powered by Claude (Anthropic)</div>
+      </div>`+
 
-      // ── GAUGE + SCORES ──
-      `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;">
-        <div style="border:1px solid ${border};${br};padding:16px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-          <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:8px;">Overall</div>
-          ${gaugeArc(overall, overallColor, 'g-overall')}
+      // GAUGE ROW
+      `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div style="border:1px solid ${border};${br};padding:16px;background:#fff;text-align:center;">
+          <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:6px;">Score Complessivo</div>
+          ${gaugeArc(overall,overallColor)}
           <div style="${fb};font-size:11px;color:#888;margin-top:2px;">${overall>=70?'Alta coerenza':overall>=50?'Coerenza media':'Coerenza debole'}</div>
         </div>
-        <div style="border:1px solid ${border};${br};padding:16px;background:${goldBg};display:flex;flex-direction:column;align-items:center;justify-content:center;">
-          <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:8px;">Score ON</div>
-          ${gaugeArc(on, scoreColor(on), 'g-on')}
+        <div style="border:1px solid ${border};${br};padding:16px;background:${goldBg};text-align:center;">
+          <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:6px;">Score ON</div>
+          ${gaugeArc(on,scoreColor(on))}
           <div style="${fb};font-size:11px;color:#888;margin-top:2px;">${scoreLabel(on)}</div>
         </div>
-        <div style="border:1px solid ${border};${br};padding:16px;background:${goldBg};display:flex;flex-direction:column;align-items:center;justify-content:center;">
-          <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:8px;">Score Smart&amp;Start</div>
-          ${gaugeArc(ss, scoreColor(ss), 'g-ss')}
+        <div style="border:1px solid ${border};${br};padding:16px;background:${goldBg};text-align:center;">
+          <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:6px;">Score Smart&amp;Start</div>
+          ${gaugeArc(ss,scoreColor(ss))}
           <div style="${fb};font-size:11px;color:#888;margin-top:2px;">${scoreLabel(ss)}</div>
         </div>
-      </div>` +
+      </div>`+
 
-      // ── CATEGORY SCORES ──
-      `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;">` +
+      // CATEGORY SCORES 6 cards
+      `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;">`+
       catScores.map(c=>{
         const col=c.val>=70?'#0a7f2e':c.val>=50?'#a07820':'#b00020';
-        const bg=c.val>=70?'rgba(10,127,46,0.06)':c.val>=50?'rgba(160,120,32,0.06)':'rgba(176,0,32,0.06)';
-        return `<div style="border:1px solid ${border};${br};padding:14px;background:${bg};text-align:center;">
-          <div style="${fd};font-size:8px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:#888;margin-bottom:6px;">${c.label}</div>
-          <div style="${fd};font-size:22px;font-weight:600;color:${col};line-height:1">${c.val}</div>
-          <div style="${fb};font-size:10px;color:#aaa;margin-top:2px">/100</div>
+        const bg=c.val>=70?'rgba(10,127,46,0.05)':c.val>=50?'rgba(160,120,32,0.05)':'rgba(176,0,32,0.05)';
+        const brd=c.val>=70?'rgba(10,127,46,0.2)':c.val>=50?'rgba(160,120,32,0.2)':'rgba(176,0,32,0.2)';
+        return `<div style="border:1px solid ${brd};${br};padding:14px;background:${bg};text-align:center;">
+          <div style="${fd};font-size:8px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:#888;margin-bottom:6px;">${c.label}</div>
+          <div style="${fd};font-size:24px;font-weight:600;color:${col};line-height:1">${c.val}</div>
+          <div style="${fb};font-size:10px;color:#bbb;margin-top:2px">/100</div>
         </div>`;
-      }).join('') +
-      `</div>` +
+      }).join('')+
+      `</div>`+
 
-      // ── RADAR + BARS ──
-      divider + 'Analisi per dimensione</div>' +
+      // INTENSITY BAR
+      intensityBar(on,ss)+
+
+      // RADAR + BARS
+      D+'Analisi per dimensione</div>'+
       `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
         <div style="border:1px solid ${border};${br};padding:20px;background:#fff;">
           <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:12px;">Radar maturit\u00e0</div>
-          <div style="display:flex;justify-content:center;">${radarSVG(radarVals)}</div>
+          <div style="display:flex;justify-content:center;overflow:hidden;">${radarSVG(radarVals)}</div>
         </div>
         <div style="border:1px solid ${border};${br};padding:20px;background:#fff;">
           <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:16px;">ON vs Smart&amp;Start per dimensione</div>
           ${barChart(barItems)}
         </div>
-      </div>` +
+      </div>`+
 
-      // ── SINTESI PANEL ──
-      divider + 'Sintesi del panel \u2014 Decisione finale</div>' +
-      `<div style="border:1px solid rgba(201,168,76,0.4);${br};padding:20px 24px;background:${goldBg};margin-bottom:12px;">${sb}</div>` +
+      // TIMELINE
+      timelineHTML(on,ss)+
 
-      // ── RISK MAP ──
-      divider + 'Mappa delle criticit\u00e0</div>' +
-      `<div style="border:1px solid ${border};${br};padding:20px;background:#fff;margin-bottom:12px;">${riskHeatmap(results)}</div>` +
+      // SINTESI
+      D+'Sintesi del panel \u2014 Decisione finale</div>'+
+      `<div style="border:1px solid rgba(201,168,76,0.4);${br};padding:22px 26px;background:${goldBg};margin-bottom:12px;">${sb}</div>`+
 
-      // ── AGENT CARDS ──
-      divider + 'Analisi dei singoli agenti</div>' +
-      `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">${cards}</div>` +
+      // RISK MAP
+      D+'Mappa delle criticit\u00e0</div>'+
+      `<div style="border:1px solid ${border};${br};padding:20px;background:#fff;margin-bottom:12px;">${riskMap(results)}</div>`+
 
-      // ── CTA ──
-      `<div style="border:1px solid ${border};${br};background:${goldBg};padding:20px 24px;margin-top:10px;">
-        <div style="${fd};font-size:14px;font-weight:600;color:#111;margin-bottom:8px;">Dopo la lettura del panel</div>
-        <div style="${fb};font-size:13px;font-weight:300;color:#555;line-height:1.7;margin-bottom:12px;">Il panel ha identificato punti di forza e criticit\u00e0. Il passo successivo \u00e8 una verifica strategica con il team AdAstra per strutturare la candidatura.</div>
-        <a href="mailto:inquiry@adastrafinancials.it" style="display:inline-block;padding:12px 24px;border:1px solid ${gold};color:${gold};${fd};font-size:11px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;text-decoration:none;${br};">Verifica Strategica con AdAstra \u2192</a>
-      </div>` +
+      // AGENTS
+      D+'Analisi dei singoli agenti</div>'+
+      `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">${cards}</div>`+
 
-      // ── FOOTNOTE ──
+      // CTA
+      `<div style="border:1px solid ${border};${br};background:${goldBg};padding:22px 26px;margin-top:10px;">
+        <div style="${fd};font-size:15px;font-weight:600;color:#111;margin-bottom:8px;">Dopo la lettura del panel</div>
+        <div style="${fb};font-size:13px;font-weight:300;color:#555;line-height:1.7;margin-bottom:14px;">Il panel ha identificato punti di forza e criticit\u00e0. Il passo successivo \u00e8 una verifica strategica con il team AdAstra per strutturare la candidatura nel modo pi\u00f9 competitivo.</div>
+        <a href="mailto:inquiry@adastrafinancials.it" style="display:inline-block;padding:13px 26px;border:1px solid ${gold};color:${gold};${fd};font-size:11px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;text-decoration:none;${br};">Verifica Strategica con AdAstra \u2192</a>
+      </div>`+
+
       `<div style="margin-top:16px;${fb};font-size:11px;font-weight:300;color:#bbb;line-height:1.6;border-left:2px solid ${border};padding-left:12px;">Valutazione generata da panel multi-agente AI (Claude \u2014 Anthropic). Non costituisce garanzia di ammissibilit\u00e0 n\u00e9 impegno da parte degli enti erogatori. Prossimamente: ChatGPT, Gemini, Grok.</div>`;
 
     rep.scrollIntoView({behavior:'smooth',block:'start'});
