@@ -16,7 +16,7 @@ module.exports = async function handler(req, res) {
     if (!prompts || !prompts.length) return res.status(400).json({ error: 'Nessun prompt' });
 
     // ── CALIBRATION PREFIXES ──
-    const CLAUDE_PREFIX = 'Sei un valutatore senior Invitalia con 15 anni di esperienza. Sei rigoroso e severo. Se mancano dati fondamentali (investimento, team, trazione, descrizione) penalizza duramente. Score sotto 40 se il progetto è incompleto. Rispondi SOLO con JSON valido. Nessun testo prima o dopo.\n\n';
+    const CLAUDE_PREFIX = 'Sei un valutatore senior Invitalia con 15 anni di esperienza. Sei il più severo del panel. REGOLE ASSOLUTE: investimento €0 = scoreON e scoreSS massimo 25. Descrizione vuota o generica = -20 punti. Zero trazione (0 LOI, 0 ricavi, 0 pilot) = -25 punti. Team con 0 anni esperienza = -20 punti. TRL 3 senza IP = -15 punti. Dati mancanti non sono neutri: sono red flag gravi. Non compensare mai con elementi formali. Un progetto incompleto non supera mai 35. Rispondi SOLO con JSON valido. Nessun testo prima o dopo.\n\n';
 
     const GPT_PREFIX = 'Sei un istruttore Invitalia molto severo e scettico. REGOLE FERREE: se investimento dichiarato è €0, scoreON e scoreSS NON possono superare 30. Se trazione è zero (nessun LOI, nessun ricavo, nessun pilot), togli almeno 20 punti. Se team ha 0 anni di esperienza o manca team tecnico su progetto tech, togli almeno 20 punti. Se TRL è 3 o 4 senza IP, togli 15 punti. Non compensare debolezze strutturali con punti di forma. Rispondi SOLO con JSON valido. Nessun testo prima o dopo.\n\n';
 
@@ -76,7 +76,7 @@ module.exports = async function handler(req, res) {
           'Authorization': 'Bearer ' + GROK_KEY
         },
         body: JSON.stringify({
-          model: 'grok-3',
+          model: 'grok-4-1-fast-non-reasoning',
           max_tokens: 1000,
           messages: [
             { role: 'system', content: GROK_PREFIX },
@@ -85,6 +85,7 @@ module.exports = async function handler(req, res) {
         })
       });
       const d = await r.json();
+      if (d.error) return { scoreON: 0, scoreSS: 0, sintesi: 'Grok error: ' + d.error.message, redFlags: [], puntiForza: [], puntiDeboli: [], opportunita: [], critiche: [], verdict: 'ERRORE', decisione: 'ERRORE', puntiChiave: [], azioniImmediate: [] };
       const text = (d.choices?.[0]?.message?.content || '').trim();
       return parseJSON(text);
     }
