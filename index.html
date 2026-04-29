@@ -456,7 +456,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
         <div><div class="price-main">€99</div><div class="price-note">una tantum · nessun abbonamento</div></div>
         <div class="price-detail">Panel 4 agenti AI<br>Score ON + Smart&Start<br>Decisione operativa</div>
       </div>
-      <div class="platform-note">Powered by Claude (Anthropic) · Prossimamente: ChatGPT, Gemini, Grok</div>
+      <div class="platform-note">Powered by Claude Sonnet · GPT-4o · Grok 3 · Prossimamente: ChatGPT, Gemini, Grok</div>
     </div>
 
   </div><!-- end screens -->
@@ -706,7 +706,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
 
       // ── GPT + GEMINI in parallelo ──
       const agWrap2=$('wiz-agents');
-      ['GPT-4o Mini (OpenAI)','Gemini 1.5 Flash (Google)'].forEach((name,i)=>{
+      ['GPT-4o (OpenAI)','Grok 3 (xAI)'].forEach((name,i)=>{
         const row=document.createElement('div');row.className='agent-row';
         row.innerHTML='<div class="agent-dot active" id="adX'+i+'"></div><span class="agent-name">'+name+'</span><span class="agent-status" id="asX'+i+'">Panel in analisi...</span>';
         agWrap2.appendChild(row);
@@ -716,7 +716,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
 
       const [gptData,gemData]=await Promise.allSettled([
         callVercel(buildPrompts().concat([buildSynthPrompt(claudeResults)]),'gpt'),
-        callVercel(buildPrompts().concat([buildSynthPrompt(claudeResults)]),'gemini')
+        callVercel(buildPrompts().concat([buildSynthPrompt(claudeResults)]),'grok')
       ]);
 
       let gptResults=null,gptSynth=null;
@@ -724,13 +724,13 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       else{dotX(0,'done');sttX(0,'Non disponibile');}
 
       let gemResults=null,gemSynth=null;
-      if(gemData.status==='fulfilled'){gemResults=gemData.value.results.slice(0,4);gemSynth=gemData.value.results[4]||null;dotX(1,'done');sttX(1,'Gemini ✓');}
+      if(gemData.status==='fulfilled'){gemResults=gemData.value.results.slice(0,4);gemSynth=gemData.value.results[4]||null;dotX(1,'done');sttX(1,'Grok ✓');}
       else{dotX(1,'done');sttX(1,'Non disponibile');}
 
       const multiAI={
         claude:{results:claudeResults,synth:claudeSynth,name:'Claude (Anthropic)'},
-        gpt:gptResults?{results:gptResults,synth:gptSynth,name:'GPT-4o Mini (OpenAI)'}:null,
-        gemini:gemResults?{results:gemResults,synth:gemSynth,name:'Gemini 1.5 Flash (Google)'}:null
+        gpt:gptResults?{results:gptResults,synth:gptSynth,name:'GPT-4o (OpenAI)'}:null,
+        gemini:gemResults?{results:gemResults,synth:gemSynth,name:'Grok 3 (xAI)'}:null
       };
       setTimeout(()=>renderReport(claudeResults,claudeSynth,multiAI),500);
     }catch(err){
@@ -1109,7 +1109,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
           <span style="${fd};font-size:10px;font-weight:500;border:1px solid ${border};border-radius:6px;padding:3px 10px;color:${gold};background:#fff;">${safe(synth.verdict)}</span>
           <span style="${fd};font-size:10px;font-weight:500;border:1px solid ${border};border-radius:6px;padding:3px 10px;color:${gold};background:#fff;">${safe(synth.decisione)}</span>
         </div>
-        <div style="${fb};font-size:11px;color:#999;">${new Date().toLocaleDateString('it-IT')} \u00b7 ${safe($('f-nome')?.value||'Progetto')} \u00b7 Powered by Claude (Anthropic)</div>
+        <div style="${fb};font-size:11px;color:#999;">${new Date().toLocaleDateString('it-IT')} \u00b7 ${safe($('f-nome')?.value||'Progetto')} \u00b7 Powered by Claude Sonnet · GPT-4o · Grok 3</div>
       </div>`+
 
       // GAUGE ROW
@@ -1179,7 +1179,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       (multiAIPanel(multiAI||{claude:{results,synth,name:'Claude (Anthropic)'}})) +
 
       // FOOTER — nessun riferimento AdAstra
-      `<div style="margin-top:16px;${fb};font-size:11px;font-weight:300;color:#bbb;line-height:1.6;border-left:2px solid ${border};padding-left:12px;">Valutazione generata da panel multi-agente AI (Claude \u2014 Anthropic). Non costituisce garanzia di ammissibilit\u00e0 n\u00e9 impegno da parte degli enti erogatori. Prossimamente: ChatGPT, Gemini, Grok.</div>`;
+      `<div style="margin-top:16px;${fb};font-size:11px;font-weight:300;color:#bbb;line-height:1.6;border-left:2px solid ${border};padding-left:12px;">Valutazione generata da panel multi-agente AI (Claude \u2014 Anthropic). Non costituisce garanzia di ammissibilit\u00e0 n\u00e9 impegno da parte degli enti erogatori. Panel: Claude Sonnet (Anthropic) · GPT-4o (OpenAI) · Grok 3 (xAI)</div>`;
 
     rep.scrollIntoView({behavior:'smooth',block:'start'});
   }
