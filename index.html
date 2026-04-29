@@ -665,12 +665,12 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
     return 'Sei il sintetizzatore finale di un panel di 4 esperti AI su bandi Invitalia ON e Smart&Start.\n\nPROGETTO:\n'+projectSummary()+'\n\nANALISI PANEL:\n'+summaries+'\n\nPesi: Valutatore 25%, Analista 35%, Territoriale 20%, Advocate 20%.\nRispondi SOLO con JSON valido:\n{"scoreON":72,"scoreONLabel":"Coerenza media","scoreSS":78,"scoreSSLabel":"Alta coerenza","verdict":"PREVALENZA SMART&START","decisione":"GO CON CORREZIONI","sintesi":"sintesi autorevole e specifica in 4-6 righe","puntiChiave":["punto 1","punto 2","punto 3"],"azioniImmediate":["azione 1","azione 2","azione 3"]}';
   }
 
-  async function callVercel(prompts){
-    const res=await fetch(VERCEL_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompts})});
+  async function callVercel(prompts, aiProvider){
+    const res=await fetch(VERCEL_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompts, ai: aiProvider||'claude'})});
     const text=await res.text();
     let data;try{data=JSON.parse(text);}catch(e){throw new Error('Risposta non JSON ('+res.status+'): '+text.substring(0,200));}
     if(!data.results)throw new Error('Nessun results: '+JSON.stringify(data).substring(0,200));
-    return data.results;
+    return {results: data.results, multiAI: data.multiAI||null};
   }
 
   function safe(v){return(v!==undefined&&v!==null&&v!=='')?String(v):'—';}
@@ -694,19 +694,110 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
     function dot(i,st){const d=document.getElementById('ad'+i);if(d)d.className='agent-dot'+(st==='active'?' active':st==='done'?' done':'');}
     function stt(i,t){const s=document.getElementById('as'+i);if(s)s.textContent=t;}
     try{
-      [0,1,2,3].forEach(i=>{dot(i,'active');stt(i,'Analisi in corso...');});
-      const results=await callVercel(buildPrompts());
-      [0,1,2,3].forEach(i=>{dot(i,'done');stt(i,'Completato \u2713');});
-      dot(4,'active');stt(4,'Integrazione...');
-      const synth=(await callVercel([buildSynthPrompt(results)]))[0];
-      dot(4,'done');stt(4,'Completato \u2713');
-      setTimeout(()=>renderReport(results,synth),500);
+      // ── CLAUDE ──
+      [0,1,2,3].forEach(i=>{dot(i,'active');stt(i,'Claude in analisi...');});
+      const claudeData=await callVercel(buildPrompts(),'claude');
+      const claudeResults=claudeData.results;
+      [0,1,2,3].forEach(i=>{dot(i,'done');stt(i,'Claude ✓');});
+      dot(4,'active');stt(4,'Sintesi Claude...');
+      const claudeSynthData=await callVercel([buildSynthPrompt(claudeResults)],'claude');
+      const claudeSynth=claudeSynthData.results[0];
+      dot(4,'done');stt(4,'Claude ✓');
+
+      // ── GPT + GEMINI in parallelo ──
+      const agWrap2=$('wiz-agents');
+      ['GPT-4o Mini (OpenAI)','Gemini 1.5 Flash (Google)'].forEach((name,i)=>{
+        const row=document.createElement('div');row.className='agent-row';
+        row.innerHTML='<div class="agent-dot active" id="adX'+i+'"></div><span class="agent-name">'+name+'</span><span class="agent-status" id="asX'+i+'">Panel in analisi...</span>';
+        agWrap2.appendChild(row);
+      });
+      function dotX(i,st){const d=document.getElementById('adX'+i);if(d)d.className='agent-dot'+(st==='done'?' done':'active');}
+      function sttX(i,t){const s=document.getElementById('asX'+i);if(s)s.textContent=t;}
+
+      const [gptData,gemData]=await Promise.allSettled([
+        callVercel(buildPrompts().concat([buildSynthPrompt(claudeResults)]),'gpt'),
+        callVercel(buildPrompts().concat([buildSynthPrompt(claudeResults)]),'gemini')
+      ]);
+
+      let gptResults=null,gptSynth=null;
+      if(gptData.status==='fulfilled'){gptResults=gptData.value.results.slice(0,4);gptSynth=gptData.value.results[4]||null;dotX(0,'done');sttX(0,'GPT-4o ✓');}
+      else{dotX(0,'done');sttX(0,'Non disponibile');}
+
+      let gemResults=null,gemSynth=null;
+      if(gemData.status==='fulfilled'){gemResults=gemData.value.results.slice(0,4);gemSynth=gemData.value.results[4]||null;dotX(1,'done');sttX(1,'Gemini ✓');}
+      else{dotX(1,'done');sttX(1,'Non disponibile');}
+
+      const multiAI={
+        claude:{results:claudeResults,synth:claudeSynth,name:'Claude (Anthropic)'},
+        gpt:gptResults?{results:gptResults,synth:gptSynth,name:'GPT-4o Mini (OpenAI)'}:null,
+        gemini:gemResults?{results:gemResults,synth:gemSynth,name:'Gemini 1.5 Flash (Google)'}:null
+      };
+      setTimeout(()=>renderReport(claudeResults,claudeSynth,multiAI),500);
     }catch(err){
       $('wiz-loading').innerHTML='<div style="padding:2rem;text-align:center;font-size:14px;color:#b00020;">Errore: '+err.message+'</div>';
     }
   }
 
-  function renderReport(results,synth){
+  function multiAIPanel(data){
+    const gold='#c9a84c';const border='rgba(201,168,76,0.25)';const goldBg='#f0ece6';
+    const fd="font-family:'Avenir Next','Century Gothic',sans-serif";
+    const fb="font-family:'Helvetica Neue',Arial,sans-serif";
+    const br='border-radius:12px';
+
+    const ais = Object.values(data).filter(Boolean);
+    if(ais.length<=1) return '';
+
+    // Calcola score medi per AI
+    const aiScores = ais.map(a=>{
+      const on = a.synth?.scoreON||0;
+      const ss = a.synth?.scoreSS||0;
+      return {name:a.name, on, ss, avg:Math.round((on+ss)/2), verdict:a.synth?.verdict||'—', decisione:a.synth?.decisione||'—'};
+    });
+
+    // Score medio finale (Precog)
+    const precogON = Math.round(aiScores.reduce((s,a)=>s+a.on,0)/aiScores.length);
+    const precogSS = Math.round(aiScores.reduce((s,a)=>s+a.ss,0)/aiScores.length);
+    const precogAvg = Math.round((precogON+precogSS)/2);
+    const precogColor = precogAvg>=70?'#0a7f2e':precogAvg>=50?'#a07820':'#b00020';
+
+    // Consenso decisione
+    const decisions = aiScores.map(a=>a.decisione);
+    const decisionCount = {};
+    decisions.forEach(d=>{if(d)decisionCount[d]=(decisionCount[d]||0)+1;});
+    const precogDecision = Object.entries(decisionCount).sort((a,b)=>b[1]-a[1])[0]?.[0]||'—';
+
+    const aiCards = aiScores.map(a=>{
+      const col=a.avg>=70?'#0a7f2e':a.avg>=50?'#a07820':'#b00020';
+      const logo = a.name.includes('Anthropic')?'◈':a.name.includes('OpenAI')?'▣':'◎';
+      return `<div style="border:1px solid ${border};${br};padding:16px;background:#fff;text-align:center;">
+        <div style="${fd};font-size:8px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:#aaa;margin-bottom:6px;">${a.name}</div>
+        <div style="${fd};font-size:22px;font-weight:600;color:${col};margin-bottom:4px;">${a.avg}<span style="font-size:12px;color:#bbb">/100</span></div>
+        <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:6px;">
+          <span style="${fd};font-size:8px;color:#aaa">ON: <b style="color:${a.on>=70?'#0a7f2e':a.on>=50?'#a07820':'#b00020'}">${a.on}</b></span>
+          <span style="${fd};font-size:8px;color:#aaa">S&S: <b style="color:${a.ss>=70?'#0a7f2e':a.ss>=50?'#a07820':'#b00020'}">${a.ss}</b></span>
+        </div>
+        <div style="${fd};font-size:8px;font-weight:500;border:1px solid ${border};border-radius:4px;padding:2px 8px;color:${gold};background:${goldBg};display:inline-block;">${a.decisione}</div>
+      </div>`;
+    }).join('');
+
+    return `<div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin:20px 0 12px;display:flex;align-items:center;gap:8px;"><span style="display:block;width:16px;height:1px;background:${gold}"></span>Panel Multi-AI — Minority Report</div>
+    <div style="border:1px solid rgba(201,168,76,0.5);${br};padding:20px 24px;background:${goldBg};margin-bottom:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:#888;margin-bottom:4px;">Decisione per consenso — ${ais.length} AI</div>
+          <div style="${fd};font-size:22px;font-weight:600;color:${precogColor}">${precogDecision}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="${fd};font-size:9px;color:#888;margin-bottom:4px;">Score medio ponderato</div>
+          <div style="${fd};font-size:28px;font-weight:600;color:${precogColor}">${precogAvg}<span style="font-size:13px;color:#bbb">/100</span></div>
+          <div style="${fb};font-size:11px;color:#888">ON: ${precogON} · S&S: ${precogSS}</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(${ais.length},1fr);gap:10px;margin-bottom:12px;">${aiCards}</div>`;
+  }
+
+    function renderReport(results,synth,multiAI){
     $('wiz-loading').style.display='none';
     const rep=$('wiz-report');
     const gold='#c9a84c';const goldBg='#f0ece6';const border='rgba(201,168,76,0.25)';
@@ -1083,6 +1174,9 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       // AGENTS
       D+'Analisi dei singoli agenti</div>'+
       `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">${cards}</div>`+
+
+      // MULTI-AI PANEL
+      (multiAIPanel(multiAI||{claude:{results,synth,name:'Claude (Anthropic)'}})) +
 
       // FOOTER — nessun riferimento AdAstra
       `<div style="margin-top:16px;${fb};font-size:11px;font-weight:300;color:#bbb;line-height:1.6;border-left:2px solid ${border};padding-left:12px;">Valutazione generata da panel multi-agente AI (Claude \u2014 Anthropic). Non costituisce garanzia di ammissibilit\u00e0 n\u00e9 impegno da parte degli enti erogatori. Prossimamente: ChatGPT, Gemini, Grok.</div>`;
