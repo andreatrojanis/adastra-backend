@@ -56,7 +56,7 @@ module.exports = async function handler(req, res) {
       const r = await fetch('https://api.x.ai/v1/chat/completions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROK_KEY },
-        body: JSON.stringify({ model: 'grok-2-1212', max_tokens: 1000, messages: [{ role: 'system', content: GROK_PREFIX }, { role: 'user', content: prompt }] })
+        body: JSON.stringify({ model: 'grok-4-1-fast-non-reasoning', max_tokens: 1000, messages: [{ role: 'system', content: GROK_PREFIX }, { role: 'user', content: prompt }] })
       });
       const d = await r.json();
       if (d.error) {
