@@ -84,11 +84,10 @@ module.exports = async function handler(req, res) {
     const requestedAI = ai || 'claude';
 
     if (requestedAI === 'claude') {
-      const results = [];
-      for (const p of prompts) {
-        const r = await callClaude(p);
-        results.push(r || fallback());
-      }
+      const delay = (ms) => new Promise(r => setTimeout(r, ms));
+      const results = await Promise.all(prompts.map((p, i) =>
+        delay(i * 300).then(() => callClaude(p)).then(r => r || fallback())
+      ));
       return res.status(200).json({ results, multiAI: [{ ai: 'claude', name: 'Claude Sonnet (Anthropic)', results }] });
     }
     if (requestedAI === 'gpt') {
