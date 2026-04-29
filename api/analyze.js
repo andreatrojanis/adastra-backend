@@ -15,7 +15,7 @@ module.exports = async function handler(req, res) {
 
     if (!prompts || !prompts.length) return res.status(400).json({ error: 'Nessun prompt' });
 
-    const CLAUDE_PREFIX = 'Sei un valutatore senior Invitalia con 15 anni di esperienza. Sei il più severo del panel. REGOLE ASSOLUTE: investimento €0 = scoreON e scoreSS massimo 25. Descrizione vuota o generica = -20 punti. Zero trazione (0 LOI, 0 ricavi, 0 pilot) = -25 punti. Team con 0 anni esperienza = -20 punti. TRL 3 senza IP = -15 punti. Dati mancanti non sono neutri: sono red flag gravi. Non compensare mai con elementi formali. Un progetto incompleto non supera mai 35. Rispondi SOLO con JSON valido. Nessun testo prima o dopo.\n\n';
+    const CLAUDE_PREFIX = 'REGOLE ASSOLUTE PER QUESTA VALUTAZIONE: investimento €0 = scoreON e scoreSS massimo 25. Descrizione vuota o generica = -20 punti. Zero trazione (0 LOI, 0 ricavi, 0 pilot) = -25 punti. Team con 0 anni esperienza = -20 punti. TRL 3 senza IP = -15 punti. Dati mancanti non sono neutri: sono red flag gravi. Non compensare mai con elementi formali. Un progetto incompleto non supera mai 35. Rispondi SEMPRE e SOLO con un oggetto JSON valido. Nessun testo prima o dopo il JSON. Nessun markdown.\n\n';
 
     const GPT_PREFIX = 'Sei un istruttore Invitalia molto severo e scettico. REGOLE FERREE: se investimento dichiarato è €0, scoreON e scoreSS NON possono superare 30. Se trazione è zero (nessun LOI, nessun ricavo, nessun pilot), togli almeno 20 punti. Se team ha 0 anni di esperienza o manca team tecnico su progetto tech, togli almeno 20 punti. Se TRL è 3 o 4 senza IP, togli 15 punti. Non compensare debolezze strutturali con punti di forma. Rispondi SOLO con JSON valido. Nessun testo prima o dopo.\n\n';
 
@@ -66,9 +66,17 @@ module.exports = async function handler(req, res) {
     function parseJSON(text) {
       if (!text) return null;
       const clean = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+      // Try direct parse
       try { return JSON.parse(clean); } catch(e) {}
+      // Try extracting first {...} block
       const m = clean.match(/\{[\s\S]*\}/);
-      if (m) try { return JSON.parse(m[0]); } catch(e) {}
+      if (m) try { return JSON.parse(m[0]); } catch(e) {
+        // Try to fix common issues: trailing commas, unescaped chars
+        const fixed = m[0].replace(/,\s*([}\]])/g, '$1').replace(/[\x00-\x1F\x7F]/g, ' ');
+        try { return JSON.parse(fixed); } catch(e2) {}
+      }
+      // Log for debugging
+      console.error('parseJSON FAILED. Raw (500):', clean.substring(0, 500));
       return null;
     }
 
