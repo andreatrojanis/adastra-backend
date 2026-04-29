@@ -84,7 +84,11 @@ module.exports = async function handler(req, res) {
     const requestedAI = ai || 'claude';
 
     if (requestedAI === 'claude') {
-      const results = await Promise.all(prompts.map(p => callClaude(p).then(r => r || fallback())));
+      const results = [];
+      for (const p of prompts) {
+        const r = await callClaude(p);
+        results.push(r || fallback());
+      }
       return res.status(200).json({ results, multiAI: [{ ai: 'claude', name: 'Claude Sonnet (Anthropic)', results }] });
     }
     if (requestedAI === 'gpt') {
