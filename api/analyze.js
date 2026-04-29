@@ -1,140 +1,139 @@
+module.exports = async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
 
-Pre-verifica Finanziabilità Startup
-START ON — Panel Multi-Agente AI — Small Due Diligence
-— —
-29/04/2026 · aaa · Powered by Claude Sonnet · GPT-4o · Grok 3
-Score Complessivo
-53 /100
-Coerenza media
-Score ON
-50 /100
-Coerenza debole
-Score Smart&Start
-55 /100
-Coerenza media
-Requisiti formali
-27
-/100
-Innovazione
-60
-/100
-Mercato
-49
-/100
-Team
-67
-/100
-Numeri
-38
-/100
-Impatti
-52
-/100
-Intensità intervento richiesta
-Lavoro necessario prima della candidatura Medio · 48/100
-Leggero Medio Forte
-Serve riallineamento mirato su uno o più assi critici prima della candidatura.
-Analisi per dimensione
-Radar maturità
-REQUISITI27INNOVAZIONE60MERCATO49TEAM67NUMERI38IMPATTI52
-ON vs Smart&Start per dimensione
-Requisiti formali
-ON
-16
-S&S
-12
-Innovazione
-ON
-30
-S&S
-29
-Mercato
-ON
-24
-S&S
-30
-Team
-ON
-30
-S&S
-37
-Numeri
-ON
-16
-S&S
-16
-Impatti
-ON
-22
-S&S
-25
-Timeline verso la candidatura
-Orizzonte: ~7 mesi
-✓
-Oggi
-Profilo analizzato dal panel AI
-2
-Verifica strategica
-Scelta misura, roadmap operativa
-1 sett.
-3
-Sviluppo prodotto
-Completamento prototipo: +4 sett.
-4 sett.
-4
-Strutturazione dossier
-Riallineamento requisiti e narrazione · Completamento prototipo: +4 sett. · + verifica de minimis richiesta · + strutturazione garanzia fideiussoria · + raccolta documentazione base
-12 sett.
-5
-Pre-istruttoria
-Simulazione valutazione interna
-2 sett.
-6
-Candidatura
-Stima: 7 mesi — subordinata a correzioni
-Elementi che allungano i tempi
-· Completamento prototipo: +4 sett. · + verifica de minimis richiesta · + strutturazione garanzia fideiussoria · + raccolta documentazione base
-Sintesi del panel — Decisione finale
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  if (req.method === 'GET') return res.status(200).send('START ON API OK — Claude Sonnet + GPT-4o + Grok 3');
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
-Analisi non disponibile per questo provider.
-Mappa delle criticità
-Critica
-Critica
-Attenzione
-Attenzione
-Analisi dei singoli agenti
-Agente 01
-Valutatore Formale
+  try {
+    const { prompts, ai } = req.body;
+    const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
+    const OPENAI_KEY = process.env.OPENAI_API_KEY;
+    const GROK_KEY = process.env.GROK_API_KEY;
 
-Analisi non disponibile per questo provider.
-Agente 02
-Analista Strategico
+    if (!prompts || !prompts.length) return res.status(400).json({ error: 'Nessun prompt' });
 
-Analisi non disponibile per questo provider.
-Agente 03
-Esperto Territoriale
+    // ── CALIBRATION PREFIXES ──
+    const CLAUDE_PREFIX = `Sei un valutatore senior Invitalia con 15 anni di esperienza. Sei il piu severo del panel. REGOLE ASSOLUTE: investimento 0 = scoreON e scoreSS massimo 25. Descrizione vuota o generica = -20 punti. Zero trazione = -25 punti. Team con 0 anni esperienza = -20 punti. TRL 3 senza IP = -15 punti. Dati mancanti sono red flag gravi. Un progetto incompleto non supera mai 35. Rispondi SOLO con JSON valido, senza testo prima o dopo, senza markdown. Formato: {"scoreON":75,"scoreSS":80,"sintesi":"analisi specifica","puntiForza":["f1"],"puntiDeboli":["d1"],"redFlags":["r1"],"opportunita":["o1"],"critiche":["c1"],"verdict":"GO","decisione":"GO CON CORREZIONI","puntiChiave":["p1"],"azioniImmediate":["a1"]}
 
-Analisi non disponibile per questo provider.
-Agente 04
-Devil's Advocate
+`;
 
-Analisi non disponibile per questo provider.
-Panel Multi-AI — Minority Report
-Decisione per consenso — 3 AI
-—
-Score medio ponderato
-41/100
-ON: 37 · S&S: 44
-Claude (Anthropic)
-53/100
-ON: 50 S&S: 55
-—
-GPT-4o (OpenAI)
-38/100
-ON: 35 S&S: 40
-NO GO
-Grok 3 (xAI)
-32/100
-ON: 25 S&S: 38
-NO - RIFIUTATO
-Valutazione generata da panel multi-agente AI (Claude — Anthropic). Non costituisce garanzia di ammissibilità né impegno da 
+    const GPT_PREFIX = 'Sei un istruttore Invitalia molto severo e scettico. REGOLE FERREE: se investimento dichiarato è €0, scoreON e scoreSS NON possono superare 30. Se trazione è zero (nessun LOI, nessun ricavo, nessun pilot), togli almeno 20 punti. Se team ha 0 anni di esperienza o manca team tecnico su progetto tech, togli almeno 20 punti. Se TRL è 3 o 4 senza IP, togli 15 punti. Non compensare debolezze strutturali con punti di forma. Rispondi SOLO con JSON valido. Nessun testo prima o dopo.\n\n';
+
+    const GROK_PREFIX = 'Sei un analista di rischio specializzato in finanza agevolata italiana. Il tuo compito è proteggere i fondi pubblici da progetti non meritevoli. Sei scettico, preciso e ancorato ai fatti. Dati mancanti = penalità severe. Zero investimento = progetto non finanziabile, score massimo 25. Zero trazione = -25 punti. Team senza esperienza tecnica su progetto tech = -20 punti. Non esistono punti di forza se non esplicitamente documentati. La vaghezza è una red flag. Rispondi SOLO con JSON valido. Nessun testo prima o dopo.\n\n';
+
+    // ── CLAUDE SONNET ──
+    async function callClaude(prompt) {
+      if (!ANTHROPIC_KEY) return null;
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': ANTHROPIC_KEY,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{ role: 'user', content: CLAUDE_PREFIX + prompt }]
+        })
+      });
+      const d = await r.json();
+      const text = (d.content || []).map(i => i.text || '').join('').trim();
+      return parseJSON(text);
+    }
+
+    // ── GPT-4o ──
+    async function callGPT(prompt) {
+      if (!OPENAI_KEY) return null;
+      const r = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + OPENAI_KEY
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          max_tokens: 1000,
+          messages: [
+            { role: 'system', content: GPT_PREFIX },
+            { role: 'user', content: prompt }
+          ]
+        })
+      });
+      const d = await r.json();
+      const text = (d.choices?.[0]?.message?.content || '').trim();
+      return parseJSON(text);
+    }
+
+    // ── GROK 3 ──
+    async function callGrok(prompt) {
+      if (!GROK_KEY) return null;
+      const r = await fetch('https://api.x.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + GROK_KEY
+        },
+        body: JSON.stringify({
+          model: 'grok-4-1-fast-non-reasoning',
+          max_tokens: 1000,
+          messages: [
+            { role: 'system', content: GROK_PREFIX },
+            { role: 'user', content: prompt }
+          ]
+        })
+      });
+      const d = await r.json();
+      if (d.error) return { scoreON: 0, scoreSS: 0, sintesi: 'Grok error: ' + d.error.message, redFlags: [], puntiForza: [], puntiDeboli: [], opportunita: [], critiche: [], verdict: 'ERRORE', decisione: 'ERRORE', puntiChiave: [], azioniImmediate: [] };
+      const text = (d.choices?.[0]?.message?.content || '').trim();
+      return parseJSON(text);
+    }
+
+    // ── JSON PARSER ──
+    function parseJSON(text) {
+      if (!text) return null;
+      const clean = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+      try { return JSON.parse(clean); } catch(e) {}
+      const m = clean.match(/\{[\s\S]*\}/);
+      if (m) try { return JSON.parse(m[0]); } catch(e) {}
+      return null;
+    }
+
+    // ── DISPATCH ──
+    const requestedAI = ai || 'claude';
+
+    if (requestedAI === 'claude') {
+      const results = await Promise.all(prompts.map(p => callClaude(p).then(r => r || fallback())));
+      return res.status(200).json({ results, multiAI: [{ ai: 'claude', name: 'Claude Sonnet (Anthropic)', results }] });
+    }
+
+    if (requestedAI === 'gpt') {
+      const results = await Promise.all(prompts.map(p => callGPT(p).then(r => r || fallback())));
+      return res.status(200).json({ results, multiAI: [{ ai: 'gpt', name: 'GPT-4o (OpenAI)', results }] });
+    }
+
+    if (requestedAI === 'grok') {
+      const results = await Promise.all(prompts.map(p => callGrok(p).then(r => r || fallback())));
+      return res.status(200).json({ results, multiAI: [{ ai: 'grok', name: 'Grok 3 (xAI)', results }] });
+    }
+
+    return res.status(400).json({ error: 'AI provider non riconosciuto: ' + requestedAI });
+
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+};
+
+function fallback() {
+  return {
+    scoreON: 50, scoreSS: 55,
+    sintesi: 'Analisi non disponibile per questo provider.',
+    redFlags: [], puntiForza: [], puntiDeboli: [],
+    opportunita: [], critiche: [],
+    verdict: '', decisione: '',
+    puntiChiave: [], azioniImmediate: []
+  };
+}
