@@ -15,8 +15,6 @@ module.exports = async function handler(req, res) {
 
     if (!prompts || !prompts.length) return res.status(400).json({ error: 'Nessun prompt' });
 
-    const NORM = 'REGOLE INVITALIA: ON richiede OBBLIGATORIAMENTE >50% soci under36 e/o donne, senza questo scoreON MAX 15, nessun vantaggio Sud per ON. Smart&Start NON ha requisiti anagrafici, aperto a tutti, Sud vale +30-35% fondo perduto, peso sostenibilita finanziaria 35%. Entrambi: investimento zero = score MAX 20, zero trazione = -20pt, team 0 anni = -15pt, TRL3 senza IP = -15pt. ';
-
     // ── CALIBRATION PREFIXES ──
     const CLAUDE_PREFIX = 'Sei un valutatore senior Invitalia con 15 anni di esperienza. Sei il più severo del panel. REGOLE ASSOLUTE: investimento €0 = scoreON e scoreSS massimo 25. Descrizione vuota o generica = -20 punti. Zero trazione (0 LOI, 0 ricavi, 0 pilot) = -25 punti. Team con 0 anni esperienza = -20 punti. TRL 3 senza IP = -15 punti. Dati mancanti non sono neutri: sono red flag gravi. Non compensare mai con elementi formali. Un progetto incompleto non supera mai 35. Rispondi SOLO con JSON valido. Nessun testo prima o dopo.\n\n';
 
@@ -37,7 +35,7 @@ module.exports = async function handler(req, res) {
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 1000,
-          messages: [{ role: 'user', content: CLAUDE_PREFIX + NORM + prompt }]
+          messages: [{ role: 'user', content: CLAUDE_PREFIX + prompt }]
         })
       });
       const d = await r.json();
@@ -58,7 +56,7 @@ module.exports = async function handler(req, res) {
           model: 'gpt-4o',
           max_tokens: 1000,
           messages: [
-            { role: 'system', content: GPT_PREFIX + NORM },
+            { role: 'system', content: GPT_PREFIX },
             { role: 'user', content: prompt }
           ]
         })
@@ -81,7 +79,7 @@ module.exports = async function handler(req, res) {
           model: 'grok-4-1-fast-non-reasoning',
           max_tokens: 1000,
           messages: [
-            { role: 'system', content: GROK_PREFIX + NORM },
+            { role: 'system', content: GROK_PREFIX },
             { role: 'user', content: prompt }
           ]
         })
