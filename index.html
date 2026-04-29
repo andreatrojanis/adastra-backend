@@ -651,13 +651,12 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
 
   function buildPrompts(){
     const s=projectSummary();
-    const j='Rispondi SOLO con un oggetto JSON valido. Nessun testo prima o dopo. Nessun markdown. Campi obbligatori: scoreON (0-100), scoreSS (0-100), sintesi (stringa), redFlags (array stringhe), puntiForza (array stringhe), puntiDeboli (array stringhe), opportunita (array stringhe), critiche (array stringhe).';
-    const norm='REGOLA INVITALIA: ON richiede >50% soci under36 e/o donne, senza questo scoreON MAX 15. Smart&Start non ha requisiti anagrafici. Sud vale solo per Smart&Start (+30-35% fondo perduto). Investimento zero = score MAX 20. Zero trazione = -20pt. Team 0 anni = -15pt.';
+    const j='Rispondi SOLO con JSON valido. Nessun testo prima o dopo. Nessun markdown.';
     return [
-      norm+'\nSei il Valutatore Formale Invitalia. Analizza requisiti di ammissibilita, conformita normativa e rischi formali di questo progetto.\n'+s+'\n'+j,
-      norm+'\nSei l Analista Strategico. Valuta business case, trazione di mercato, scalabilita e sostenibilita economica di questo progetto.\n'+s+'\n'+j,
-      norm+'\nSei l Esperto Territoriale italiano. Valuta impatti occupazionali, localizzazione geografica e coerenza con politiche Invitalia di questo progetto.\n'+s+'\n'+j,
-      norm+'\nSei il Devil Advocate piu severo del panel. Trova ogni criticita che puo bloccare questa candidatura. Sii specifico e impietoso.\n'+s+'\n'+j
+      'Sei un valutatore senior Invitalia con 15 anni di esperienza su bandi ON e Smart&Start. Analizza questo progetto in modo specifico e contestuale.\n'+s+'\n\n'+j+'\n{"scoreON":75,"scoreSS":80,"sintesi":"analisi specifica in 3-4 righe","redFlags":["criticita 1","criticita 2","criticita 3"]}',
+      'Sei un analista strategico di startup. Valuta business case, narrazione, scalabilita e trazione di mercato.\n'+s+'\n\n'+j+'\n{"scoreON":70,"scoreSS":75,"sintesi":"analisi strategica specifica in 3-4 righe","puntiForza":["forza 1","forza 2","forza 3"],"puntiDeboli":["debolezza 1","debolezza 2"]}',
+      'Sei un esperto di sviluppo territoriale italiano. Valuta impatti occupazionali, localizzazione e driver politici per Invitalia.\n'+s+'\n\n'+j+'\n{"scoreON":65,"scoreSS":70,"sintesi":"analisi territoriale specifica in 3-4 righe","opportunita":["opportunita 1","opportunita 2","opportunita 3"]}',
+      'Sei un devil advocate severo. Trova tutto quello che puo bloccare questa candidatura su Invitalia. Sii critico e specifico.\n'+s+'\n\n'+j+'\n{"scoreON":55,"scoreSS":60,"sintesi":"critiche specifiche e severe in 3-4 righe","critiche":["critica 1","critica 2","critica 3","critica 4"]}'
     ];
   }
 
