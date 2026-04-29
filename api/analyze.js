@@ -26,7 +26,12 @@ module.exports = async function handler(req, res) {
       const r = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1000, messages: [{ role: 'user', content: CLAUDE_PREFIX + prompt }] })
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 1000,
+          system: CLAUDE_PREFIX,
+          messages: [{ role: 'user', content: prompt }]
+        })
       });
       const d = await r.json();
       const text = (d.content || []).map(i => i.text || '').join('').trim();
