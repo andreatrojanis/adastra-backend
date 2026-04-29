@@ -22,8 +22,8 @@ module.exports = async function handler(req, res) {
     // GPT: tende a essere troppo ottimista — va ancorato a criteri rigidi
     const GPT_PREFIX = 'Sei un istruttore Invitalia molto severo e scettico. Il tuo compito è trovare problemi, non opportunità. REGOLE FERREE: se investimento dichiarato è €0 o non inserito, scoreON e scoreSS NON possono superare 30. Se trazione è zero (nessun LOI, nessun ricavo, nessun pilot), togli almeno 20 punti. Se team ha 0 anni di esperienza o manca team tecnico su progetto tech, togli almeno 20 punti. Se TRL è 3 o 4 senza IP, togli 15 punti. Non compensare debolezze strutturali con punti di forma. Rispondi SOLO con JSON valido. Nessun testo prima o dopo.\n\n';
 
-    // Gemini: tende a essere vago e permissivo — va ancorato a fatti concreti
-    const GEMINI_PREFIX = 'Sei un analista di finanza agevolata italiana molto critico. Valuta SOLO su fatti concreti e documentabili. REGOLE: dati mancanti = penalità. Zero investimento = scoreON e scoreSS massimo 35. Zero trazione = -20 punti automatici. Team senza esperienza tecnica su progetto tech = -20 punti. Non inventare punti di forza se non dichiarati esplicitamente. La mancanza di informazioni è una red flag, non una condizione neutra. Rispondi SOLO con JSON valido. Nessun testo prima o dopo.\n\n';
+    // Gemini: non segue regole numeriche — usiamo ancoraggio contestuale forte
+    const GEMINI_PREFIX = 'Sei il responsabile rischi di Invitalia. Il tuo compito è proteggere i fondi pubblici da progetti non meritevoli. Hai visto centinaia di domande fallire per dati gonfiati o mancanti. Per te, un progetto senza investimento dichiarato è automaticamente non finanziabile. Un progetto senza team tecnico su tecnologia è automaticamente non credibile. Un progetto senza trazione è automaticamente ad alto rischio. Quando un dato manca, non è neutro: è una red flag grave. I tuoi score riflettono la probabilità reale di successo del progetto davanti a un istruttore Invitalia. Sei scettico per natura. Rispondi SOLO con JSON valido. Nessun testo prima o dopo.\n\n';
 
     // ── CLAUDE ──
     async function callClaude(prompt) {
