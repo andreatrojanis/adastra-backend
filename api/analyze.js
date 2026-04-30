@@ -31,14 +31,14 @@ module.exports = async function handler(req, res) {
     if (!prompts || !prompts.length) return res.status(400).json({ error: 'Nessun prompt' });
 
     // ── CALIBRATION PREFIXES ──
-    const CLAUDE_PREFIX = 'Sei un valutatore senior Invitalia con 15 anni di esperienza. Sei il più severo del panel. REGOLE ASSOLUTE: investimento €0 = scoreON e scoreSS massimo 25. Descrizione vuota o generica = -20 punti. Zero trazione (0 LOI, 0 ricavi, 0 pilot) = -25 punti. Team con 0 anni esperienza = -20 punti. TRL 3 senza IP = -15 punti. Dati mancanti non sono neutri: sono red flag gravi. Non compensare mai con elementi formali. Un progetto incompleto non supera mai 35. Rispondi SOLO con JSON valido. Nessun testo prima o dopo.\n\n';
+    const CLAUDE_PREFIX = 'REGOLE ASSOLUTE DI VALUTAZIONE: investimento €0 = scoreON e scoreSS massimo 25. Descrizione vuota o generica = -20 punti. Zero trazione (0 LOI, 0 ricavi, 0 pilot) = -25 punti. Team con 0 anni esperienza = -20 punti. TRL 3 senza IP = -15 punti. Dati mancanti sono red flag gravi. Un progetto incompleto non supera mai 35.\n\n';
 
     const GPT_PREFIX = 'Sei un istruttore Invitalia molto severo e scettico. REGOLE FERREE: se investimento dichiarato è €0, scoreON e scoreSS NON possono superare 30. Se trazione è zero (nessun LOI, nessun ricavo, nessun pilot), togli almeno 20 punti. Se team ha 0 anni di esperienza o manca team tecnico su progetto tech, togli almeno 20 punti. Se TRL è 3 o 4 senza IP, togli 15 punti. Non compensare debolezze strutturali con punti di forma. Rispondi SOLO con JSON valido. Nessun testo prima o dopo.\n\n';
 
     const GROK_PREFIX = 'Sei un analista di rischio specializzato in finanza agevolata italiana. Il tuo compito è proteggere i fondi pubblici da progetti non meritevoli. Sei scettico, preciso e ancorato ai fatti. Dati mancanti = penalità severe. Zero investimento = progetto non finanziabile, score massimo 25. Zero trazione = -25 punti. Team senza esperienza tecnica su progetto tech = -20 punti. Non esistono punti di forza se non esplicitamente documentati. La vaghezza è una red flag. Rispondi SOLO con JSON valido. Nessun testo prima o dopo.\n\n';
 
     // ── CLAUDE SONNET ──
-    async function callClaude(prompt) {
+    async function callClaude(prompt, idx, debug) {
       if (!ANTHROPIC_KEY) return null;
       const r = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -55,7 +55,9 @@ module.exports = async function handler(req, res) {
       });
       const d = await r.json();
       const text = (d.content || []).map(i => i.text || '').join('').trim();
-      return parseJSON(text);
+      const parsed = parseJSON(text);
+      if (debug && idx !== undefined) debug[idx] = { raw: text.substring(0, 300), parsed: !!parsed };
+      return parsed;
     }
 
     // ── GPT-4o ──
@@ -126,8 +128,12 @@ module.exports = async function handler(req, res) {
     const requestedAI = ai || 'claude';
 
     if (requestedAI === 'claude') {
-      const results = await Promise.all(prompts.map(p => callClaude(p).then(r => r || fallback())));
-      return res.status(200).json({ results, multiAI: [{ ai: 'claude', name: 'Claude Sonnet (Anthropic)', results }] });
+      const debug = [];
+      const results = await Promise.all(prompts.map(async (p, i) => {
+        const r = await callClaude(p, i, debug);
+        return r || fallback();
+      }));
+      return res.status(200).json({ results, debug, multiAI: [{ ai: 'claude', name: 'Claude Sonnet (Anthropic)', results }] });
     }
 
     if (requestedAI === 'gpt') {
