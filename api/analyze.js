@@ -108,8 +108,15 @@ module.exports = async function handler(req, res) {
     // ── JSON PARSER ──
     function parseJSON(text) {
       if (!text) return null;
-      const clean = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+      // Extract content inside ```json ... ``` blocks first
+      const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+      if (fence) {
+        try { return JSON.parse(fence[1].trim()); } catch(e) {}
+      }
+      // Try direct parse
+      const clean = text.trim();
       try { return JSON.parse(clean); } catch(e) {}
+      // Extract first { ... } block
       const m = clean.match(/\{[\s\S]*\}/);
       if (m) try { return JSON.parse(m[0]); } catch(e) {}
       return null;
