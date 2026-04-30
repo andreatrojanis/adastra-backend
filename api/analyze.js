@@ -4,7 +4,22 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
 
   if (req.method === 'OPTIONS') return res.status(204).end();
-  if (req.method === 'GET') return res.status(200).send('START ON API OK — Claude Sonnet + GPT-4o + Grok 3');
+  if (req.method === 'GET') {
+    const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
+    if (!ANTHROPIC_KEY) return res.status(200).send('NO ANTHROPIC KEY');
+    try {
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 200, messages: [{ role: 'user', content: 'Rispondi SOLO con questo JSON esatto: {"scoreON":70,"sintesi":"funziona"}' }] })
+      });
+      const d = await r.json();
+      const raw = (d.content || []).map(i => i.text || '').join('') || JSON.stringify(d);
+      return res.status(200).send('RAW CLAUDE: ' + raw);
+    } catch(e) {
+      return res.status(200).send('ERRORE: ' + e.message);
+    }
+  }
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   try {
@@ -16,9 +31,7 @@ module.exports = async function handler(req, res) {
     if (!prompts || !prompts.length) return res.status(400).json({ error: 'Nessun prompt' });
 
     // ── CALIBRATION PREFIXES ──
-    const CLAUDE_PREFIX = `Sei un valutatore senior Invitalia con 15 anni di esperienza. Sei il piu severo del panel. REGOLE ASSOLUTE: investimento 0 = scoreON e scoreSS massimo 25. Descrizione vuota o generica = -20 punti. Zero trazione = -25 punti. Team con 0 anni esperienza = -20 punti. TRL 3 senza IP = -15 punti. Dati mancanti sono red flag gravi. Un progetto incompleto non supera mai 35. Rispondi SOLO con JSON valido, senza testo prima o dopo, senza markdown. Formato: {"scoreON":75,"scoreSS":80,"sintesi":"analisi specifica","puntiForza":["f1"],"puntiDeboli":["d1"],"redFlags":["r1"],"opportunita":["o1"],"critiche":["c1"],"verdict":"GO","decisione":"GO CON CORREZIONI","puntiChiave":["p1"],"azioniImmediate":["a1"]}
-
-`;
+    const CLAUDE_PREFIX = 'Sei un valutatore senior Invitalia con 15 anni di esperienza. Sei il più severo del panel. REGOLE ASSOLUTE: investimento €0 = scoreON e scoreSS massimo 25. Descrizione vuota o generica = -20 punti. Zero trazione (0 LOI, 0 ricavi, 0 pilot) = -25 punti. Team con 0 anni esperienza = -20 punti. TRL 3 senza IP = -15 punti. Dati mancanti non sono neutri: sono red flag gravi. Non compensare mai con elementi formali. Un progetto incompleto non supera mai 35. Rispondi SOLO con JSON valido. Nessun testo prima o dopo.\n\n';
 
     const GPT_PREFIX = 'Sei un istruttore Invitalia molto severo e scettico. REGOLE FERREE: se investimento dichiarato è €0, scoreON e scoreSS NON possono superare 30. Se trazione è zero (nessun LOI, nessun ricavo, nessun pilot), togli almeno 20 punti. Se team ha 0 anni di esperienza o manca team tecnico su progetto tech, togli almeno 20 punti. Se TRL è 3 o 4 senza IP, togli 15 punti. Non compensare debolezze strutturali con punti di forma. Rispondi SOLO con JSON valido. Nessun testo prima o dopo.\n\n';
 
