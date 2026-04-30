@@ -1054,7 +1054,8 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
 
     // ── RISK MAP ──
     function riskMap(results){
-      const items=[...new Set(results.flatMap(r=>[...(r.redFlags||[]),(r.critiche||[])]).filter(x=>x&&x.length>10&&x.length<300))].slice(0,6);
+      const flatten=arr=>arr.flatMap(x=>typeof x==='string'&&x.includes(',')&&x.length>150?x.split(',').map(s=>s.trim()):x);
+      const items=[...new Set(flatten(results.flatMap(r=>[...(r.redFlags||[]),(r.critiche||[])])).filter(x=>typeof x==='string'&&x.trim().length>10&&x.length<200))].slice(0,6);
       if(!items.length)return '<p style="font-size:13px;color:#888;font-weight:300">Nessuna criticit\u00e0 dominante identificata.</p>';
       const cols=['#b00020','#b00020','#a07820','#a07820','#0a7f2e','#0a7f2e'];
       const labels=['Critica','Critica','Attenzione','Attenzione','Monitorare','Monitorare'];
