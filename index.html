@@ -797,7 +797,105 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
     <div style="display:grid;grid-template-columns:repeat(${ais.length},1fr);gap:10px;margin-bottom:12px;">${aiCards}</div>`;
   }
 
-    function renderReport(results,synth,multiAI){
+  
+    // ── PIANO PRE-CANDIDATURA ──
+    function pianoCandidatura(scoreON, scoreSS){
+      const scoreMedia = Math.round((scoreON+scoreSS)/2);
+      const gold='#c9a84c';const border='rgba(201,168,76,0.25)';const goldBg='#f0ece6';
+      const fd="font-family:'Avenir Next','Century Gothic',sans-serif";
+      const fb="font-family:'Helvetica Neue',Arial,sans-serif";
+      const br='border-radius:12px';
+
+      const ip = document.getElementById('f-ip')?.value||'';
+      const deminimis = document.getElementById('f-deminimis')?.value||'';
+      const fideiussione = document.getElementById('f-fideiussione')?.value||'';
+      const coinvestitori = document.getElementById('f-coinvestitori')?.value||'';
+      const advisor = document.getElementById('f-advisor')?.value||'';
+      const universita = document.getElementById('f-universita')?.value||'';
+      const trazione = answers['s14']||'';
+      const anzianita = answers['s6']||'';
+      const capital = parseInt(document.getElementById('f-capitale')?.value||'0')||0;
+
+      const D = '<div style="'+fd+';font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:'+gold+';margin:20px 0 12px;display:flex;align-items:center;gap:8px;"><span style="display:block;width:16px;height:1px;background:'+gold+'"></span>';
+
+      if(scoreMedia < 40){
+        return D+'Prossimo passo</div>'+
+          '<div style="border:1px solid rgba(176,0,32,0.25);'+br+';padding:20px;background:rgba(176,0,32,0.03);margin-bottom:12px;">'+
+          '<div style="'+fd+';font-size:14px;font-weight:600;color:#b00020;margin-bottom:8px;">Il progetto richiede una revisione sostanziale</div>'+
+          '<div style="'+fb+';font-size:13px;font-weight:300;color:#555;line-height:1.7;margin-bottom:14px;">Con un profilo sotto 40/100 non conviene procedere verso la candidatura. Il panel ha identificato criticita strutturali che richiedono un intervento strategico prima di qualsiasi documentazione.</div>'+
+          '<a href="mailto:inquiry@adastrafinancials.it?subject=Verifica strategica progetto" style="display:inline-block;padding:12px 24px;border:1px solid #b00020;color:#b00020;'+fd+';font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;border-radius:999px;">Verifica Strategica con AdAstra</a>'+
+          '</div>';
+      }
+
+      const azioni = [];
+      const avvisoGiallo = scoreMedia < 55;
+
+      // OBBLIGATORIO
+      if(deminimis.includes('Non verificato'))
+        azioni.push({livello:'obbligatorio',label:'Verifica De Minimis',desc:'Controlla il registro nazionale aiuti di Stato per tutti i soci. Requisito bloccante per Smart&Start.',tempo:'1 settimana',costo:'0'});
+      if(fideiussione.includes('Non ancora')||fideiussione.includes('Da strutturare')||fideiussione.includes('Non disponibile'))
+        azioni.push({livello:'obbligatorio',label:'Struttura la fideiussione bancaria',desc:'Smart&Start richiede garanzia fideiussoria sul finanziamento agevolato. Contatta la tua banca per pre-autorizzazione.',tempo:'2-4 settimane',costo:'variabile'});
+      if(anzianita.includes('Costituenda'))
+        azioni.push({livello:'obbligatorio',label:'Costituisci formalmente la societa',desc:'Serve costituzione societaria prima della presentazione. Atto notarile + iscrizione Registro Imprese come startup innovativa.',tempo:'2-3 settimane',costo:'1.500-2.500'});
+      if(capital===0)
+        azioni.push({livello:'obbligatorio',label:'Definisci il capitale iniziale',desc:'Capitale iniziale zero e red flag critica per Invitalia. Anche 10.000-30.000 euro cambia significativamente il profilo.',tempo:'immediato',costo:'variabile'});
+
+      // RACCOMANDATO
+      if(trazione.includes('1 ')||trazione.includes('2 ')||trazione.includes('3 '))
+        azioni.push({livello:'raccomandato',label:'Converti LOI in pre-contratti vincolanti',desc:'Trasforma le lettere di intento in accordi con data, importo e deliverable. Anche 2-3 pre-contratti cambiano la valutazione della trazione.',tempo:'2-4 settimane',costo:'0'});
+      if(coinvestitori.includes('No')||coinvestitori.includes('trattativa'))
+        azioni.push({livello:'raccomandato',label:'Conferma almeno un co-investitore',desc:'Un business angel o incubatore confermato con lettera formale aumenta la credibilita finanziaria. Contatta IAG, SprintX, o investitori della tua rete.',tempo:'variabile',costo:'0'});
+      if(advisor.includes('No')||advisor.includes('informale'))
+        azioni.push({livello:'raccomandato',label:'Formalizza un advisor o entra in un incubatore',desc:'Una lettera di adesione da incubatore certificato (es. SprintX Bari, Impact Hub) vale significativamente in istruttoria.',tempo:'1-2 settimane',costo:'0'});
+      if(ip.includes('Assente'))
+        azioni.push({livello:'raccomandato',label:'Deposita domanda di brevetto o marchio UIBM',desc:'Anche solo la domanda di brevetto dimostra protezione IP. Costo accessibile con consulente PI.',tempo:'1 settimana',costo:'300-600'});
+
+      // PREFERIBILE
+      if(universita.includes('No'))
+        azioni.push({livello:'preferibile',label:'Avvia una partnership universitaria',desc:'Un accordo con un ateneo locale aggiunge validazione R&D. Contatta il technology transfer office della tua universita.',tempo:'4-8 settimane',costo:'0'});
+      if(trazione.includes('3 '))
+        azioni.push({livello:'preferibile',label:'Avvia almeno un pilot operativo',desc:'Un pilot con data di inizio e deliverable documentati vale piu di 10 LOI. Anche a titolo gratuito o a prezzo ridotto.',tempo:'variabile',costo:'0'});
+
+      if(!azioni.length) return '';
+
+      const colori = {
+        obbligatorio:{bg:'rgba(176,0,32,0.04)',brd:'rgba(176,0,32,0.25)',col:'#b00020',lbl:'OBBLIGATORIO'},
+        raccomandato:{bg:'rgba(160,120,32,0.04)',brd:'rgba(160,120,32,0.25)',col:'#a07820',lbl:'RACCOMANDATO'},
+        preferibile:{bg:'rgba(10,127,46,0.04)',brd:'rgba(10,127,46,0.2)',col:'#0a7f2e',lbl:'PREFERIBILE'}
+      };
+
+      const righe = azioni.map(function(a){
+        const c=colori[a.livello];
+        return '<div style="border:1px solid '+c.brd+';border-radius:10px;padding:14px 16px;background:'+c.bg+';margin-bottom:8px;">'+
+          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'+
+          '<span style="'+fd+';font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:'+c.col+';">'+c.lbl+'</span>'+
+          '<span style="'+fd+';font-size:13px;font-weight:600;color:#111;">'+a.label+'</span>'+
+          '</div>'+
+          '<div style="'+fb+';font-size:12px;font-weight:300;color:#555;line-height:1.6;margin-bottom:8px;">'+a.desc+'</div>'+
+          '<div style="display:flex;gap:16px;">'+
+          '<span style="'+fd+';font-size:10px;color:#888;">Tempo: '+a.tempo+'</span>'+
+          '<span style="'+fd+';font-size:10px;color:#888;">Costo: '+a.costo+'</span>'+
+          '</div>'+
+          '</div>';
+      }).join('');
+
+      const banner = avvisoGiallo ?
+        '<div style="padding:12px 14px;background:rgba(160,120,32,0.08);border-radius:8px;border:1px solid rgba(160,120,32,0.25);'+fb+';font-size:12px;color:#a07820;line-height:1.6;margin-bottom:14px;">Il profilo attuale necessita di lavoro prima che la candidatura sia opportuna. Completa le azioni obbligatorie e raccomandate per portare il progetto a un livello sufficiente.</div>' : '';
+
+      return D+'Piano pre-candidatura</div>'+
+        '<div style="border:1px solid '+border+';'+br+';padding:20px;background:#fff;margin-bottom:12px;">'+
+        '<div style="'+fb+';font-size:13px;font-weight:300;color:#555;line-height:1.6;margin-bottom:16px;">Prima di generare il dossier, completa queste azioni per massimizzare le probabilita di approvazione.</div>'+
+        banner+
+        righe+
+        '<div style="margin-top:16px;padding:14px 16px;background:'+goldBg+';border-radius:10px;border:1px solid '+border+';">'+
+        '<div style="'+fd+';font-size:12px;font-weight:600;color:#111;margin-bottom:4px;">Quando hai completato le azioni obbligatorie e raccomandate</div>'+
+        '<div style="'+fb+';font-size:12px;font-weight:300;color:#555;line-height:1.6;margin-bottom:12px;">Il tuo profilo sara pronto per la generazione del dossier completo Smart&Start.</div>'+
+        '<a href="mailto:inquiry@adastrafinancials.it?subject=Richiesta dossier SmartStart" style="display:inline-block;padding:12px 24px;background:'+gold+';color:#fff;'+fd+';font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;border-radius:999px;">Genera Dossier Completo</a>'+
+        '</div>'+
+        '</div>';
+    }
+
+  function renderReport(results,synth,multiAI){
     $('wiz-loading').style.display='none';
     const rep=$('wiz-report');
     const gold='#c9a84c';const goldBg='#f0ece6';const border='rgba(201,168,76,0.25)';
@@ -1181,6 +1279,9 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
 
       // FOOTER — nessun riferimento AdAstra
       `<div style="margin-top:16px;${fb};font-size:11px;font-weight:300;color:#bbb;line-height:1.6;border-left:2px solid ${border};padding-left:12px;">Valutazione generata da panel multi-agente AI (Claude \u2014 Anthropic). Non costituisce garanzia di ammissibilit\u00e0 n\u00e9 impegno da parte degli enti erogatori. Panel: Claude Sonnet (Anthropic) · GPT-4o (OpenAI) · Grok 3 (xAI)</div>`;
+
+    // PIANO PRE-CANDIDATURA
+    rep.innerHTML += pianoCandidatura(safeN(synth.scoreON), safeN(synth.scoreSS));
 
     rep.scrollIntoView({behavior:'smooth',block:'start'});
   }
