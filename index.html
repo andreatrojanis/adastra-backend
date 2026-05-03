@@ -1426,17 +1426,18 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
   }
 
   function applyRestoredData(data){
-    if(data._answers) { try { const a = JSON.parse(data._answers); Object.assign(answers, a); } catch(e){} }
-    Object.keys(data).forEach(k => {
+    // Ripristina valori campi
+    Object.keys(data).forEach(function(k){
       if(k.startsWith('f-')) {
         const el = document.getElementById(k);
         if(el) { el.value = data[k]; el.dispatchEvent(new Event('change')); }
       }
     });
-    if(data._step && data._step > 0) {
-      currentStep = Math.min(parseInt(data._step), TOTAL_STEPS);
-      updateProgress(); updateNav(); updateBtn();
-      document.querySelectorAll('.wiz-step').forEach((s,i) => s.style.display = i+1===currentStep?'block':'none');
+    // Naviga allo step salvato tramite funzione globale
+    if(data._step && parseInt(data._step) > 0) {
+      if(window.goToStep) {
+        window.goToStep(parseInt(data._step));
+      }
     }
   }
 
@@ -1540,6 +1541,15 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
   window.restoreFromStorage = restoreFromStorage;
   window.copyCode = copyCode;
   window.getWizardState = function(){ return { step: currentStep, answers: answers }; };
+  window.goToStep = function(n){
+    const total = document.querySelectorAll('.wiz-step').length;
+    currentStep = Math.min(Math.max(1, n), total);
+    document.querySelectorAll('.wiz-step').forEach(function(s,i){
+      s.style.display = i+1===currentStep ? 'block' : 'none';
+    });
+    updateProgress(); updateNav(); updateBtn();
+    window.scrollTo(0,0);
+  };
   initRegioni();
   updateProgress();
   updateNav();
