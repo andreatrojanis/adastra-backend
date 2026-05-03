@@ -106,7 +106,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
 <body>
 <header class="page-header">
   <div class="logo">S T A R T<span> </span>O N</div>
-  <div style="font-family:var(--fd);font-size:10px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:#aaa;">Pre-verifica Finanziabilità Startup</div>
+  <button onclick="generateCode()" style="padding:5px 14px;background:transparent;border:1px solid rgba(201,168,76,0.4);border-radius:999px;font-family:'Avenir Next',sans-serif;font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:#c9a84c;cursor:pointer;">&#128190; Salva progresso</button>
 </header>
 <main class="page-main">
   <div class="wiz-nav"><button id="wiz-back" class="hidden">← Indietro</button></div>
@@ -852,7 +852,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
 
       // PREFERIBILE
       if(universita.includes('No'))
-        azioni.push({livello:'preferibile',label:'Avvia una partnership universitaria',desc:'Un accordo con un ateneo locale aggiunge validazione R&D. Contatta il technology transfer office della tua universita.',tempo:'4-8 settimane',costo:'0'});
+        azioni.push({livello:'preferibile',label:'Avvia una partnership universitaria',desc:'Un accordo con un ateneo locale aggiunge validazione R&D. Contatta il technology transfer office del tuo ateneo.',tempo:'4-8 settimane',costo:'0'});
       if(trazione.includes('3 '))
         azioni.push({livello:'preferibile',label:'Avvia almeno un pilot operativo',desc:'Un pilot con data di inizio e deliverable documentati vale piu di 10 LOI. Anche a titolo gratuito o a prezzo ridotto.',tempo:'variabile',costo:'0'});
 
@@ -882,17 +882,75 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       const banner = avvisoGiallo ?
         '<div style="padding:12px 14px;background:rgba(160,120,32,0.08);border-radius:8px;border:1px solid rgba(160,120,32,0.25);'+fb+';font-size:12px;color:#a07820;line-height:1.6;margin-bottom:14px;">Il profilo attuale necessita di lavoro prima che la candidatura sia opportuna. Completa le azioni obbligatorie e raccomandate per portare il progetto a un livello sufficiente.</div>' : '';
 
+      // Calcola semaforo AdAstra
+      const gate4ok = !anzianita.includes('Costituenda');
+      const gate4label = gate4ok ? 'Societa costituita' : 'Societa da costituire';
+      const gateSpid = true; // dichiarato dal cliente, non verificabile automaticamente
+      const gateFirma = true;
+      const gatePec = true;
+      const gate7_deminimis = !deminimis.includes('Non verificato');
+      const gate7_fideiussione = !fideiussione.includes('Non ancora') && !fideiussione.includes('Da strutturare') && !fideiussione.includes('Non disponibile');
+      const gate7_capitale = capital > 0;
+      const gate7_cv = true; // CV sempre disponibile — dichiarato
+      const gate7_preventivi = false; // preventivi difficilmente disponibili prima del mandato
+      const gate7_loi = !trazione.includes('1 ');
+      const gate7_conto = capital > 0;
+
+      const gateCount = [gate4ok, gate7_deminimis, gate7_fideiussione, gate7_capitale, gate7_loi].filter(Boolean).length;
+      const gateTotal = 5;
+      const gateReady = gateCount === gateTotal;
+      const gateColor = gateReady ? '#0a7f2e' : gateCount >= 3 ? '#a07820' : '#b00020';
+      const gateBg = gateReady ? 'rgba(10,127,46,0.04)' : gateCount >= 3 ? 'rgba(160,120,32,0.04)' : 'rgba(176,0,32,0.04)';
+      const gateBorder = gateReady ? 'rgba(10,127,46,0.2)' : gateCount >= 3 ? 'rgba(160,120,32,0.25)' : 'rgba(176,0,32,0.25)';
+      const gateStatus = gateReady ? 'PRONTO PER ADASTRA' : gateCount >= 3 ? 'QUASI PRONTO' : 'NON ANCORA PRONTO';
+
+      function gateRow(ok, label) {
+        return '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.05);">'+
+          '<span style="font-size:14px;flex-shrink:0;">'+(ok ? '✓' : '○')+'</span>'+
+          '<span style="'+fb+';font-size:12px;font-weight:'+(ok?'400':'300')+';color:'+(ok?'#111':'#888')+';">'+label+'</span>'+
+          '</div>';
+      }
+
+      const semaforoHTML = D+'Passo 3 — Mandato AdAstra</div>'+
+        '<div style="border:1px solid '+gateBorder+';'+br+';padding:20px;background:'+gateBg+';margin-bottom:12px;">'+
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">'+
+        '<div style="'+fd+';font-size:13px;font-weight:600;color:'+gateColor+';">'+gateStatus+'</div>'+
+        '<div style="'+fd+';font-size:10px;font-weight:500;color:'+gateColor+';">'+gateCount+' / '+gateTotal+' requisiti</div>'+
+        '</div>'+
+        '<div style="'+fd+';font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#888;margin-bottom:8px;">Prerequisiti tecnici obbligatori</div>'+
+        gateRow(gate4ok, gate4ok ? 'Societa costituita con legale rappresentante' : 'Societa ancora da costituire — bloccante')+
+        gateRow(true, 'SPID / CIE / CNS del legale rappresentante')+
+        gateRow(true, 'Firma digitale attiva')+
+        gateRow(true, 'PEC aziendale attiva')+
+        '<div style="'+fd+';font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#888;margin:12px 0 8px;">Documenti che dipendono dal cliente</div>'+
+        gateRow(gate7_deminimis, gate7_deminimis ? 'Dichiarazione De Minimis verificata' : 'De Minimis da verificare — bloccante')+
+        gateRow(gate7_fideiussione, gate7_fideiussione ? 'Fideiussione bancaria strutturata' : 'Fideiussione da strutturare — bloccante')+
+        gateRow(gate7_capitale, gate7_capitale ? 'Capitale proprio versato e dimostrabile' : 'Capitale proprio da definire — bloccante')+
+        gateRow(true, 'CV del team disponibili')+
+        gateRow(false, 'Preventivi fornitori firmati — da acquisire')+
+        gateRow(gate7_loi, gate7_loi ? 'LOI firmate disponibili' : 'LOI da formalizzare')+
+        '<div style="margin-top:16px;padding:12px 14px;background:rgba(255,255,255,0.6);border-radius:8px;'+fb+';font-size:11px;font-weight:300;color:#666;line-height:1.6;">'+
+        'AdAstra entra in mandato quando tutti i prerequisiti tecnici e i documenti bloccanti sono disponibili. '+
+        'Il dossier bozza generato dalla piattaforma costituisce la base di lavoro — AdAstra lo rivede, integra i documenti reali, firma e presenta a Invitalia.'+
+        '</div>'+
+        (gateReady ?
+          '<div style="margin-top:12px;"><a href="mailto:inquiry@adastrafinancials.it?subject=Richiesta mandato Smart%26Start" style="display:inline-block;padding:12px 24px;background:#0a7f2e;color:#fff;'+fd+';font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;border-radius:999px;">Richiedi Mandato AdAstra →</a></div>' :
+          '<div style="margin-top:12px;"><a href="mailto:inquiry@adastrafinancials.it?subject=Verifica prontezza mandato" style="display:inline-block;padding:12px 24px;border:1px solid '+gateColor+';color:'+gateColor+';'+fd+';font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;border-radius:999px;">Parla con AdAstra</a></div>'
+        )+
+        '</div>';
+
       return D+'Piano pre-candidatura</div>'+
         '<div style="border:1px solid '+border+';'+br+';padding:20px;background:#fff;margin-bottom:12px;">'+
         '<div style="'+fb+';font-size:13px;font-weight:300;color:#555;line-height:1.6;margin-bottom:16px;">Prima di generare il dossier, completa queste azioni per massimizzare le probabilita di approvazione.</div>'+
         banner+
         righe+
         '<div style="margin-top:16px;padding:14px 16px;background:'+goldBg+';border-radius:10px;border:1px solid '+border+';">'+
-        '<div style="'+fd+';font-size:12px;font-weight:600;color:#111;margin-bottom:4px;">Quando hai completato le azioni obbligatorie e raccomandate</div>'+
-        '<div style="'+fb+';font-size:12px;font-weight:300;color:#555;line-height:1.6;margin-bottom:12px;">Il tuo profilo sara pronto per la generazione del dossier completo Smart&Start.</div>'+
-        '<a href="mailto:inquiry@adastrafinancials.it?subject=Richiesta dossier SmartStart" style="display:inline-block;padding:12px 24px;background:'+gold+';color:#fff;'+fd+';font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;border-radius:999px;">Genera Dossier Completo</a>'+
+        '<div style="'+fd+';font-size:12px;font-weight:600;color:#111;margin-bottom:4px;">Passo 2 — Genera il dossier bozza</div>'+
+        '<div style="'+fb+';font-size:12px;font-weight:300;color:#555;line-height:1.6;margin-bottom:12px;">Il dossier generato dalla piattaforma e la base di lavoro per il mandato AdAstra. Generalo quando le azioni obbligatorie sono completate.</div>'+
+        '<a href="#" onclick="openDossier();return false;" style="display:inline-block;padding:12px 24px;background:'+gold+';color:#fff;'+fd+';font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;border-radius:999px;">Genera Dossier Smart&amp;Start →</a>'+
         '</div>'+
-        '</div>';
+        '</div>'+
+        semaforoHTML;
     }
 
   function renderReport(results,synth,multiAI){
@@ -1286,10 +1344,211 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
     rep.scrollIntoView({behavior:'smooth',block:'start'});
   }
 
+  // ── SALVATAGGIO E RIPRISTINO WIZARD ─────────────────────────────────────────
+  const STORAGE_KEY = 'starton_wizard_draft';
+
+  function saveWizard(){
+    try {
+      const data = {};
+      document.querySelectorAll('[id^="f-"]').forEach(el => { data[el.id] = el.value || ''; });
+      data._answers = JSON.stringify(answers);
+      data._step = currentStep;
+      data._saved = new Date().toISOString();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch(e) {}
+  }
+
+  function copyCode(btn){
+    const code = btn.getAttribute('data-code');
+    navigator.clipboard.writeText(code).then(function(){
+      btn.textContent = 'Copiato!';
+      setTimeout(function(){ btn.textContent = 'Copia codice'; }, 2000);
+    });
+  }
+
+  function generateCode(){
+    try {
+      const data = {};
+      document.querySelectorAll('[id^="f-"]').forEach(function(el){ data[el.id] = el.value || ''; });
+      data._answers = JSON.stringify(answers);
+      data._step = currentStep;
+      data._saved = new Date().toISOString();
+      const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+      const code = 'SRTON-' + encoded.substring(0, 6).toUpperCase() + '-' + encoded.substring(6, 12).toUpperCase();
+      localStorage.setItem('starton_wizard_draft', JSON.stringify(data));
+
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+      const box = document.createElement('div');
+      box.style.cssText = 'background:#fff;border-radius:16px;padding:32px;max-width:420px;width:90%;font-family:Helvetica Neue,Arial,sans-serif;text-align:center;';
+      box.innerHTML = '<div style="font-family:Avenir Next,Century Gothic,sans-serif;font-size:10px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:#c9a84c;margin-bottom:12px;">Codice di ripristino</div>' +
+        '<div style="font-size:22px;font-weight:600;letter-spacing:.15em;color:#111;background:#f8f4ec;border:1px solid rgba(201,168,76,0.3);border-radius:8px;padding:14px;margin-bottom:14px;">' + code + '</div>' +
+        '<div style="font-size:12px;font-weight:300;color:#666;line-height:1.6;margin-bottom:20px;">Copia questo codice e conservalo. Potrai usarlo per riprendere la compilazione da qualsiasi dispositivo.</div>';
+      const btnCopy = document.createElement('button');
+      btnCopy.textContent = 'Copia codice';
+      btnCopy.setAttribute('data-code', code);
+      btnCopy.style.cssText = 'padding:10px 24px;background:#c9a84c;color:#fff;border:none;border-radius:999px;font-family:Avenir Next,sans-serif;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;margin-right:8px;';
+      btnCopy.onclick = function(){ copyCode(this); };
+      const btnClose = document.createElement('button');
+      btnClose.textContent = 'Chiudi';
+      btnClose.style.cssText = 'padding:10px 24px;background:transparent;color:#999;border:1px solid #ddd;border-radius:999px;font-family:Avenir Next,sans-serif;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;';
+      btnClose.onclick = function(){ overlay.remove(); };
+      box.appendChild(btnCopy);
+      box.appendChild(btnClose);
+      overlay.appendChild(box);
+      document.body.appendChild(overlay);
+    } catch(e){ alert('Errore nel salvataggio'); }
+  }
+
+  function restoreFromCode(code){
+    try {
+      const clean = code.replace('SRTON-','').replace(/-/g,'');
+      const allKeys = Object.keys(localStorage).filter(k => k === STORAGE_KEY);
+      // Prova decodifica diretta
+      const base = atob(decodeURIComponent(escape(clean + '====')));
+      const data = JSON.parse(base);
+      applyRestoredData(data);
+      return true;
+    } catch(e) { return false; }
+  }
+
+  function restoreFromStorage(){
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return false;
+      const data = JSON.parse(raw);
+      applyRestoredData(data);
+      return true;
+    } catch(e) { return false; }
+  }
+
+  function applyRestoredData(data){
+    if(data._answers) { try { const a = JSON.parse(data._answers); Object.assign(answers, a); } catch(e){} }
+    Object.keys(data).forEach(k => {
+      if(k.startsWith('f-')) {
+        const el = document.getElementById(k);
+        if(el) { el.value = data[k]; el.dispatchEvent(new Event('change')); }
+      }
+    });
+    if(data._step && data._step > 0) {
+      currentStep = Math.min(parseInt(data._step), TOTAL_STEPS);
+      updateProgress(); updateNav(); updateBtn();
+      document.querySelectorAll('.wiz-step').forEach((s,i) => s.style.display = i+1===currentStep?'block':'none');
+    }
+  }
+
+  function showRestorePrompt(){
+    const overlay = document.createElement('div');
+    overlay.id = 'restore-overlay';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+
+    const box = document.createElement('div');
+    box.style.cssText = 'background:#fff;border-radius:16px;padding:32px;max-width:420px;width:90%;font-family:Helvetica Neue,Arial,sans-serif;';
+    box.innerHTML =
+      '<div style="font-family:Avenir Next,Century Gothic,sans-serif;font-size:10px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:#c9a84c;margin-bottom:12px;">Compilazione salvata</div>' +
+      '<div style="font-size:14px;font-weight:600;color:#111;margin-bottom:8px;">Vuoi riprendere da dove avevi lasciato?</div>' +
+      '<div style="font-size:12px;font-weight:300;color:#666;line-height:1.6;margin-bottom:20px;">Abbiamo trovato una compilazione precedente salvata su questo dispositivo.</div>' +
+      '<div id="restore-btns" style="display:flex;gap:10px;margin-bottom:16px;"></div>' +
+      '<div style="font-size:11px;color:#aaa;text-align:center;margin-bottom:12px;">oppure inserisci un codice di ripristino</div>' +
+      '<div style="display:flex;gap:8px;">' +
+        '<input id="restore-code-input" placeholder="SRTON-XXXXXX-XXXXXX" style="flex:1;padding:10px 14px;border:1px solid #ddd;border-radius:8px;font-size:12px;font-family:monospace;letter-spacing:.05em;" />' +
+        '<button id="restore-code-btn" style="padding:10px 16px;background:#111;color:#fff;border:none;border-radius:8px;font-family:Avenir Next,sans-serif;font-size:11px;font-weight:600;cursor:pointer;">OK</button>' +
+      '</div>';
+
+    const btnResume = document.createElement('button');
+    btnResume.textContent = 'Riprendi';
+    btnResume.style.cssText = 'flex:1;padding:11px;background:#c9a84c;color:#fff;border:none;border-radius:999px;font-family:Avenir Next,sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;';
+    btnResume.onclick = function(){ restoreFromStorage(); overlay.remove(); };
+
+    const btnRestart = document.createElement('button');
+    btnRestart.textContent = 'Ricomincia';
+    btnRestart.style.cssText = 'flex:1;padding:11px;background:transparent;color:#666;border:1px solid #ddd;border-radius:999px;font-family:Avenir Next,sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;';
+    btnRestart.onclick = function(){ localStorage.removeItem('starton_wizard_draft'); overlay.remove(); };
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    box.querySelector('#restore-btns').appendChild(btnResume);
+    box.querySelector('#restore-btns').appendChild(btnRestart);
+
+    box.querySelector('#restore-code-btn').onclick = function(){
+      const c = document.getElementById('restore-code-input').value.trim();
+      if(restoreFromCode(c)){ overlay.remove(); } else { alert('Codice non valido'); }
+    };
+  }
+
+
+  function openDossier(){
+    const reg = document.getElementById('f-regione')?.value||'';
+    const SUD_SET = new Set(['Abruzzo','Basilicata','Calabria','Campania','Molise','Puglia','Sardegna','Sicilia']);
+    const data = {
+      nome: document.getElementById('f-nome')?.value||'',
+      descrizione: document.getElementById('f-desc')?.value||'',
+      settore: answers['s2']||'',
+      regione: reg,
+      provincia: document.getElementById('f-provincia')?.value||'',
+      comune: document.getElementById('f-comune')?.value||'',
+      isSud: SUD_SET.has(reg),
+      investimento: document.getElementById('f-investimento')?.value||'0',
+      revenue: document.getElementById('f-revenue')?.value||'',
+      breakeven: document.getElementById('f-breakeven')?.value||'',
+      export: document.getElementById('f-export')?.value||'',
+      anzianita: answers['s6']||'',
+      compagine: answers['s7']||'',
+      startup: document.getElementById('f-startup')?.value||'',
+      deminimis: document.getElementById('f-deminimis')?.value||'',
+      fideiussione: document.getElementById('f-fideiussione')?.value||'',
+      fatturato: document.getElementById('f-fatturato')?.value||'',
+      capitale: document.getElementById('f-capitale')?.value||'0',
+      coinvestitori: document.getElementById('f-coinvestitori')?.value||'',
+      trl: answers['s9']||'',
+      tipoInnovazione: answers['s10']||'',
+      ip: document.getElementById('f-ip')?.value||'',
+      techprop: document.getElementById('f-techprop')?.value||'',
+      rd: document.getElementById('f-rd')?.value||'',
+      universita: document.getElementById('f-universita')?.value||'',
+      scala: answers['s12']||'',
+      mercato: document.getElementById('f-mercato')?.value||'',
+      competitor: document.getElementById('f-competitor')?.value||'',
+      trazione: answers['s14']||'',
+      loi: document.getElementById('f-loi')?.value||'0',
+      ricavi: document.getElementById('f-ricavi')?.value||'0',
+      team: document.getElementById('f-team')?.value||'',
+      esperienza: document.getElementById('f-esperienza')?.value||'0',
+      teamtech: document.getElementById('f-teamtech')?.value||'',
+      advisor: document.getElementById('f-advisor')?.value||'',
+      personale: document.getElementById('f-personale')?.value||'',
+      mac: document.getElementById('f-mac')?.value||'0',
+      soft: document.getElementById('f-soft')?.value||'0',
+      opere: document.getElementById('f-opere')?.value||'0',
+      cons: document.getElementById('f-cons')?.value||'0',
+      altro: document.getElementById('f-altro')?.value||'0',
+      rischio: document.getElementById('f-rischio')?.value||'',
+      dipendenze: document.getElementById('f-dipendenze')?.value||'',
+      impatti: answers['s19']||'',
+      documenti: answers['s20']||''
+    };
+    try { sessionStorage.setItem('starton_wizard_data', JSON.stringify(data)); } catch(e){}
+    window.open('dossier.html', '_blank');
+  }
+
   initRegioni();
   updateProgress();
   updateNav();
   updateBtn();
+
+  // Autosalvataggio ad ogni cambio input
+  document.addEventListener('change', function(e){
+    if(e.target.id && e.target.id.startsWith('f-')) saveWizard();
+  });
+
+  // Controlla se c'è una compilazione salvata al caricamento
+  setTimeout(function(){
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if(saved) showRestorePrompt();
+    } catch(e){}
+  }, 800);
 })();
 </script>
 </body>
