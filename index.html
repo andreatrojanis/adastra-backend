@@ -1434,10 +1434,12 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       }
     });
     // Naviga allo step salvato tramite funzione globale
-    if(data._step && parseInt(data._step) > 0) {
+    const stepToGo = parseInt(data._step) || 0;
+    alert('Step salvato: ' + stepToGo + ' | Dati: ' + JSON.stringify(Object.keys(data)));
+    if(stepToGo > 1) {
       setTimeout(function(){
-        if(window.goToStep) window.goToStep(parseInt(data._step));
-      }, 300);
+        if(window.goToStep) window.goToStep(stepToGo);
+      }, 500);
     }
   }
 
