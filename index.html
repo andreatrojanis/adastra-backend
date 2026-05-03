@@ -1373,8 +1373,9 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       data._answers = JSON.stringify(answers);
       data._step = currentStep;
       data._saved = new Date().toISOString();
-      const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
-      const code = 'SRTON-' + encoded.substring(0, 6).toUpperCase() + '-' + encoded.substring(6, 12).toUpperCase();
+      const ts = Date.now().toString(36).toUpperCase();
+      const code = 'SRTON-' + ts.substring(0,6) + '-' + (Math.random().toString(36).substring(2,8).toUpperCase());
+      data._code = code;
       localStorage.setItem('starton_wizard_draft', JSON.stringify(data));
 
       const overlay = document.createElement('div');
@@ -1405,7 +1406,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       const clean = code.replace('SRTON-','').replace(/-/g,'');
       const allKeys = Object.keys(localStorage).filter(k => k === STORAGE_KEY);
       // Prova decodifica diretta
-      const base = atob(decodeURIComponent(escape(clean + '====')));
+      const base = decodeURIComponent(atob(clean + '===='));
       const data = JSON.parse(base);
       applyRestoredData(data);
       return true;
