@@ -1398,7 +1398,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       box.appendChild(btnClose);
       overlay.appendChild(box);
       document.body.appendChild(overlay);
-    } catch(e){ alert('Errore nel salvataggio'); }
+    } catch(e){ console.error('generateCode error:', e.message, e.stack); alert('Errore: ' + e.message); }
   }
 
   function restoreFromCode(code){
