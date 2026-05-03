@@ -1351,8 +1351,9 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
     try {
       const data = {};
       document.querySelectorAll('[id^="f-"]').forEach(el => { data[el.id] = el.value || ''; });
-      data._answers = JSON.stringify(answers);
-      data._step = currentStep;
+      const state = window.getWizardState ? window.getWizardState() : {step:1, answers:{}};
+      data._answers = JSON.stringify(state.answers);
+      data._step = state.step;
       data._saved = new Date().toISOString();
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch(e) {}
@@ -1370,8 +1371,9 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
     try {
       const data = {};
       document.querySelectorAll('[id^="f-"]').forEach(function(el){ data[el.id] = el.value || ''; });
-      data._answers = JSON.stringify(answers);
-      data._step = currentStep;
+      const state = window.getWizardState ? window.getWizardState() : {step:1, answers:{}};
+      data._answers = JSON.stringify(state.answers);
+      data._step = state.step;
       data._saved = new Date().toISOString();
       const ts = Date.now().toString(36).toUpperCase();
       const code = 'SRTON-' + ts.substring(0,6) + '-' + (Math.random().toString(36).substring(2,8).toUpperCase());
@@ -1537,6 +1539,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
   window.restoreFromCode = restoreFromCode;
   window.restoreFromStorage = restoreFromStorage;
   window.copyCode = copyCode;
+  window.getWizardState = function(){ return { step: currentStep, answers: answers }; };
   initRegioni();
   updateProgress();
   updateNav();
