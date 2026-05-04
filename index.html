@@ -1351,9 +1351,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
     try {
       const data = {};
       document.querySelectorAll('[id^="f-"]').forEach(el => { data[el.id] = el.value || ''; });
-      let stepNum = 1;
-      document.querySelectorAll('.wiz-step').forEach(function(s,i){ if(s.style.display === 'block') stepNum = i+1; });
-      data._step = stepNum;
+      data._step = current || 1;
       data._saved = new Date().toISOString();
       localStorage.setItem('starton_wizard_draft', JSON.stringify(data));
     } catch(e) {}
@@ -1371,9 +1369,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
     try {
       const data = {};
       document.querySelectorAll('[id^="f-"]').forEach(function(el){ data[el.id] = el.value || ''; });
-      let stepNum = 1;
-      document.querySelectorAll('.wiz-step').forEach(function(s,i){ if(s.style.display === 'block') stepNum = i+1; });
-      data._step = stepNum;
+      data._step = current || 1;
       data._saved = new Date().toISOString();
       const ts = Date.now().toString(36).toUpperCase();
       const code = 'SRTON-' + ts.substring(0,6) + '-' + (Math.random().toString(36).substring(2,8).toUpperCase());
@@ -1435,11 +1431,10 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
     });
     // Naviga allo step salvato tramite funzione globale
     const stepToGo = parseInt(data._step) || 0;
-    alert('Step salvato: ' + stepToGo + ' | Dati: ' + JSON.stringify(Object.keys(data)));
     if(stepToGo > 1) {
       setTimeout(function(){
         if(window.goToStep) window.goToStep(stepToGo);
-      }, 500);
+      }, 400);
     }
   }
 
@@ -1542,16 +1537,8 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
   window.restoreFromCode = restoreFromCode;
   window.restoreFromStorage = restoreFromStorage;
   window.copyCode = copyCode;
-  window.getWizardState = function(){ return { step: currentStep, answers: answers }; };
-  window.goToStep = function(n){
-    const total = document.querySelectorAll('.wiz-step').length;
-    currentStep = Math.min(Math.max(1, n), total);
-    document.querySelectorAll('.wiz-step').forEach(function(s,i){
-      s.style.display = i+1===currentStep ? 'block' : 'none';
-    });
-    updateProgress(); updateNav(); updateBtn();
-    window.scrollTo(0,0);
-  };
+  window.getWizardState = function(){ return { step: current, answers: answers }; };
+  window.goToStep = function(n){ goTo(Math.max(1, parseInt(n))); };
   initRegioni();
   updateProgress();
   updateNav();
