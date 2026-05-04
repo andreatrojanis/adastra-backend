@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>START ON — Dossier Smart&Start</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif}
+:root{--gold:#c9a84c;--gold-light:#a07820;--gold-bg:#f0ece6;--border:rgba(201,168,76,0.28);--radius:12px;--fd:'Avenir Next','Century Gothic',Futura,sans-serif;--fb:'Helvetica Neue',Arial,sans-serif}
+.page-header{background:#fff;border-bottom:1px solid var(--border);padding:16px 40px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:var(--fd);font-size:13px;font-weight:500;letter-spacing:.25em;text-transform:uppercase;color:#111;text-decoration:none}
+.logo span{color:var(--gold)}
+.back-link{font-family:var(--fd);font-size:11px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:#999;text-decoration:none;cursor:pointer}
+.back-link:hover{color:var(--gold)}
+.page-main{max-width:720px;margin:0 auto;padding:48px 24px 100px}
+@media(max-width:600px){.page-header{padding:14px 20px}.page-main{padding:32px 16px 80px}}
+
+.eyebrow{font-family:var(--fd);font-size:10px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.eyebrow::before{content:'';display:block;width:18px;height:1px;background:var(--gold)}
+.page-title{font-family:var(--fd);font-size:clamp(22px,4vw,32px);font-weight:600;color:#111;line-height:1.15;margin-bottom:8px;letter-spacing:-.02em}
+.page-title em{font-style:normal;font-weight:300;color:var(--gold-light)}
+.page-sub{font-family:var(--fb);font-size:13px;font-weight:300;color:#666;line-height:1.7;margin-bottom:32px;max-width:500px}
+
+/* STATO INIZIALE */
+#state-nodata{display:block}
+#state-loading{display:none}
+#state-done{display:none}
+#state-error{display:none}
+
+.info-box{border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;background:#fff;margin-bottom:16px}
+.info-box-title{font-family:var(--fd);font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
+.info-row:last-child{border-bottom:none}
+.info-lbl{color:#666;font-weight:300}
+.info-val{color:#111;font-weight:500;font-size:12px;text-align:right;max-width:60%}
+
+.section-list{display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
+.section-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border:1px solid var(--border);border-radius:10px;background:#fff}
+.section-num{font-family:var(--fd);font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--gold);flex-shrink:0;width:24px}
+.section-name{font-family:var(--fb);font-size:13px;font-weight:300;color:#333;flex:1}
+.section-status{font-family:var(--fd);font-size:9px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:#bbb;flex-shrink:0}
+.section-status.done{color:#0a7f2e}
+.section-status.active{color:var(--gold)}
+.section-status.error{color:#b00020}
+
+/* SPINNER */
+.spinner{width:28px;height:28px;border:2px solid rgba(201,168,76,0.15);border-top-color:var(--gold);border-radius:50%;margin:0 auto 14px;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* BTN */
+.btn-main{padding:15px 32px;background:var(--gold);color:#fff;border:none;border-radius:999px;font-family:var(--fd);font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .22s}
+.btn-main:hover{background:var(--gold-light);transform:translateY(-1px)}
+.btn-main:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.btn-outline{padding:13px 28px;background:transparent;color:var(--gold);border:1px solid var(--gold);border-radius:999px;font-family:var(--fd);font-size:11px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .22s}
+.btn-outline:hover{background:var(--gold-bg)}
+
+.progress-bar{height:4px;background:rgba(201,168,76,0.12);border-radius:2px;margin-bottom:4px;overflow:hidden}
+.progress-fill{height:100%;background:var(--gold);border-radius:2px;transition:width .5s ease}
+.progress-label{font-family:var(--fd);font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);text-align:right;margin-bottom:20px}
+
+.done-card{border:1px solid rgba(10,127,46,0.2);border-radius:var(--radius);padding:24px;background:rgba(10,127,46,0.04);margin-bottom:20px;text-align:center}
+.done-icon{font-size:32px;margin-bottom:12px}
+.done-title{font-family:var(--fd);font-size:16px;font-weight:600;color:#0a7f2e;margin-bottom:6px}
+.done-sub{font-family:var(--fb);font-size:13px;font-weight:300;color:#555;line-height:1.6}
+
+.price-badge{display:inline-block;padding:4px 12px;border:1px solid var(--border);border-radius:999px;font-family:var(--fd);font-size:11px;font-weight:600;color:#111;background:#fff;margin-bottom:16px}
+
+.disclaimer{margin-top:24px;padding:14px 16px;background:rgba(201,168,76,0.05);border-radius:8px;border:1px solid rgba(201,168,76,0.15);font-family:var(--fb);font-size:11px;font-weight:300;color:#888;line-height:1.6}
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <a href="index.html" class="logo">S T A R T <span>O</span> N</a>
+  <a class="back-link" onclick="history.back()">← Torna al report</a>
+</header>
+
+<main class="page-main">
+
+  <!-- STATO: nessun dato -->
+  <div id="state-nodata">
+    <div class="eyebrow">Dossier Smart&Start</div>
+    <div class="page-title">Genera il tuo<br><em>dossier completo.</em></div>
+    <div class="page-sub">Per generare il dossier devi prima completare il wizard e ottenere il report. Torna alla pagina principale e compila il wizard.</div>
+    <a href="index.html" class="btn-main" style="display:inline-block;text-decoration:none;margin-top:8px">Vai al wizard →</a>
+  </div>
+
+  <!-- STATO: dati presenti, pronto per generare -->
+  <div id="state-ready" style="display:none">
+    <div class="eyebrow">Dossier Smart&Start</div>
+    <div class="page-title">Il tuo dossier<br><em>è pronto per essere generato.</em></div>
+    <div class="page-sub">L'AI genererà automaticamente tutti i documenti richiesti da Invitalia per la candidatura Smart&Start, personalizzati sui dati del tuo progetto.</div>
+
+    <span class="price-badge">€ 399 — una tantum</span>
+
+    <div class="info-box" style="margin-top:8px">
+      <div class="info-box-title">Progetto da candidare</div>
+      <div id="project-summary"></div>
+    </div>
+
+    <div class="info-box">
+      <div class="info-box-title">Documenti che verranno generati</div>
+      <div class="section-list" id="section-list-preview">
+        <div class="section-item"><span class="section-num">01</span><span class="section-name">Executive Summary — Descrizione del progetto e sintesi strategica</span><span class="section-status">—</span></div>
+        <div class="section-item"><span class="section-num">02</span><span class="section-name">Value Proposition Canvas — 6 campi obbligatori Invitalia</span><span class="section-status">—</span></div>
+        <div class="section-item"><span class="section-num">03</span><span class="section-name">Business Model Canvas — 9 blocchi strutturati</span><span class="section-status">—</span></div>
+        <div class="section-item"><span class="section-num">04</span><span class="section-name">Analisi di mercato e competitor</span><span class="section-status">—</span></div>
+        <div class="section-item"><span class="section-num">05</span><span class="section-name">Piano operativo e milestones a 36 mesi</span><span class="section-status">—</span></div>
+        <div class="section-item"><span class="section-num">06</span><span class="section-name">Piano occupazionale — personale previsto</span><span class="section-status">—</span></div>
+        <div class="section-item"><span class="section-num">07</span><span class="section-name">Descrizione innovazione tecnologica e IP</span><span class="section-status">—</span></div>
+        <div class="section-item"><span class="section-num">08</span><span class="section-name">Impatto sociale, ambientale e territoriale</span><span class="section-status">—</span></div>
+        <div class="section-item"><span class="section-num">09</span><span class="section-name">Piano finanziario — Conto Economico previsionale 3 anni</span><span class="section-status">—</span></div>
+        <div class="section-item"><span class="section-num">10</span><span class="section-name">Fonti e Impieghi — struttura del finanziamento</span><span class="section-status">—</span></div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <button class="btn-main" id="btn-generate" onclick="startGeneration()">Genera Dossier Smart&Start →</button>
+      <button class="btn-outline" onclick="history.back()">Torna al report</button>
+    </div>
+
+    <div class="disclaimer">
+      Il dossier generato costituisce una bozza professionale da revisionare con il team AdAstra prima della presentazione formale. I dati finanziari sono proiettati sulla base delle informazioni inserite nel wizard e richiedono validazione da parte di un professionista.
+    </div>
+  </div>
+
+  <!-- STATO: generazione in corso -->
+  <div id="state-loading">
+    <div class="eyebrow">Generazione in corso</div>
+    <div class="page-title">L'AI sta<br><em>costruendo il dossier.</em></div>
+    <div class="page-sub">Il processo richiede 2-3 minuti. Non chiudere questa pagina.</div>
+
+    <div class="progress-label" id="progress-label">Sezione 0 / 10</div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+
+    <div class="section-list" id="section-list-loading"></div>
+  </div>
+
+  <!-- STATO: completato -->
+  <div id="state-done">
+    <div class="done-card">
+      <div class="done-icon">✓</div>
+      <div class="done-title">Dossier generato con successo</div>
+      <div class="done-sub">Il documento Word è stato scaricato automaticamente sul tuo computer.<br>Aprilo, revisionalo con il team AdAstra e presentalo su Invitalia.</div>
+    </div>
+
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px">
+      <button class="btn-main" id="btn-download-again">Scarica di nuovo →</button>
+      <button class="btn-outline" onclick="startGeneration()">Rigenera dossier</button>
+    </div>
+
+    <div class="info-box">
+      <div class="info-box-title">Prossimi passi</div>
+      <div class="section-list">
+        <div class="section-item"><span class="section-num">→</span><span class="section-name">Revisione con team AdAstra — verifica coerenza dossier e piano finanziario</span></div>
+        <div class="section-item"><span class="section-num">→</span><span class="section-name">Verifica De Minimis e strutturazione fideiussione bancaria</span></div>
+        <div class="section-item"><span class="section-num">→</span><span class="section-name">Registrazione su piattaforma Invitalia e presentazione formale</span></div>
+        <div class="section-item"><span class="section-num">→</span><span class="section-name">Presidio istruttoria — gestione quesiti Invitalia con AdAstra</span></div>
+      </div>
+    </div>
+
+    <div class="disclaimer">
+      Valutazione generata da panel multi-agente AI (Claude — Anthropic). Non costituisce garanzia di ammissibilità né impegno da parte degli enti erogatori. Il dossier deve essere revisionato da un professionista prima della presentazione formale.
+    </div>
+  </div>
+
+  <!-- STATO: errore -->
+  <div id="state-error">
+    <div style="border:1px solid rgba(176,0,32,0.2);border-radius:var(--radius);padding:24px;background:rgba(176,0,32,0.03);margin-bottom:20px">
+      <div style="font-family:var(--fd);font-size:14px;font-weight:600;color:#b00020;margin-bottom:8px">Errore durante la generazione</div>
+      <div id="error-msg" style="font-family:var(--fb);font-size:13px;font-weight:300;color:#555;line-height:1.6;margin-bottom:14px"></div>
+      <button class="btn-outline" onclick="startGeneration()">Riprova</button>
+    </div>
+  </div>
+
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js"></script>
+<script>
+(function(){
+
+const VERCEL_URL = 'https://adastra-backend-sigma.vercel.app/api/analyze';
+const SECTIONS = [
+  {id:'executive', label:'Executive Summary'},
+  {id:'vpc', label:'Value Proposition Canvas'},
+  {id:'bmc', label:'Business Model Canvas'},
+  {id:'mercato', label:'Analisi di mercato e competitor'},
+  {id:'operativo', label:'Piano operativo e milestones'},
+  {id:'occupazionale', label:'Piano occupazionale'},
+  {id:'innovazione', label:'Innovazione tecnologica e IP'},
+  {id:'impatto', label:'Impatto sociale e territoriale'},
+  {id:'conto_economico', label:'Conto Economico previsionale'},
+  {id:'fonti_impieghi', label:'Fonti e Impieghi'},
+];
+
+let wizardData = null;
+let generatedSections = {};
+let docxBlob = null;
+
+// Carica dati dal sessionStorage
+function loadData(){
+  try {
+    const raw = sessionStorage.getItem('starton_wizard_data');
+    if(raw) wizardData = JSON.parse(raw);
+  } catch(e) {}
+  return wizardData;
+}
+
+function show(id){
+  ['state-nodata','state-ready','state-loading','state-done','state-error'].forEach(s => {
+    document.getElementById(s).style.display = s === id ? 'block' : 'none';
+  });
+}
+
+function buildProjectSummary(){
+  if(!wizardData) return '';
+  const d = wizardData;
+  const rows = [
+    ['Progetto', d.nome || '—'],
+    ['Settore', d.settore || '—'],
+    ['Sede', [d.comune, d.provincia ? '('+d.provincia+')' : '', d.regione].filter(Boolean).join(' ') || '—'],
+    ['Investimento', d.investimento ? '€ ' + parseInt(d.investimento).toLocaleString('it-IT') : '—'],
+    ['TRL', d.trl || '—'],
+    ['Trazione', d.trazione || '—'],
+    ['Team', d.esperienza ? d.esperienza + ' anni cumulati' : '—'],
+  ];
+  return rows.map(([l,v]) => `<div class="info-row"><span class="info-lbl">${l}</span><span class="info-val">${v}</span></div>`).join('');
+}
+
+function projectContext(){
+  if(!wizardData) return '';
+  const d = wizardData;
+  return `PROGETTO: ${d.nome||'—'}
+DESCRIZIONE: ${d.descrizione||'—'}
+SETTORE: ${d.settore||'—'}
+REGIONE: ${d.regione||'—'}${d.provincia?' ('+d.provincia+')':''} — ${d.isSud?'SUD ITALIA (premialità Smart&Start)':'Centro/Nord'}
+COMUNE: ${d.comune||'—'}
+INVESTIMENTO: €${parseInt(d.investimento||0).toLocaleString('it-IT')}
+MODELLO REVENUE: ${d.revenue||'—'}
+BREAK-EVEN: ${d.breakeven||'—'}
+EXPORT: ${d.export||'—'}
+ANZIANITA IMPRESA: ${d.anzianita||'—'}
+COMPAGINE: ${d.compagine||'—'}
+STARTUP INNOVATIVA: ${d.startup||'—'}
+DE MINIMIS: ${d.deminimis||'—'}
+FIDEIUSSIONE: ${d.fideiussione||'—'}
+FATTURATO ATTUALE: ${d.fatturato||'—'}
+CAPITALE INIZIALE: €${parseInt(d.capitale||0).toLocaleString('it-IT')}
+CO-INVESTITORI: ${d.coinvestitori||'—'}
+TRL: ${d.trl||'—'}
+TIPO INNOVAZIONE: ${d.tipoInnovazione||'—'}
+IP / BREVETTI: ${d.ip||'—'}
+TECNOLOGIA PROPRIETARIA: ${d.techprop||'—'}
+R&D: ${d.rd||'—'}
+PARTNERSHIP UNIVERSITARIE: ${d.universita||'—'}
+SCALABILITA: ${d.scala||'—'}
+MERCATO TARGET: ${d.mercato||'—'}
+COMPETITOR E DIFFERENZIAZIONE: ${d.competitor||'—'}
+TRAZIONE: ${d.trazione||'—'}
+LOI / PILOT / CONTRATTI: ${d.loi||'0'}
+RICAVI MENSILI ATTUALI: €${parseInt(d.ricavi||0).toLocaleString('it-IT')}
+TEAM: ${d.team||'—'}
+ESPERIENZA CUMULATA: ${d.esperienza||'0'} anni
+TEAM TECNICO: ${d.teamtech||'—'}
+ADVISOR / INCUBATORE: ${d.advisor||'—'}
+PERSONALE 36 MESI: ${d.personale||'—'}
+SPESE: Macchinari ${d.mac||0}% Software ${d.soft||0}% Opere ${d.opere||0}% Consulenze ${d.cons||0}% Altro ${d.altro||0}%
+RISCHIO PRINCIPALE: ${d.rischio||'—'}
+DIPENDENZE CRITICHE: ${d.dipendenze||'—'}
+IMPATTI: ${d.impatti||'Nessuno selezionato'}
+DOCUMENTI DISPONIBILI: ${d.documenti||'Nessuno'}`;
+}
+
+function buildPrompt(sectionId){
+  const ctx = projectContext();
+  const prompts = {
+    executive: `Sei un consulente esperto di finanza agevolata italiana. Scrivi un Executive Summary professionale per una candidatura Smart&Start Invitalia.
+
+DATI PROGETTO:
+${ctx}
+
+Scrivi un Executive Summary di 400-600 parole che includa:
+1. Descrizione sintetica del progetto e del problema che risolve
+2. Soluzione proposta e innovazione tecnologica
+3. Mercato target e dimensioni
+4. Modello di business e fonti di ricavo
+5. Team e competenze chiave
+6. Risultati attesi e impatto occupazionale
+7. Perché Smart&Start è il bando giusto per questo progetto
+
+Tono professionale, specifico, senza genericità. Rispondi SOLO con il testo della sezione, senza titoli o intestazioni.`,
+
+    vpc: `Sei un consulente esperto di finanza agevolata italiana. Compila il Value Proposition Canvas per una candidatura Smart&Start Invitalia.
+
+DATI PROGETTO:
+${ctx}
+
+Il VPC di Smart&Start ha 6 campi obbligatori. Compila ciascuno con contenuto specifico e contestuale (max 1.500 caratteri per campo):
+
+1. ATTIVITA DEL CLIENTE: cosa fa concretamente il cliente target nel suo lavoro quotidiano
+2. DIFFICOLTA DEL CLIENTE: ostacoli, frustrazioni e rischi che incontra
+3. VANTAGGI ATTESI DAL CLIENTE: risultati e benefici che vuole ottenere
+4. PRODOTTI E SERVIZI: cosa offre la startup concretamente
+5. ATTENUATORI DI DIFFICOLTA: come la soluzione risolve i problemi del cliente
+6. GENERATORI DI VANTAGGI: come la soluzione crea i benefici attesi
+
+Rispondi in formato JSON con chiavi: attivita, difficolta, vantaggi, prodotti, attenuatori, generatori`,
+
+    bmc: `Sei un consulente esperto di finanza agevolata italiana. Compila il Business Model Canvas per una candidatura Smart&Start Invitalia.
+
+DATI PROGETTO:
+${ctx}
+
+Compila i 9 blocchi del BMC in modo specifico e coerente con il progetto:
+
+1. SEGMENTI DI CLIENTELA: chi sono i clienti target
+2. PROPOSTA DI VALORE: cosa offre di unico
+3. CANALI: come raggiunge i clienti
+4. RELAZIONI CON I CLIENTI: tipo di relazione mantenuta
+5. FLUSSI DI RICAVI: come genera ricavi (dettaglio)
+6. RISORSE CHIAVE: risorse fondamentali necessarie
+7. ATTIVITA CHIAVE: attività principali da svolgere
+8. PARTNER CHIAVE: partner e fornitori chiave
+9. STRUTTURA DEI COSTI: principali voci di costo
+
+Rispondi in formato JSON con chiavi: segmenti, proposta, canali, relazioni, ricavi, risorse, attivita, partner, costi`,
+
+    mercato: `Sei un consulente esperto di finanza agevolata italiana. Scrivi l'analisi di mercato e competitor per una candidatura Smart&Start Invitalia.
+
+DATI PROGETTO:
+${ctx}
+
+Scrivi un'analisi di mercato di 400-500 parole che includa:
+1. Descrizione del mercato di riferimento con dati dimensionali (TAM, SAM, SOM se applicabile)
+2. Trend del settore e driver di crescita
+3. Analisi dei competitor diretti e indiretti con differenziazione
+4. Posizionamento competitivo della startup
+5. Barriere all'ingresso e vantaggi competitivi
+
+Rispondi SOLO con il testo della sezione.`,
+
+    operativo: `Sei un consulente esperto di finanza agevolata italiana. Scrivi il piano operativo per una candidatura Smart&Start Invitalia.
+
+DATI PROGETTO:
+${ctx}
+
+Scrivi un piano operativo con milestones a 36 mesi che includa:
+- Mesi 1-6: attività iniziali (sviluppo prodotto, team, primi clienti)
+- Mesi 7-12: lancio commerciale e primi ricavi
+- Mesi 13-24: crescita e scaling
+- Mesi 25-36: consolidamento e obiettivi di break-even
+
+Per ogni fase: attività principali, risorse necessarie, risultati attesi, KPI misurabili.
+
+Rispondi SOLO con il testo della sezione (300-400 parole).`,
+
+    occupazionale: `Sei un consulente esperto di finanza agevolata italiana. Scrivi il piano occupazionale per una candidatura Smart&Start Invitalia.
+
+DATI PROGETTO:
+${ctx}
+
+Scrivi un piano occupazionale che descriva:
+1. Composizione attuale del team (ruoli, competenze, anni esperienza)
+2. Personale previsto a 12, 24 e 36 mesi (ruoli e qualifiche)
+3. Tipologia contrattuale prevista
+4. Impatto occupazionale totale previsto
+5. Politiche di inclusione (under 36, donne, zone svantaggiate se applicabile)
+
+Rispondi SOLO con il testo della sezione (200-300 parole).`,
+
+    innovazione: `Sei un consulente esperto di finanza agevolata italiana. Scrivi la sezione innovazione tecnologica e IP per una candidatura Smart&Start Invitalia.
+
+DATI PROGETTO:
+${ctx}
+
+Scrivi una descrizione dell'innovazione che includa:
+1. Descrizione tecnica della soluzione e del suo funzionamento
+2. Livello TRL attuale e piano di sviluppo
+3. Componente innovativa rispetto allo stato dell'arte
+4. Tecnologia proprietaria e protezione IP (brevetti, segreto industriale, copyright SW)
+5. Dipendenze tecnologiche da terze parti e piano di mitigazione
+6. Roadmap tecnologica a 36 mesi
+
+Rispondi SOLO con il testo della sezione (300-400 parole).`,
+
+    impatto: `Sei un consulente esperto di finanza agevolata italiana. Scrivi la sezione impatto sociale, ambientale e territoriale per una candidatura Smart&Start Invitalia.
+
+DATI PROGETTO:
+${ctx}
+
+Scrivi una sezione di impatto che includa:
+1. Impatto sociale misurabile del progetto
+2. Impatto ambientale (se applicabile: riduzione emissioni, economia circolare)
+3. Impatto territoriale (sviluppo locale, Sud se applicabile)
+4. Contributo alla transizione digitale
+5. Allineamento con obiettivi PNRR e politiche Invitalia
+6. KPI di impatto misurabili a 36 mesi
+
+Rispondi SOLO con il testo della sezione (200-300 parole).`,
+
+    conto_economico: `Sei un consulente esperto di finanza agevolata italiana e di pianificazione finanziaria. Genera il Conto Economico previsionale per una candidatura Smart&Start Invitalia.
+
+DATI PROGETTO:
+${ctx}
+
+Genera un Conto Economico previsionale su 3 anni (Anno 1, Anno 2, Anno 3) realistico e coerente con i dati del progetto. Include:
+- RICAVI: dettaglio per linea di prodotto/servizio
+- COSTI OPERATIVI: personale, servizi, tecnologia, marketing, amministrazione
+- MARGINE OPERATIVO LORDO (EBITDA)
+- AMMORTAMENTI
+- RISULTATO OPERATIVO (EBIT)
+- ONERI FINANZIARI
+- UTILE/PERDITA NETTO
+
+I numeri devono essere coerenti con: investimento dichiarato, modello revenue, personale previsto, break-even stimato.
+
+Rispondi in formato JSON con struttura: {anno1: {ricavi, costi_personale, costi_servizi, costi_tech, costi_marketing, costi_amm, ebitda, ammortamenti, ebit, oneri_finanziari, utile_netto}, anno2: {...}, anno3: {...}}`,
+
+    fonti_impieghi: `Sei un consulente esperto di finanza agevolata italiana. Genera il prospetto Fonti e Impieghi per una candidatura Smart&Start Invitalia.
+
+DATI PROGETTO:
+${ctx}
+
+Genera il prospetto Fonti e Impieghi che mostri:
+
+IMPIEGHI (dove vanno i soldi):
+- Immobilizzazioni immateriali (software, brevetti, licenze)
+- Immobilizzazioni materiali (attrezzature, hardware)
+- Capitale circolante (costi operativi primi 12 mesi)
+- Totale impieghi = investimento dichiarato
+
+FONTI (da dove vengono i soldi):
+- Finanziamento Smart&Start (80-90% delle spese)
+- Contributo a fondo perduto (se Sud: 30-35% del finanziamento)
+- Capitale proprio dei soci
+- Co-investitori (se presenti)
+- Totale fonti = totale impieghi
+
+Rispondi in formato JSON con struttura: {impieghi: {immateriali, materiali, circolante, totale}, fonti: {smartstart_mutuo, smartstart_fondo_perduto, capitale_proprio, co_investitori, totale}}`
+  };
+  return prompts[sectionId] || '';
+}
+
+async function callClaude(prompt){
+  const res = await fetch(VERCEL_URL, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      ai: 'claude',
+      prompts: [prompt]
+    })
+  });
+  const data = await res.json();
+  if(!data.results || !data.results[0]) throw new Error('Nessuna risposta');
+  return data.results[0];
+}
+
+function updateSection(idx, status){
+  const list = document.getElementById('section-list-loading');
+  if(!list) return;
+  const items = list.querySelectorAll('.section-item');
+  if(items[idx]){
+    const statusEl = items[idx].querySelector('.section-status');
+    if(statusEl){
+      statusEl.className = 'section-status ' + status;
+      statusEl.textContent = status === 'done' ? '✓ Completata' : status === 'active' ? 'In corso...' : status === 'error' ? '✗ Errore' : '—';
+    }
+  }
+  const fill = document.getElementById('progress-fill');
+  const label = document.getElementById('progress-label');
+  const done = document.querySelectorAll('.section-status.done').length;
+  if(fill) fill.style.width = Math.round((done/SECTIONS.length)*100) + '%';
+  if(label) label.textContent = 'Sezione ' + done + ' / ' + SECTIONS.length;
+}
+
+async function startGeneration(){
+  if(!wizardData){ show('state-nodata'); return; }
+
+  show('state-loading');
+  generatedSections = {};
+
+  // Build section list UI
+  const list = document.getElementById('section-list-loading');
+  list.innerHTML = SECTIONS.map((s,i) =>
+    `<div class="section-item"><span class="section-num">${String(i+1).padStart(2,'0')}</span><span class="section-name">${s.label}</span><span class="section-status" id="sec-${s.id}">In attesa</span></div>`
+  ).join('');
+
+  try {
+    for(let i = 0; i < SECTIONS.length; i++){
+      const s = SECTIONS[i];
+      updateSection(i, 'active');
+      try {
+        const result = await callClaude(buildPrompt(s.id));
+        generatedSections[s.id] = result;
+        updateSection(i, 'done');
+      } catch(e) {
+        generatedSections[s.id] = {sintesi: 'Sezione non disponibile — da completare manualmente.'};
+        updateSection(i, 'error');
+      }
+      await new Promise(r => setTimeout(r, 300));
+    }
+
+    // Genera il docx
+    await buildDocx();
+    show('state-done');
+
+  } catch(err){
+    document.getElementById('error-msg').textContent = err.message;
+    show('state-error');
+  }
+}
+
+function getText(section, field){
+  const s = generatedSections[section];
+  if(!s) return 'Sezione non disponibile.';
+  if(typeof s === 'string') return s;
+  if(s.sintesi) return s.sintesi;
+  return JSON.stringify(s, null, 2);
+}
+
+function getJSON(section){
+  const s = generatedSections[section];
+  if(!s) return {};
+  if(typeof s === 'object') return s;
+  try { return JSON.parse(s.sintesi || '{}'); } catch(e){ return {}; }
+}
+
+async function buildDocx(){
+  const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType,
+          Table, TableRow, TableCell, BorderStyle, WidthType, ShadingType,
+          LevelFormat } = docx;
+
+  const d = wizardData;
+  const gold = 'C9A84C';
+  const dark = '111111';
+  const gray = '666666';
+  const lightGray = 'F5F5F5';
+
+  const border = { style: BorderStyle.SINGLE, size: 1, color: 'DDDDDD' };
+  const borders = { top: border, bottom: border, left: border, right: border };
+  const cellMargins = { top: 80, bottom: 80, left: 120, right: 120 };
+
+  function h1(text){
+    return new Paragraph({
+      heading: HeadingLevel.HEADING_1,
+      children: [new TextRun({ text, bold: true, size: 28, color: dark, font: 'Arial' })],
+      spacing: { before: 400, after: 160 },
+      border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: gold, space: 1 } }
+    });
+  }
+
+  function h2(text){
+    return new Paragraph({
+      heading: HeadingLevel.HEADING_2,
+      children: [new TextRun({ text, bold: true, size: 22, color: '7B6728', font: 'Arial' })],
+      spacing: { before: 280, after: 100 }
+    });
+  }
+
+  function p(text, opts={}){
+    return new Paragraph({
+      children: [new TextRun({ text: text||'', size: 22, color: opts.color||dark, font: 'Arial' })],
+      spacing: { before: opts.before||60, after: opts.after||60 },
+      alignment: opts.align || AlignmentType.LEFT
+    });
+  }
+
+  function divider(){
+    return new Paragraph({
+      children: [new TextRun('')],
+      spacing: { before: 120, after: 0 },
+      border: { bottom: { style: BorderStyle.SINGLE, size: 2, color: 'EEEEEE', space: 1 } }
+    });
+  }
+
+  function labelValue(label, value){
+    return new Table({
+      width: { size: 9360, type: WidthType.DXA },
+      columnWidths: [2880, 6480],
+      rows: [new TableRow({ children: [
+        new TableCell({
+          borders, width: { size: 2880, type: WidthType.DXA },
+          margins: cellMargins,
+          shading: { fill: 'F8F4EC', type: ShadingType.CLEAR },
+          children: [new Paragraph({ children: [new TextRun({ text: label, bold: true, size: 20, color: '7B6728', font: 'Arial' })] })]
+        }),
+        new TableCell({
+          borders, width: { size: 6480, type: WidthType.DXA },
+          margins: cellMargins,
+          children: [new Paragraph({ children: [new TextRun({ text: value||'—', size: 20, font: 'Arial' })] })]
+        })
+      ]})]
+    });
+  }
+
+  function vpcField(label, content){
+    return [
+      h2(label),
+      p(content || 'Da completare.', {before: 80, after: 120}),
+      divider()
+    ];
+  }
+
+  function bmcField(label, content){
+    return [
+      new Paragraph({
+        children: [new TextRun({ text: label, bold: true, size: 21, color: '7B6728', font: 'Arial' })],
+        spacing: { before: 200, after: 60 }
+      }),
+      p(content || 'Da completare.', {before: 40, after: 100})
+    ];
+  }
+
+  function euroFormat(n){ return n ? '€ ' + parseInt(n).toLocaleString('it-IT') : '—'; }
+
+  // Dati generati
+  const exec = getText('executive');
+  const vpc = getJSON('vpc');
+  const bmc = getJSON('bmc');
+  const mercato = getText('mercato');
+  const operativo = getText('operativo');
+  const occupazionale = getText('occupazionale');
+  const innovazione = getText('innovazione');
+  const impatto = getText('impatto');
+  const ce = getJSON('conto_economico');
+  const fi = getJSON('fonti_impieghi');
+
+  const children = [
+
+    // COPERTINA
+    new Paragraph({
+      children: [new TextRun({ text: 'PIANO DI IMPRESA', size: 48, bold: true, color: dark, font: 'Arial' })],
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 1200, after: 160 }
+    }),
+    new Paragraph({
+      children: [new TextRun({ text: d.nome || 'Progetto', size: 36, bold: true, color: gold, font: 'Arial' })],
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 0, after: 240 }
+    }),
+    new Paragraph({
+      children: [new TextRun({ text: 'Candidatura Smart&Start Italia — Invitalia', size: 24, color: gray, font: 'Arial' })],
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 0, after: 80 }
+    }),
+    new Paragraph({
+      children: [new TextRun({ text: new Date().toLocaleDateString('it-IT', {year:'numeric', month:'long'}), size: 22, color: gray, font: 'Arial' })],
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 0, after: 800 }
+    }),
+    new Paragraph({
+      children: [new TextRun({ text: 'Documento generato da START ON — Panel Multi-Agente AI', size: 18, color: 'AAAAAA', font: 'Arial' })],
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 0, after: 200 }
+    }),
+    divider(),
+
+    // DATI PROGETTO
+    h1('Dati identificativi del progetto'),
+    labelValue('Nome progetto', d.nome),
+    p('', {before: 4, after: 4}),
+    labelValue('Settore', d.settore),
+    p('', {before: 4, after: 4}),
+    labelValue('Sede legale', [d.comune, d.provincia, d.regione].filter(Boolean).join(', ')),
+    p('', {before: 4, after: 4}),
+    labelValue('Investimento totale', euroFormat(d.investimento)),
+    p('', {before: 4, after: 4}),
+    labelValue('Modello di revenue', d.revenue),
+    p('', {before: 4, after: 4}),
+    labelValue('Break-even stimato', d.breakeven),
+    p('', {before: 4, after: 4}),
+    labelValue('Startup innovativa', d.startup),
+    p('', {before: 4, after: 4}),
+    labelValue('De Minimis', d.deminimis),
+    p('', {before: 4, after: 80}),
+
+    // SEZIONE 1: EXECUTIVE SUMMARY
+    h1('1. Executive Summary'),
+    p(exec, {before: 80, after: 80}),
+
+    // SEZIONE 2: VPC
+    h1('2. Value Proposition Canvas'),
+    p('Il Value Proposition Canvas descrive la proposta di valore della startup in relazione ai bisogni del cliente target.', {before: 60, after: 120, color: gray}),
+    ...vpcField('2.1 Attività del cliente', vpc.attivita),
+    ...vpcField('2.2 Difficoltà del cliente', vpc.difficolta),
+    ...vpcField('2.3 Vantaggi attesi dal cliente', vpc.vantaggi),
+    ...vpcField('2.4 Prodotti e servizi', vpc.prodotti),
+    ...vpcField('2.5 Attenuatori di difficoltà', vpc.attenuatori),
+    ...vpcField('2.6 Generatori di vantaggi', vpc.generatori),
+
+    // SEZIONE 3: BMC
+    h1('3. Business Model Canvas'),
+    p('Il Business Model Canvas descrive come la startup crea, distribuisce e cattura valore.', {before: 60, after: 120, color: gray}),
+    ...bmcField('3.1 Segmenti di clientela', bmc.segmenti),
+    ...bmcField('3.2 Proposta di valore', bmc.proposta),
+    ...bmcField('3.3 Canali', bmc.canali),
+    ...bmcField('3.4 Relazioni con i clienti', bmc.relazioni),
+    ...bmcField('3.5 Flussi di ricavi', bmc.ricavi),
+    ...bmcField('3.6 Risorse chiave', bmc.risorse),
+    ...bmcField('3.7 Attività chiave', bmc.attivita),
+    ...bmcField('3.8 Partner chiave', bmc.partner),
+    ...bmcField('3.9 Struttura dei costi', bmc.costi),
+
+    // SEZIONE 4: MERCATO
+    h1('4. Analisi di mercato e competitor'),
+    p(mercato, {before: 80, after: 80}),
+
+    // SEZIONE 5: PIANO OPERATIVO
+    h1('5. Piano operativo e milestones'),
+    p(operativo, {before: 80, after: 80}),
+
+    // SEZIONE 6: PIANO OCCUPAZIONALE
+    h1('6. Piano occupazionale'),
+    p(occupazionale, {before: 80, after: 80}),
+
+    // SEZIONE 7: INNOVAZIONE
+    h1('7. Innovazione tecnologica e proprietà intellettuale'),
+    p(innovazione, {before: 80, after: 80}),
+
+    // SEZIONE 8: IMPATTO
+    h1('8. Impatto sociale, ambientale e territoriale'),
+    p(impatto, {before: 80, after: 80}),
+
+    // SEZIONE 9: CONTO ECONOMICO
+    h1('9. Piano finanziario — Conto Economico previsionale'),
+    p('Proiezioni economiche su 3 anni. I valori sono stimati sulla base dei dati inseriti e devono essere validati da un professionista.', {before: 60, after: 120, color: gray}),
+  ];
+
+  // Tabella CE
+  const ceYears = ['anno1','anno2','anno3'];
+  const ceLabels = [
+    ['Ricavi totali', 'ricavi'],
+    ['Costi del personale', 'costi_personale'],
+    ['Costi servizi e fornitori', 'costi_servizi'],
+    ['Costi tecnologia', 'costi_tech'],
+    ['Costi marketing', 'costi_marketing'],
+    ['Costi amministrativi', 'costi_amm'],
+    ['EBITDA', 'ebitda'],
+    ['Ammortamenti', 'ammortamenti'],
+    ['EBIT', 'ebit'],
+    ['Oneri finanziari', 'oneri_finanziari'],
+    ['Utile / Perdita netta', 'utile_netto'],
+  ];
+
+  children.push(new Table({
+    width: { size: 9360, type: WidthType.DXA },
+    columnWidths: [3360, 2000, 2000, 2000],
+    rows: [
+      new TableRow({
+        tableHeader: true,
+        children: ['Voce', 'Anno 1', 'Anno 2', 'Anno 3'].map((h, ci) => new TableCell({
+          borders, width: { size: ci===0?3360:2000, type: WidthType.DXA },
+          margins: cellMargins,
+          shading: { fill: '2D2416', type: ShadingType.CLEAR },
+          children: [new Paragraph({ children: [new TextRun({ text: h, bold: true, size: 20, color: 'FFFFFF', font: 'Arial' })] })]
+        }))
+      }),
+      ...ceLabels.map(([label, key], ri) => new TableRow({
+        children: [
+          new TableCell({
+            borders, width: { size: 3360, type: WidthType.DXA }, margins: cellMargins,
+            shading: { fill: ri%2===0 ? 'F8F4EC' : 'FFFFFF', type: ShadingType.CLEAR },
+            children: [new Paragraph({ children: [new TextRun({ text: label, size: 20, bold: key==='ebitda'||key==='ebit'||key==='utile_netto', font: 'Arial' })] })]
+          }),
+          ...ceYears.map(yr => new TableCell({
+            borders, width: { size: 2000, type: WidthType.DXA }, margins: cellMargins,
+            shading: { fill: ri%2===0 ? 'F8F4EC' : 'FFFFFF', type: ShadingType.CLEAR },
+            children: [new Paragraph({
+              alignment: AlignmentType.RIGHT,
+              children: [new TextRun({ text: ce[yr]?.[key] ? euroFormat(ce[yr][key]) : '—', size: 20, font: 'Arial', bold: key==='ebitda'||key==='ebit'||key==='utile_netto' })]
+            })]
+          }))
+        ]
+      }))
+    ]
+  }));
+
+  // SEZIONE 10: FONTI E IMPIEGHI
+  children.push(
+    p('', {before: 60}),
+    h1('10. Fonti e Impieghi'),
+    p('Il prospetto mostra la struttura del finanziamento e l\'utilizzo delle risorse.', {before: 60, after: 120, color: gray})
+  );
+
+  const fiRows = [
+    ['IMPIEGHI', null],
+    ['Immobilizzazioni immateriali (SW, brevetti, licenze)', fi.impieghi?.immateriali],
+    ['Immobilizzazioni materiali (attrezzature, hardware)', fi.impieghi?.materiali],
+    ['Capitale circolante (12 mesi operativi)', fi.impieghi?.circolante],
+    ['TOTALE IMPIEGHI', fi.impieghi?.totale],
+    ['', null],
+    ['FONTI', null],
+    ['Finanziamento Smart&Start — quota mutuo tasso zero', fi.fonti?.smartstart_mutuo],
+    ['Finanziamento Smart&Start — quota fondo perduto', fi.fonti?.smartstart_fondo_perduto],
+    ['Capitale proprio dei soci', fi.fonti?.capitale_proprio],
+    ['Co-investitori', fi.fonti?.co_investitori],
+    ['TOTALE FONTI', fi.fonti?.totale],
+  ];
+
+  children.push(new Table({
+    width: { size: 9360, type: WidthType.DXA },
+    columnWidths: [6360, 3000],
+    rows: fiRows.map(([label, val]) => {
+      const isHeader = val === null && label !== '';
+      const isEmpty = label === '' && val === null;
+      const isTotale = label.startsWith('TOTALE');
+      return new TableRow({
+        children: [
+          new TableCell({
+            borders, width: { size: 6360, type: WidthType.DXA }, margins: cellMargins,
+            shading: { fill: isHeader ? '2D2416' : isTotale ? 'F8F4EC' : isEmpty ? 'FFFFFF' : 'FFFFFF', type: ShadingType.CLEAR },
+            children: [new Paragraph({ children: [new TextRun({ text: label, bold: isHeader||isTotale, size: 20, color: isHeader?'FFFFFF':dark, font: 'Arial' })] })]
+          }),
+          new TableCell({
+            borders, width: { size: 3000, type: WidthType.DXA }, margins: cellMargins,
+            shading: { fill: isHeader ? '2D2416' : isTotale ? 'F8F4EC' : 'FFFFFF', type: ShadingType.CLEAR },
+            children: [new Paragraph({
+              alignment: AlignmentType.RIGHT,
+              children: [new TextRun({ text: val ? euroFormat(val) : (isHeader ? '' : '—'), bold: isTotale, size: 20, color: isHeader?'FFFFFF':dark, font: 'Arial' })]
+            })]
+          })
+        ]
+      });
+    })
+  }));
+
+  // DISCLAIMER
+  children.push(
+    p('', {before: 120}),
+    divider(),
+    p('Nota: questo documento è stato generato automaticamente da START ON — Panel Multi-Agente AI (Claude — Anthropic) sulla base dei dati inseriti nel wizard. Costituisce una bozza professionale che richiede revisione e validazione da parte di un consulente qualificato prima della presentazione formale a Invitalia. I dati finanziari sono proiettivi e non costituiscono garanzia di risultati.', {before: 120, after: 60, color: '999999'})
+  );
+
+  const doc = new Document({
+    styles: {
+      default: { document: { run: { font: 'Arial', size: 22 } } },
+      paragraphStyles: [
+        { id: 'Heading1', name: 'Heading 1', basedOn: 'Normal', next: 'Normal', quickFormat: true,
+          run: { size: 32, bold: true, font: 'Arial', color: dark },
+          paragraph: { spacing: { before: 480, after: 200 }, outlineLevel: 0 } },
+        { id: 'Heading2', name: 'Heading 2', basedOn: 'Normal', next: 'Normal', quickFormat: true,
+          run: { size: 24, bold: true, font: 'Arial', color: '7B6728' },
+          paragraph: { spacing: { before: 320, after: 120 }, outlineLevel: 1 } },
+      ]
+    },
+    sections: [{
+      properties: {
+        page: {
+          size: { width: 11906, height: 16838 },
+          margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 }
+        }
+      },
+      children
+    }]
+  });
+
+  const buffer = await docx.Packer.toBuffer(doc);
+  docxBlob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+  downloadDocx();
+
+  document.getElementById('btn-download-again').onclick = downloadDocx;
+}
+
+function downloadDocx(){
+  if(!docxBlob) return;
+  const url = URL.createObjectURL(docxBlob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Dossier_SmartStart_' + (wizardData?.nome||'progetto').replace(/\s+/g,'_') + '_' + new Date().toISOString().slice(0,10) + '.docx';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// INIT
+window.startGeneration = startGeneration;
+
+const data = loadData();
+if(data){
+  document.getElementById('project-summary').innerHTML = buildProjectSummary();
+  show('state-ready');
+} else {
+  show('state-nodata');
+}
+
+})();
+</script>
+</body>
+</html>
