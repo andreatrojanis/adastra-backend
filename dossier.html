@@ -527,9 +527,10 @@ function getJSON(section){
 }
 
 async function buildDocx(){
+  const docxLib = window.docx || docx;
   const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType,
           Table, TableRow, TableCell, BorderStyle, WidthType, ShadingType,
-          LevelFormat } = docx;
+          LevelFormat } = docxLib;
 
   const d = wizardData;
   const gold = 'C9A84C';
@@ -855,7 +856,7 @@ async function buildDocx(){
     }]
   });
 
-  const buffer = await docx.Packer.toBuffer(doc);
+  const buffer = await Packer.toBuffer(doc);
   docxBlob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
   downloadDocx();
 
