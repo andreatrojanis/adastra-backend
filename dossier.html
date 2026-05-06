@@ -22,7 +22,6 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
 .page-title em{font-style:normal;font-weight:300;color:var(--gold-light)}
 .page-sub{font-family:var(--fb);font-size:13px;font-weight:300;color:#666;line-height:1.7;margin-bottom:32px;max-width:500px}
 
-/* STATO INIZIALE */
 #state-nodata{display:block}
 #state-loading{display:none}
 #state-done{display:none}
@@ -44,11 +43,9 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
 .section-status.active{color:var(--gold)}
 .section-status.error{color:#b00020}
 
-/* SPINNER */
 .spinner{width:28px;height:28px;border:2px solid rgba(201,168,76,0.15);border-top-color:var(--gold);border-radius:50%;margin:0 auto 14px;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* BTN */
 .btn-main{padding:15px 32px;background:var(--gold);color:#fff;border:none;border-radius:999px;font-family:var(--fd);font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .22s}
 .btn-main:hover{background:var(--gold-light);transform:translateY(-1px)}
 .btn-main:disabled{opacity:.35;cursor:not-allowed;transform:none}
@@ -80,17 +77,17 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
 
   <!-- STATO: nessun dato -->
   <div id="state-nodata">
-    <div class="eyebrow">Dossier Smart&Start</div>
+    <div class="eyebrow">Dossier Smart&amp;Start</div>
     <div class="page-title">Genera il tuo<br><em>dossier completo.</em></div>
     <div class="page-sub">Per generare il dossier devi prima completare il wizard e ottenere il report. Torna alla pagina principale e compila il wizard.</div>
     <a href="index.html" class="btn-main" style="display:inline-block;text-decoration:none;margin-top:8px">Vai al wizard →</a>
   </div>
 
-  <!-- STATO: dati presenti, pronto per generare -->
+  <!-- STATO: pronto -->
   <div id="state-ready" style="display:none">
-    <div class="eyebrow">Dossier Smart&Start</div>
+    <div class="eyebrow">Dossier Smart&amp;Start</div>
     <div class="page-title">Il tuo dossier<br><em>è pronto per essere generato.</em></div>
-    <div class="page-sub">L'AI genererà automaticamente tutti i documenti richiesti da Invitalia per la candidatura Smart&Start, personalizzati sui dati del tuo progetto.</div>
+    <div class="page-sub">Claude Sonnet genererà automaticamente tutte le sezioni richieste da Invitalia, personalizzate sui dati del tuo progetto. Testo abbondante, specifico e professionale.</div>
 
     <span class="price-badge">€ 399 — una tantum</span>
 
@@ -100,36 +97,36 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
     </div>
 
     <div class="info-box">
-      <div class="info-box-title">Documenti che verranno generati</div>
-      <div class="section-list" id="section-list-preview">
-        <div class="section-item"><span class="section-num">01</span><span class="section-name">Executive Summary — Descrizione del progetto e sintesi strategica</span><span class="section-status">—</span></div>
+      <div class="info-box-title">Sezioni che verranno generate — Claude Sonnet</div>
+      <div class="section-list">
+        <div class="section-item"><span class="section-num">01</span><span class="section-name">Executive Summary — sintesi strategica 500-800 parole</span><span class="section-status">—</span></div>
         <div class="section-item"><span class="section-num">02</span><span class="section-name">Value Proposition Canvas — 6 campi obbligatori Invitalia</span><span class="section-status">—</span></div>
         <div class="section-item"><span class="section-num">03</span><span class="section-name">Business Model Canvas — 9 blocchi strutturati</span><span class="section-status">—</span></div>
-        <div class="section-item"><span class="section-num">04</span><span class="section-name">Analisi di mercato e competitor</span><span class="section-status">—</span></div>
+        <div class="section-item"><span class="section-num">04</span><span class="section-name">Analisi di mercato e competitor — TAM/SAM/SOM</span><span class="section-status">—</span></div>
         <div class="section-item"><span class="section-num">05</span><span class="section-name">Piano operativo e milestones a 36 mesi</span><span class="section-status">—</span></div>
         <div class="section-item"><span class="section-num">06</span><span class="section-name">Piano occupazionale — personale previsto</span><span class="section-status">—</span></div>
-        <div class="section-item"><span class="section-num">07</span><span class="section-name">Descrizione innovazione tecnologica e IP</span><span class="section-status">—</span></div>
+        <div class="section-item"><span class="section-num">07</span><span class="section-name">Innovazione tecnologica e IP — TRL e roadmap</span><span class="section-status">—</span></div>
         <div class="section-item"><span class="section-num">08</span><span class="section-name">Impatto sociale, ambientale e territoriale</span><span class="section-status">—</span></div>
-        <div class="section-item"><span class="section-num">09</span><span class="section-name">Piano finanziario — Conto Economico previsionale 3 anni</span><span class="section-status">—</span></div>
+        <div class="section-item"><span class="section-num">09</span><span class="section-name">Conto Economico previsionale 3 anni</span><span class="section-status">—</span></div>
         <div class="section-item"><span class="section-num">10</span><span class="section-name">Fonti e Impieghi — struttura del finanziamento</span><span class="section-status">—</span></div>
       </div>
     </div>
 
     <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-      <button class="btn-main" id="btn-generate" onclick="startGeneration()">Genera Dossier Smart&Start →</button>
+      <button class="btn-main" id="btn-generate" onclick="startGeneration()">Genera Dossier Smart&amp;Start →</button>
       <button class="btn-outline" onclick="history.back()">Torna al report</button>
     </div>
 
     <div class="disclaimer">
-      Il dossier generato costituisce una bozza professionale da revisionare con il team AdAstra prima della presentazione formale. I dati finanziari sono proiettati sulla base delle informazioni inserite nel wizard e richiedono validazione da parte di un professionista.
+      Il dossier è generato da Claude Sonnet (Anthropic) — 4.000 token per sezione. Costituisce una bozza professionale da revisionare con il team AdAstra prima della presentazione formale a Invitalia.
     </div>
   </div>
 
   <!-- STATO: generazione in corso -->
   <div id="state-loading">
     <div class="eyebrow">Generazione in corso</div>
-    <div class="page-title">L'AI sta<br><em>costruendo il dossier.</em></div>
-    <div class="page-sub">Il processo richiede 2-3 minuti. Non chiudere questa pagina.</div>
+    <div class="page-title">Claude Sonnet sta<br><em>costruendo il dossier.</em></div>
+    <div class="page-sub">Il processo richiede 3-5 minuti — ogni sezione è generata con testo abbondante e specifico. Non chiudere questa pagina.</div>
 
     <div class="progress-label" id="progress-label">Sezione 0 / 10</div>
     <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
@@ -161,7 +158,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
     </div>
 
     <div class="disclaimer">
-      Valutazione generata da panel multi-agente AI (Claude — Anthropic). Non costituisce garanzia di ammissibilità né impegno da parte degli enti erogatori. Il dossier deve essere revisionato da un professionista prima della presentazione formale.
+      Dossier generato da Claude Sonnet (Anthropic). Non costituisce garanzia di ammissibilità né impegno da parte degli enti erogatori. Revisionare con un professionista prima della presentazione formale.
     </div>
   </div>
 
@@ -176,36 +173,30 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
 
 </main>
 
-
 <script>
-// docx library alias
-let docx;
-document.addEventListener("DOMContentLoaded", function(){
-  docx = window.docx;
-  init();
-});
+document.addEventListener('DOMContentLoaded', function(){ init(); });
 
 function init(){
 
-const VERCEL_URL = 'https://adastra-backend-sigma.vercel.app/api/analyze';
+const GENERATE_URL = 'https://adastra-backend-sigma.vercel.app/api/generate';
+
 const SECTIONS = [
-  {id:'executive', label:'Executive Summary'},
-  {id:'vpc', label:'Value Proposition Canvas'},
-  {id:'bmc', label:'Business Model Canvas'},
-  {id:'mercato', label:'Analisi di mercato e competitor'},
-  {id:'operativo', label:'Piano operativo e milestones'},
-  {id:'occupazionale', label:'Piano occupazionale'},
-  {id:'innovazione', label:'Innovazione tecnologica e IP'},
-  {id:'impatto', label:'Impatto sociale e territoriale'},
+  {id:'executive',    label:'Executive Summary'},
+  {id:'vpc',          label:'Value Proposition Canvas'},
+  {id:'bmc',          label:'Business Model Canvas'},
+  {id:'mercato',      label:'Analisi di mercato e competitor'},
+  {id:'operativo',    label:'Piano operativo e milestones'},
+  {id:'occupazionale',label:'Piano occupazionale'},
+  {id:'innovazione',  label:'Innovazione tecnologica e IP'},
+  {id:'impatto',      label:'Impatto sociale e territoriale'},
   {id:'conto_economico', label:'Conto Economico previsionale'},
-  {id:'fonti_impieghi', label:'Fonti e Impieghi'},
+  {id:'fonti_impieghi',  label:'Fonti e Impieghi'},
 ];
 
 let wizardData = null;
 let generatedSections = {};
 let docxBlob = null;
 
-// Carica dati dal sessionStorage
 function loadData(){
   try {
     const raw = sessionStorage.getItem('starton_wizard_data');
@@ -215,7 +206,7 @@ function loadData(){
 }
 
 function show(id){
-  ['state-nodata','state-ready','state-loading','state-done','state-error'].forEach(s => {
+  ['state-nodata','state-ready','state-loading','state-done','state-error'].forEach(function(s){
     document.getElementById(s).style.display = s === id ? 'block' : 'none';
   });
 }
@@ -232,235 +223,289 @@ function buildProjectSummary(){
     ['Trazione', d.trazione || '—'],
     ['Team', d.esperienza ? d.esperienza + ' anni cumulati' : '—'],
   ];
-  return rows.map(([l,v]) => `<div class="info-row"><span class="info-lbl">${l}</span><span class="info-val">${v}</span></div>`).join('');
+  return rows.map(function(r){ return '<div class="info-row"><span class="info-lbl">'+r[0]+'</span><span class="info-val">'+r[1]+'</span></div>'; }).join('');
 }
 
 function projectContext(){
   if(!wizardData) return '';
   const d = wizardData;
-  return `PROGETTO: ${d.nome||'—'}
-DESCRIZIONE: ${d.descrizione||'—'}
-SETTORE: ${d.settore||'—'}
-REGIONE: ${d.regione||'—'}${d.provincia?' ('+d.provincia+')':''} — ${d.isSud?'SUD ITALIA (premialità Smart&Start)':'Centro/Nord'}
-COMUNE: ${d.comune||'—'}
-INVESTIMENTO: €${parseInt(d.investimento||0).toLocaleString('it-IT')}
-MODELLO REVENUE: ${d.revenue||'—'}
-BREAK-EVEN: ${d.breakeven||'—'}
-EXPORT: ${d.export||'—'}
-ANZIANITA IMPRESA: ${d.anzianita||'—'}
-COMPAGINE: ${d.compagine||'—'}
-STARTUP INNOVATIVA: ${d.startup||'—'}
-DE MINIMIS: ${d.deminimis||'—'}
-FIDEIUSSIONE: ${d.fideiussione||'—'}
-FATTURATO ATTUALE: ${d.fatturato||'—'}
-CAPITALE INIZIALE: €${parseInt(d.capitale||0).toLocaleString('it-IT')}
-CO-INVESTITORI: ${d.coinvestitori||'—'}
-TRL: ${d.trl||'—'}
-TIPO INNOVAZIONE: ${d.tipoInnovazione||'—'}
-IP / BREVETTI: ${d.ip||'—'}
-TECNOLOGIA PROPRIETARIA: ${d.techprop||'—'}
-R&D: ${d.rd||'—'}
-PARTNERSHIP UNIVERSITARIE: ${d.universita||'—'}
-SCALABILITA: ${d.scala||'—'}
-MERCATO TARGET: ${d.mercato||'—'}
-COMPETITOR E DIFFERENZIAZIONE: ${d.competitor||'—'}
-TRAZIONE: ${d.trazione||'—'}
-LOI / PILOT / CONTRATTI: ${d.loi||'0'}
-RICAVI MENSILI ATTUALI: €${parseInt(d.ricavi||0).toLocaleString('it-IT')}
-TEAM: ${d.team||'—'}
-ESPERIENZA CUMULATA: ${d.esperienza||'0'} anni
-TEAM TECNICO: ${d.teamtech||'—'}
-ADVISOR / INCUBATORE: ${d.advisor||'—'}
-PERSONALE 36 MESI: ${d.personale||'—'}
-SPESE: Macchinari ${d.mac||0}% Software ${d.soft||0}% Opere ${d.opere||0}% Consulenze ${d.cons||0}% Altro ${d.altro||0}%
-RISCHIO PRINCIPALE: ${d.rischio||'—'}
-DIPENDENZE CRITICHE: ${d.dipendenze||'—'}
-IMPATTI: ${d.impatti||'Nessuno selezionato'}
-DOCUMENTI DISPONIBILI: ${d.documenti||'Nessuno'}`;
+  return 'PROGETTO: '+(d.nome||'—')+
+    '\nDESCRIZIONE: '+(d.descrizione||'—')+
+    '\nSETTORE: '+(d.settore||'—')+
+    '\nREGIONE: '+(d.regione||'—')+(d.provincia?' ('+d.provincia+')':'')+' — '+(d.isSud?'SUD ITALIA (premialità Smart&Start attiva)':'Centro/Nord')+
+    '\nCOMUNE: '+(d.comune||'—')+
+    '\nINVESTIMENTO: €'+parseInt(d.investimento||0).toLocaleString('it-IT')+
+    '\nMODELLO REVENUE: '+(d.revenue||'—')+
+    '\nBREAK-EVEN: '+(d.breakeven||'—')+
+    '\nEXPORT: '+(d.export||'—')+
+    '\nANZIANITA IMPRESA: '+(d.anzianita||'—')+
+    '\nCOMPAGINE: '+(d.compagine||'—')+
+    '\nSTARTUP INNOVATIVA: '+(d.startup||'—')+
+    '\nDE MINIMIS: '+(d.deminimis||'—')+
+    '\nFIDEIUSSIONE: '+(d.fideiussione||'—')+
+    '\nFATTURATOATTUALE: '+(d.fatturato||'—')+
+    '\nCAPITALE INIZIALE: €'+parseInt(d.capitale||0).toLocaleString('it-IT')+
+    '\nCO-INVESTITORI: '+(d.coinvestitori||'—')+
+    '\nTRL: '+(d.trl||'—')+
+    '\nTIPO INNOVAZIONE: '+(d.tipoInnovazione||'—')+
+    '\nIP / BREVETTI: '+(d.ip||'—')+
+    '\nTECNOLOGIA PROPRIETARIA: '+(d.techprop||'—')+
+    '\nR&D: '+(d.rd||'—')+
+    '\nPARTNERSHIP UNIVERSITARIE: '+(d.universita||'—')+
+    '\nSCALABILITA: '+(d.scala||'—')+
+    '\nMERCATO TARGET: '+(d.mercato||'—')+
+    '\nCOMPETITOR E DIFFERENZIAZIONE: '+(d.competitor||'—')+
+    '\nTRAZIONE: '+(d.trazione||'—')+
+    '\nLOI / PILOT / CONTRATTI: '+(d.loi||'0')+
+    '\nRICAVI MENSILI ATTUALI: €'+parseInt(d.ricavi||0).toLocaleString('it-IT')+
+    '\nTEAM: '+(d.team||'—')+
+    '\nESPERIENZA CUMULATA: '+(d.esperienza||'0')+' anni'+
+    '\nTEAM TECNICO: '+(d.teamtech||'—')+
+    '\nADVISOR / INCUBATORE: '+(d.advisor||'—')+
+    '\nPERSONALE 36 MESI: '+(d.personale||'—')+
+    '\nSPESE: Macchinari '+(d.mac||0)+'% Software '+(d.soft||0)+'% Opere '+(d.opere||0)+'% Consulenze '+(d.cons||0)+'% Altro '+(d.altro||0)+'%'+
+    '\nRISCHIO PRINCIPALE: '+(d.rischio||'—')+
+    '\nDIPENDENZE CRITICHE: '+(d.dipendenze||'—')+
+    '\nIMPATTI: '+(d.impatti||'Nessuno selezionato')+
+    '\nDOCUMENTI DISPONIBILI: '+(d.documenti||'Nessuno');
 }
 
 function buildPrompt(sectionId){
   const ctx = projectContext();
   const prompts = {
-    executive: `Sei un consulente esperto di finanza agevolata italiana. Scrivi un Executive Summary professionale per una candidatura Smart&Start Invitalia.
+
+executive: `Sei un consulente senior di finanza agevolata italiana con 15 anni di esperienza in candidature Invitalia Smart&Start. Scrivi un Executive Summary professionale, abbondante e convincente.
 
 DATI PROGETTO:
 ${ctx}
 
-Scrivi un Executive Summary di 400-600 parole che includa:
-1. Descrizione sintetica del progetto e del problema che risolve
-2. Soluzione proposta e innovazione tecnologica
-3. Mercato target e dimensioni
-4. Modello di business e fonti di ricavo
-5. Team e competenze chiave
-6. Risultati attesi e impatto occupazionale
-7. Perché Smart&Start è il bando giusto per questo progetto
+Scrivi un Executive Summary di ALMENO 600-800 parole che includa obbligatoriamente:
+1. Il problema reale che il progetto risolve — con dati di contesto sul settore
+2. La soluzione proposta, la sua unicità e il vantaggio competitivo
+3. L'innovazione tecnologica e lo stato di sviluppo attuale (TRL)
+4. Il mercato target con dimensioni stimate (TAM/SAM se possibile)
+5. Il modello di business, le fonti di ricavo e la sostenibilità economica
+6. Il team: competenze, ruoli e track record rilevante
+7. I risultati attesi a 12, 24 e 36 mesi con KPI concreti
+8. Perché Smart&Start è il bando più adatto — citando esplicitamente i requisiti soddisfatti
+9. L'impatto occupazionale e territoriale atteso
 
-Tono professionale, specifico, senza genericità. Rispondi SOLO con il testo della sezione, senza titoli o intestazioni.`,
+Tono autorevole, specifico, orientato alla commissione istruttoria Invitalia. Zero genericità. Ogni affermazione deve essere supportata dai dati del progetto.
+Rispondi SOLO con il testo, senza titoli o intestazioni.`,
 
-    vpc: `Sei un consulente esperto di finanza agevolata italiana. Compila il Value Proposition Canvas per una candidatura Smart&Start Invitalia.
-
-DATI PROGETTO:
-${ctx}
-
-Il VPC di Smart&Start ha 6 campi obbligatori. Compila ciascuno con contenuto specifico e contestuale (max 1.500 caratteri per campo):
-
-1. ATTIVITA DEL CLIENTE: cosa fa concretamente il cliente target nel suo lavoro quotidiano
-2. DIFFICOLTA DEL CLIENTE: ostacoli, frustrazioni e rischi che incontra
-3. VANTAGGI ATTESI DAL CLIENTE: risultati e benefici che vuole ottenere
-4. PRODOTTI E SERVIZI: cosa offre la startup concretamente
-5. ATTENUATORI DI DIFFICOLTA: come la soluzione risolve i problemi del cliente
-6. GENERATORI DI VANTAGGI: come la soluzione crea i benefici attesi
-
-Rispondi in formato JSON con chiavi: attivita, difficolta, vantaggi, prodotti, attenuatori, generatori`,
-
-    bmc: `Sei un consulente esperto di finanza agevolata italiana. Compila il Business Model Canvas per una candidatura Smart&Start Invitalia.
+vpc: `Sei un consulente senior di finanza agevolata italiana. Compila il Value Proposition Canvas per Smart&Start Invitalia.
 
 DATI PROGETTO:
 ${ctx}
 
-Compila i 9 blocchi del BMC in modo specifico e coerente con il progetto:
+Il VPC di Smart&Start richiede 6 campi. Ogni campo deve essere ABBONDANTE (300-500 parole ciascuno), specifico e contestuale al progetto. Non essere generico.
 
-1. SEGMENTI DI CLIENTELA: chi sono i clienti target
-2. PROPOSTA DI VALORE: cosa offre di unico
-3. CANALI: come raggiunge i clienti
-4. RELAZIONI CON I CLIENTI: tipo di relazione mantenuta
-5. FLUSSI DI RICAVI: come genera ricavi (dettaglio)
-6. RISORSE CHIAVE: risorse fondamentali necessarie
-7. ATTIVITA CHIAVE: attività principali da svolgere
-8. PARTNER CHIAVE: partner e fornitori chiave
-9. STRUTTURA DEI COSTI: principali voci di costo
+1. ATTIVITA DEL CLIENTE: descrivi in dettaglio cosa fa quotidianamente il cliente target — le sue routine operative, i processi che segue, le decisioni che prende, gli strumenti che usa oggi
+2. DIFFICOLTA DEL CLIENTE: analizza in profondità ostacoli, frustrazioni, rischi e costi che affronta — sia economici che operativi e temporali
+3. VANTAGGI ATTESI DAL CLIENTE: specifica i risultati concreti, i benefici economici misurabili, i miglioramenti operativi e strategici che il cliente si aspetta
+4. PRODOTTI E SERVIZI: descrivi nel dettaglio cosa offre la startup — funzionalità, modalità di erogazione, pricing, integrazioni, roadmap evolutiva
+5. ATTENUATORI DI DIFFICOLTA: spiega come la soluzione elimina o riduce ogni singola difficoltà identificata — meccanismo per meccanismo
+6. GENERATORI DI VANTAGGI: dettagliare come la soluzione genera ogni singolo vantaggio atteso — con metriche e tempi
+
+Rispondi in formato JSON con chiavi: attivita, difficolta, vantaggi, prodotti, attenuatori, generatori
+Ogni valore deve essere una stringa di testo ricca e articolata.`,
+
+bmc: `Sei un consulente senior di finanza agevolata italiana. Compila il Business Model Canvas per Smart&Start Invitalia.
+
+DATI PROGETTO:
+${ctx}
+
+Compila i 9 blocchi del BMC in modo ABBONDANTE e specifico (200-300 parole per blocco). Non essere generico — ogni elemento deve essere contestualizzato al progetto specifico.
+
+1. SEGMENTI DI CLIENTELA: chi sono esattamente i clienti, segmentazione, dimensioni, comportamenti d'acquisto
+2. PROPOSTA DI VALORE: cosa offre di unico e differenziante rispetto alle alternative esistenti
+3. CANALI: come raggiunge i clienti in ogni fase (awareness, valutazione, acquisto, post-vendita)
+4. RELAZIONI CON I CLIENTI: tipo e intensità della relazione, customer success, supporto, community
+5. FLUSSI DI RICAVI: tutte le fonti di ricavo con pricing, modello e volumi attesi per anno
+6. RISORSE CHIAVE: risorse fisiche, intellettuali, umane e finanziarie fondamentali
+7. ATTIVITA CHIAVE: le attività core che creano e consegnano valore
+8. PARTNER CHIAVE: chi sono i partner strategici, i fornitori critici, le alleanze
+9. STRUTTURA DEI COSTI: principali voci di costo fissi e variabili, economie di scala
 
 Rispondi in formato JSON con chiavi: segmenti, proposta, canali, relazioni, ricavi, risorse, attivita, partner, costi`,
 
-    mercato: `Sei un consulente esperto di finanza agevolata italiana. Scrivi l'analisi di mercato e competitor per una candidatura Smart&Start Invitalia.
+mercato: `Sei un consulente senior di finanza agevolata italiana. Scrivi l'analisi di mercato per Smart&Start Invitalia.
 
 DATI PROGETTO:
 ${ctx}
 
-Scrivi un'analisi di mercato di 400-500 parole che includa:
-1. Descrizione del mercato di riferimento con dati dimensionali (TAM, SAM, SOM se applicabile)
-2. Trend del settore e driver di crescita
-3. Analisi dei competitor diretti e indiretti con differenziazione
-4. Posizionamento competitivo della startup
-5. Barriere all'ingresso e vantaggi competitivi
+Scrivi un'analisi di mercato ABBONDANTE di almeno 600-700 parole che includa:
+1. Contesto e definizione del mercato di riferimento — con dati di settore italiani ed europei
+2. Dimensioni del mercato: TAM (Total Addressable Market), SAM (Serviceable Addressable Market), SOM (Share of Market) con stime motivate
+3. Trend macro e driver di crescita del settore nei prossimi 3-5 anni
+4. Dinamiche competitive: chi sono i player principali, come è strutturato il mercato
+5. Analisi dei competitor diretti (almeno 3-4) con confronto su: prezzo, funzionalità, target, posizionamento
+6. Analisi dei competitor indiretti e delle soluzioni sostitutive
+7. Posizionamento competitivo della startup e differenziazione sostenibile
+8. Barriere all'ingresso del mercato e come la startup le supera o le crea
+9. Opportunità di mercato non presidiate dai competitor
+
+Usa dati specifici, citazioni di trend di settore, numeri concreti. Tono da analisi professionale.
+Rispondi SOLO con il testo della sezione.`,
+
+operativo: `Sei un consulente senior di finanza agevolata italiana. Scrivi il piano operativo per Smart&Start Invitalia.
+
+DATI PROGETTO:
+${ctx}
+
+Scrivi un piano operativo DETTAGLIATO con milestones a 36 mesi (almeno 500 parole). Per ogni fase indica attività, risorse, KPI e deliverable concreti.
+
+FASE 1 — Mesi 1-6: Setup e sviluppo
+- Attività di sviluppo prodotto/servizio
+- Costituzione e rafforzamento del team
+- Infrastruttura tecnologica e operativa
+- Prime attività commerciali e validazione
+- KPI target fine fase
+
+FASE 2 — Mesi 7-12: Lancio commerciale
+- Go-to-market e acquisizione primi clienti
+- Attività di sales e marketing
+- Raggiungimento primi ricavi
+- Feedback e iterazione prodotto
+- KPI target fine fase
+
+FASE 3 — Mesi 13-24: Crescita e scaling
+- Espansione base clienti
+- Ottimizzazione unit economics
+- Eventuali nuove funzionalità o mercati
+- Consolidamento del team
+- KPI target fine fase
+
+FASE 4 — Mesi 25-36: Consolidamento e break-even
+- Raggiungimento obiettivo break-even
+- Preparazione round successivo o autonomia finanziaria
+- Espansione geografica o di prodotto se prevista
+- KPI target fine fase
 
 Rispondi SOLO con il testo della sezione.`,
 
-    operativo: `Sei un consulente esperto di finanza agevolata italiana. Scrivi il piano operativo per una candidatura Smart&Start Invitalia.
+occupazionale: `Sei un consulente senior di finanza agevolata italiana. Scrivi il piano occupazionale per Smart&Start Invitalia.
 
 DATI PROGETTO:
 ${ctx}
 
-Scrivi un piano operativo con milestones a 36 mesi che includa:
-- Mesi 1-6: attività iniziali (sviluppo prodotto, team, primi clienti)
-- Mesi 7-12: lancio commerciale e primi ricavi
-- Mesi 13-24: crescita e scaling
-- Mesi 25-36: consolidamento e obiettivi di break-even
+Scrivi un piano occupazionale DETTAGLIATO (almeno 400 parole) che includa:
+1. Composizione attuale del team fondatore: ruoli, competenze specifiche, anni di esperienza rilevante, precedenti esperienze professionali significative
+2. Fabbisogno di personale a 12 mesi: ruoli da inserire, qualifiche richieste, modalità di ricerca e selezione
+3. Fabbisogno di personale a 24 mesi: espansione prevista, nuovi ruoli, struttura organizzativa
+4. Fabbisogno di personale a 36 mesi: organico completo previsto, struttura gerarchica, funzioni aziendali coperte
+5. Tipologie contrattuali previste: contratti a tempo indeterminato, determinato, collaborazioni, stage
+6. Politiche di inclusione: presenza under 36, donne, personale proveniente da zone svantaggiate
+7. Piano retributivo e benefit previsti
+8. Impatto occupazionale netto totale generato dal progetto
 
-Per ogni fase: attività principali, risorse necessarie, risultati attesi, KPI misurabili.
+Rispondi SOLO con il testo della sezione.`,
 
-Rispondi SOLO con il testo della sezione (300-400 parole).`,
-
-    occupazionale: `Sei un consulente esperto di finanza agevolata italiana. Scrivi il piano occupazionale per una candidatura Smart&Start Invitalia.
-
-DATI PROGETTO:
-${ctx}
-
-Scrivi un piano occupazionale che descriva:
-1. Composizione attuale del team (ruoli, competenze, anni esperienza)
-2. Personale previsto a 12, 24 e 36 mesi (ruoli e qualifiche)
-3. Tipologia contrattuale prevista
-4. Impatto occupazionale totale previsto
-5. Politiche di inclusione (under 36, donne, zone svantaggiate se applicabile)
-
-Rispondi SOLO con il testo della sezione (200-300 parole).`,
-
-    innovazione: `Sei un consulente esperto di finanza agevolata italiana. Scrivi la sezione innovazione tecnologica e IP per una candidatura Smart&Start Invitalia.
+innovazione: `Sei un consulente senior di finanza agevolata italiana con expertise in proprietà intellettuale e innovazione tecnologica. Scrivi la sezione innovazione per Smart&Start Invitalia.
 
 DATI PROGETTO:
 ${ctx}
 
-Scrivi una descrizione dell'innovazione che includa:
-1. Descrizione tecnica della soluzione e del suo funzionamento
-2. Livello TRL attuale e piano di sviluppo
-3. Componente innovativa rispetto allo stato dell'arte
-4. Tecnologia proprietaria e protezione IP (brevetti, segreto industriale, copyright SW)
-5. Dipendenze tecnologiche da terze parti e piano di mitigazione
-6. Roadmap tecnologica a 36 mesi
+Scrivi una descrizione dell'innovazione ABBONDANTE (almeno 600 parole) che includa:
+1. Descrizione tecnica approfondita della soluzione: architettura, componenti, funzionamento, stack tecnologico
+2. Stato dell'arte del settore e gap che la soluzione risolve — cosa non esiste oggi e perché
+3. Livello TRL attuale con descrizione delle evidenze che lo dimostrano
+4. Piano di sviluppo tecnologico: da TRL attuale a TRL target, attività necessarie, tempi
+5. Componente innovativa rispetto allo stato dell'arte — novità assoluta vs novità relativa al mercato
+6. Protezione IP: situazione brevettuale attuale, strategia di protezione, segreto industriale, copyright software
+7. Dipendenze tecnologiche da terze parti (API, librerie, fornitori): rischi e piano di mitigazione o internalizzazione
+8. Roadmap tecnologica a 36 mesi con milestone specifiche
+9. Eventuali pubblicazioni, ricerche o partnership con enti di ricerca a supporto
 
-Rispondi SOLO con il testo della sezione (300-400 parole).`,
+Rispondi SOLO con il testo della sezione.`,
 
-    impatto: `Sei un consulente esperto di finanza agevolata italiana. Scrivi la sezione impatto sociale, ambientale e territoriale per una candidatura Smart&Start Invitalia.
-
-DATI PROGETTO:
-${ctx}
-
-Scrivi una sezione di impatto che includa:
-1. Impatto sociale misurabile del progetto
-2. Impatto ambientale (se applicabile: riduzione emissioni, economia circolare)
-3. Impatto territoriale (sviluppo locale, Sud se applicabile)
-4. Contributo alla transizione digitale
-5. Allineamento con obiettivi PNRR e politiche Invitalia
-6. KPI di impatto misurabili a 36 mesi
-
-Rispondi SOLO con il testo della sezione (200-300 parole).`,
-
-    conto_economico: `Sei un consulente esperto di finanza agevolata italiana e di pianificazione finanziaria. Genera il Conto Economico previsionale per una candidatura Smart&Start Invitalia.
+impatto: `Sei un consulente senior di finanza agevolata italiana. Scrivi la sezione impatto per Smart&Start Invitalia.
 
 DATI PROGETTO:
 ${ctx}
 
-Genera un Conto Economico previsionale su 3 anni (Anno 1, Anno 2, Anno 3) realistico e coerente con i dati del progetto. Include:
-- RICAVI: dettaglio per linea di prodotto/servizio
-- COSTI OPERATIVI: personale, servizi, tecnologia, marketing, amministrazione
-- MARGINE OPERATIVO LORDO (EBITDA)
-- AMMORTAMENTI
-- RISULTATO OPERATIVO (EBIT)
-- ONERI FINANZIARI
+Scrivi una sezione di impatto DETTAGLIATA (almeno 400 parole) che includa:
+1. Impatto sociale diretto e indiretto: chi beneficia concretamente della soluzione e come
+2. Impatto ambientale: riduzione emissioni, efficienza energetica, economia circolare (se applicabile)
+3. Impatto territoriale: sviluppo dell'area geografica, indotto economico locale, effetti sulla comunità
+4. Impatto sulla digitalizzazione: contributo alla trasformazione digitale di settori/processi
+5. Allineamento con le priorità PNRR: missioni e componenti rilevanti, obiettivi comuni
+6. Allineamento con le politiche Invitalia e con gli obiettivi di sviluppo del Mezzogiorno (se applicabile)
+7. KPI di impatto misurabili a 12, 24 e 36 mesi con metodo di misurazione
+8. Sostenibilità dell'impatto nel lungo periodo — cosa rimane dopo la fine del finanziamento
+
+Rispondi SOLO con il testo della sezione.`,
+
+conto_economico: `Sei un consulente senior di finanza agevolata e pianificazione finanziaria. Genera il Conto Economico previsionale per Smart&Start Invitalia.
+
+DATI PROGETTO:
+${ctx}
+
+Genera un Conto Economico previsionale dettagliato su 3 anni. I numeri devono essere COERENTI con:
+- Investimento totale dichiarato
+- Modello di revenue e pricing
+- Personale previsto e relativi costi
+- Break-even stimato
+- Capitalizzazione iniziale disponibile
+
+Struttura obbligatoria:
+- RICAVI: suddivisi per linea di prodotto/servizio con volumi e prezzi unitari
+- COSTO DEL VENDUTO: costi diretti di produzione/erogazione
+- MARGINE LORDO
+- COSTI OPERATIVI: personale (dettagliato), marketing, tecnologia/infrastruttura, consulenze, amministrazione, affitti, altri
+- EBITDA (Margine Operativo Lordo)
+- AMMORTAMENTI E SVALUTAZIONI
+- EBIT (Risultato Operativo)
+- ONERI FINANZIARI (interessi sul finanziamento Smart&Start)
+- RISULTATO PRIMA DELLE IMPOSTE
+- IMPOSTE STIMATE
 - UTILE/PERDITA NETTO
 
-I numeri devono essere coerenti con: investimento dichiarato, modello revenue, personale previsto, break-even stimato.
+Rispondi in formato JSON con struttura:
+{"anno1":{"ricavi_totali":0,"costo_venduto":0,"margine_lordo":0,"costi_personale":0,"costi_marketing":0,"costi_tech":0,"costi_consulenze":0,"costi_amm":0,"altri_costi":0,"ebitda":0,"ammortamenti":0,"ebit":0,"oneri_finanziari":0,"risultato_ante_imposte":0,"imposte":0,"utile_netto":0},"anno2":{...},"anno3":{...},"note":"spiegazione delle assunzioni principali"}`,
 
-Rispondi in formato JSON con struttura: {anno1: {ricavi, costi_personale, costi_servizi, costi_tech, costi_marketing, costi_amm, ebitda, ammortamenti, ebit, oneri_finanziari, utile_netto}, anno2: {...}, anno3: {...}}`,
-
-    fonti_impieghi: `Sei un consulente esperto di finanza agevolata italiana. Genera il prospetto Fonti e Impieghi per una candidatura Smart&Start Invitalia.
+fonti_impieghi: `Sei un consulente senior di finanza agevolata italiana. Genera il prospetto Fonti e Impieghi per Smart&Start Invitalia.
 
 DATI PROGETTO:
 ${ctx}
 
-Genera il prospetto Fonti e Impieghi che mostri:
+Genera il prospetto Fonti e Impieghi COMPLETO e COERENTE con l'investimento dichiarato.
 
-IMPIEGHI (dove vanno i soldi):
-- Immobilizzazioni immateriali (software, brevetti, licenze)
-- Immobilizzazioni materiali (attrezzature, hardware)
-- Capitale circolante (costi operativi primi 12 mesi)
-- Totale impieghi = investimento dichiarato
+IMPIEGHI (dove vengono investiti i fondi):
+- Immobilizzazioni immateriali: software proprietario, brevetti, licenze, know-how, sito/app, costi di sviluppo capitalizzabili
+- Immobilizzazioni materiali: hardware, attrezzature, strumenti, arredi, veicoli strumentali
+- Capitale circolante iniziale: costi operativi primi 12 mesi non coperti dai ricavi
+- Totale Impieghi = esattamente l'investimento dichiarato
 
-FONTI (da dove vengono i soldi):
-- Finanziamento Smart&Start (80-90% delle spese)
-- Contributo a fondo perduto (se Sud: 30-35% del finanziamento)
-- Capitale proprio dei soci
-- Co-investitori (se presenti)
-- Totale fonti = totale impieghi
+FONTI (da dove vengono i fondi):
+Smart&Start finanzia:
+- Se Sud Italia: fino al 90% in prestito agevolato a tasso 0% + 30% a fondo perduto sulla quota finanziata
+- Se Centro/Nord: fino al 80% in prestito agevolato a tasso 0%
+- Capitale proprio dei soci (minimo 10-20%)
+- Co-investitori confermati (se presenti)
+- Totale Fonti = Totale Impieghi
 
-Rispondi in formato JSON con struttura: {impieghi: {immateriali, materiali, circolante, totale}, fonti: {smartstart_mutuo, smartstart_fondo_perduto, capitale_proprio, co_investitori, totale}}`
+Rispondi in formato JSON con struttura:
+{"impieghi":{"immateriali":{"descrizione":"","importo":0},"materiali":{"descrizione":"","importo":0},"circolante":{"descrizione":"","importo":0},"totale":0},"fonti":{"smartstart_prestito":{"descrizione":"","importo":0},"smartstart_fondo_perduto":{"descrizione":"","importo":0},"capitale_proprio":{"descrizione":"","importo":0},"co_investitori":{"descrizione":"","importo":0},"totale":0},"note":"spiegazione della struttura finanziaria"}`
+
   };
   return prompts[sectionId] || '';
 }
 
-async function callClaude(prompt){
-  const res = await fetch(VERCEL_URL, {
+// ── CHIAMATA A /api/generate (Claude Sonnet, 4000 token) ──
+async function callGenerate(sectionId, prompt){
+  const res = await fetch(GENERATE_URL, {
     method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({
-      ai: 'claude',
-      prompts: [prompt]
-    })
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ sectionId: sectionId, prompt: prompt })
   });
+  if(!res.ok){
+    const errBody = await res.text();
+    throw new Error('HTTP ' + res.status + ' — ' + errBody.substring(0, 150));
+  }
   const data = await res.json();
-  if(!data.results || !data.results[0]) throw new Error('Nessuna risposta');
-  return data.results[0];
+  if(data.error) throw new Error(data.error);
+  return data; // {type:'text'|'json', data: string|object}
 }
 
 function updateSection(idx, status){
@@ -471,12 +516,12 @@ function updateSection(idx, status){
     const statusEl = items[idx].querySelector('.section-status');
     if(statusEl){
       statusEl.className = 'section-status ' + status;
-      statusEl.textContent = status === 'done' ? '✓ Completata' : status === 'active' ? 'In corso...' : status === 'error' ? '✗ Errore' : '—';
+      statusEl.textContent = status==='done' ? '✓ Completata' : status==='active' ? 'In corso...' : status==='error' ? '✗ Errore' : '—';
     }
   }
   const fill = document.getElementById('progress-fill');
   const label = document.getElementById('progress-label');
-  const done = document.querySelectorAll('.section-status.done').length;
+  const done = list.querySelectorAll('.section-status.done').length;
   if(fill) fill.style.width = Math.round((done/SECTIONS.length)*100) + '%';
   if(label) label.textContent = 'Sezione ' + done + ' / ' + SECTIONS.length;
 }
@@ -487,28 +532,28 @@ async function startGeneration(){
   show('state-loading');
   generatedSections = {};
 
-  // Build section list UI
   const list = document.getElementById('section-list-loading');
-  list.innerHTML = SECTIONS.map((s,i) =>
-    `<div class="section-item"><span class="section-num">${String(i+1).padStart(2,'0')}</span><span class="section-name">${s.label}</span><span class="section-status" id="sec-${s.id}">In attesa</span></div>`
-  ).join('');
+  list.innerHTML = SECTIONS.map(function(s,i){
+    return '<div class="section-item"><span class="section-num">'+String(i+1).padStart(2,'0')+'</span><span class="section-name">'+s.label+'</span><span class="section-status" id="sec-'+s.id+'">In attesa</span></div>';
+  }).join('');
 
   try {
-    for(let i = 0; i < SECTIONS.length; i++){
-      const s = SECTIONS[i];
+    for(var i = 0; i < SECTIONS.length; i++){
+      var s = SECTIONS[i];
       updateSection(i, 'active');
       try {
-        const result = await callClaude(buildPrompt(s.id));
+        var result = await callGenerate(s.id, buildPrompt(s.id));
+        // result = {type:'text'|'json', data: string|object}
         generatedSections[s.id] = result;
         updateSection(i, 'done');
       } catch(e) {
-        generatedSections[s.id] = {sintesi: 'Sezione non disponibile — da completare manualmente.'};
+        generatedSections[s.id] = {type:'text', data:'Sezione non disponibile — errore: '+e.message+'. Da completare manualmente.'};
         updateSection(i, 'error');
       }
-      await new Promise(r => setTimeout(r, 300));
+      // Pausa tra sezioni per non sovraccaricare
+      await new Promise(function(r){ setTimeout(r, 500); });
     }
 
-    // Genera il docx
     await buildDocx();
     show('state-done');
 
@@ -518,34 +563,43 @@ async function startGeneration(){
   }
 }
 
-function getText(section, field){
-  const s = generatedSections[section];
+// Estrae testo dalla risposta generate
+function getSectionText(sectionId){
+  var s = generatedSections[sectionId];
   if(!s) return 'Sezione non disponibile.';
-  if(typeof s === 'string') return s;
-  if(s.sintesi) return s.sintesi;
-  return JSON.stringify(s, null, 2);
+  if(s.type === 'text') return s.data || 'Sezione non disponibile.';
+  if(s.type === 'json') return JSON.stringify(s.data, null, 2);
+  return 'Sezione non disponibile.';
 }
 
-function getJSON(section){
-  const s = generatedSections[section];
+function getSectionJSON(sectionId){
+  var s = generatedSections[sectionId];
   if(!s) return {};
-  if(typeof s === 'object') return s;
-  try { return JSON.parse(s.sintesi || '{}'); } catch(e){ return {}; }
+  if(s.type === 'json' && s.data) return s.data;
+  return {};
 }
 
 async function buildDocx(){
-  // Genera il Word lato server tramite /api/docx
-  const response = await fetch('/api/docx', {
+  // Prepara le sezioni per /api/docx
+  var sections = {};
+  SECTIONS.forEach(function(s){
+    var res = generatedSections[s.id];
+    if(res){
+      sections[s.id] = res.type === 'json' ? res.data : res.data;
+    }
+  });
+
+  var response = await fetch('/api/docx', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
       projectName: wizardData ? wizardData.nome || 'Progetto' : 'Progetto',
-      sections: generatedSections
+      sections: sections
     })
   });
 
-  if (!response.ok) {
-    const err = await response.json().catch(function(){ return {error: 'Errore sconosciuto'}; });
+  if(!response.ok){
+    var err = await response.json().catch(function(){ return {error:'Errore sconosciuto'}; });
     throw new Error(err.error || 'Errore generazione Word');
   }
 
@@ -556,20 +610,19 @@ async function buildDocx(){
 
 function downloadDocx(){
   if(!docxBlob) return;
-  const url = URL.createObjectURL(docxBlob);
-  const a = document.createElement('a');
+  var url = URL.createObjectURL(docxBlob);
+  var a = document.createElement('a');
   a.href = url;
-  a.download = 'Dossier_SmartStart_' + (wizardData?.nome||'progetto').replace(/\s+/g,'_') + '_' + new Date().toISOString().slice(0,10) + '.docx';
+  a.download = 'Dossier_SmartStart_' + ((wizardData && wizardData.nome)||'progetto').replace(/\s+/g,'_') + '_' + new Date().toISOString().slice(0,10) + '.docx';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
 }
 
-// INIT
 window.startGeneration = startGeneration;
 
-const data = loadData();
+var data = loadData();
 if(data){
   document.getElementById('project-summary').innerHTML = buildProjectSummary();
   show('state-ready');
