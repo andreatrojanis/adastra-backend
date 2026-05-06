@@ -29,12 +29,15 @@ button.sec{background:#222;color:#c9a84c;border:1px solid #c9a84c}
   <button onclick="testDocx()">DOCX</button>
   <button onclick="testGPT()">GPT</button>
   <button onclick="testGrok()">GROK</button>
+  <button onclick="testGenerate()">GENERATE</button>
+  <button class="sec" onclick="openDossierWithData()">APRI DOSSIER →</button>
   <button class="sec" onclick="document.getElementById('results').innerHTML=''">CLEAR</button>
 </div>
 <div id="results"></div>
 
 <script>
 const BACKEND='/api/analyze';
+const GENERATE='/api/generate';
 const R=document.getElementById('results');
 
 function log(id,status,msg,detail){
@@ -46,13 +49,9 @@ function log(id,status,msg,detail){
 
 function section(t){const d=document.createElement('div');d.className='section';d.textContent=t;R.appendChild(d);}
 
-// Fix: controlla HTTP status prima di parsare JSON
 async function post(ai,prompts){
   const res=await fetch(BACKEND,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ai,prompts})});
-  if(!res.ok){
-    const body=await res.text();
-    throw new Error('HTTP '+res.status+' — '+(body||'').substring(0,120));
-  }
+  if(!res.ok){const body=await res.text();throw new Error('HTTP '+res.status+' — '+(body||'').substring(0,120));}
   return res.json();
 }
 
@@ -60,17 +59,7 @@ async function testDocx(){
   section('DOCX SERVER-SIDE TEST');
   log('docx1','pending','Chiamata /api/docx...');
   try{
-    const res=await fetch('/api/docx',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        projectName:'Test START ON',
-        sections:{
-          executive:'Questo e un test di generazione dossier lato server. Il sistema funziona correttamente.',
-          mercato:'Analisi di mercato di test. Mercato target: startup italiane.'
-        }
-      })
-    });
+    const res=await fetch('/api/docx',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({projectName:'Test START ON',sections:{executive:'Questo e un test di generazione dossier lato server. Il sistema funziona correttamente.',mercato:'Analisi di mercato di test. Mercato target: startup italiane.'}})});
     if(!res.ok){const e=await res.json().catch(()=>({error:'unknown'}));throw new Error(e.error||'HTTP '+res.status);}
     const blob=await res.blob();
     log('docx1','ok','Word generato: '+blob.size+' bytes');
@@ -82,16 +71,90 @@ async function testDocx(){
   }catch(e){log('docx1','fail','ERRORE: '+e.message);}
 }
 
+// ── TEST /api/generate — Claude Sonnet testo lungo ──
+async function testGenerate(){
+  section('GENERATE TEST — Claude Sonnet');
+
+  // Test 1: sezione narrativa (Executive Summary)
+  log('gen1','pending','Executive Summary — attesa risposta Claude Sonnet...');
+  try{
+    const t0=Date.now();
+    const res=await fetch(GENERATE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      sectionId:'executive',
+      prompt:'Sei un consulente senior di finanza agevolata italiana. Scrivi un Executive Summary professionale per questa startup:\n\nPROGETTO: START ON\nSETTORE: SaaS B2B Fintech\nREGIONE: Puglia (SUD)\nINVESTIMENTO: €900.000\nTRL: 6 — prototipo funzionante\nLOI: 10 lettere di intento firmate\nTEAM: 15 anni esperienza cumulata\nIP: algoritmo multi-agente depositato UIBM\nREVENUE: €99 report, €399 dossier, 7% success fee\n\nScrivi almeno 600 parole. Tono professionale per commissione Invitalia.'
+    })});
+    if(!res.ok){const b=await res.text();throw new Error('HTTP '+res.status+' — '+b.substring(0,150));}
+    const data=await res.json();
+    const ms=((Date.now()-t0)/1000).toFixed(1)+'s';
+    if(data.error) throw new Error(data.error);
+    const testo=data.type==='text'?data.data:JSON.stringify(data.data);
+    const parole=testo.trim().split(/\s+/).length;
+    log('gen1',parole>200?'ok':'fail','Executive Summary — '+parole+' parole — type:'+data.type+' — '+ms,testo.substring(0,400)+'...');
+  }catch(e){log('gen1','fail','ERRORE Executive: '+e.message);}
+
+  // Test 2: sezione JSON (VPC)
+  log('gen2','pending','VPC JSON — attesa risposta Claude Sonnet...');
+  try{
+    const t0=Date.now();
+    const res=await fetch(GENERATE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      sectionId:'vpc',
+      prompt:'Compila il Value Proposition Canvas per START ON — piattaforma SaaS AI per pre-valutazione finanziabilità startup italiane. Rispondi SOLO in formato JSON con chiavi: attivita, difficolta, vantaggi, prodotti, attenuatori, generatori'
+    })});
+    if(!res.ok){const b=await res.text();throw new Error('HTTP '+res.status+' — '+b.substring(0,150));}
+    const data=await res.json();
+    const ms=((Date.now()-t0)/1000).toFixed(1)+'s';
+    if(data.error) throw new Error(data.error);
+    const ok=data.type==='json'&&data.data&&data.data.attivita;
+    log('gen2',ok?'ok':'fail','VPC — type:'+data.type+' — '+ms,ok?'Campi: '+Object.keys(data.data).join(', '):JSON.stringify(data).substring(0,200));
+  }catch(e){log('gen2','fail','ERRORE VPC: '+e.message);}
+}
+
+// ── APRI DOSSIER CON DATI STARTON FINTI ──
+function openDossierWithData(){
+  const fakeData={
+    nome:'START ON',
+    descrizione:'Piattaforma SaaS multi-agente AI per pre-valutazione finanziabilità startup e PMI attraverso panel Claude, GPT-4o e Grok con report strutturato, score, piano pre-candidatura e dossier automatico.',
+    settore:'SaaS B2B Fintech — Finanza Agevolata',
+    regione:'Puglia',provincia:'LE',comune:'Lecce',isSud:true,
+    investimento:'900000',revenue:'SaaS / abbonamento',breakeven:'12–24 mesi',
+    export:'Sì — Europa nei primi 3 anni',
+    anzianita:'Costituenda — non ancora fondata',
+    compagine:'≥51% under 36 e/o donne',
+    startup:'Sì / molto probabile',
+    deminimis:'Verificato — nessun problema',
+    fideiussione:'Da strutturare',fatturato:'Zero — pre-revenue',
+    capitale:'30000',coinvestitori:'In trattativa',
+    trl:'TRL 6 — prototipo avanzato e dimostrato',
+    tipoInnovazione:'Innovazione di prodotto — nuovo prodotto o servizio',
+    ip:'In corso di deposito',techprop:'Sì — tecnologia proprietaria',
+    rd:'Alta — ricerca applicata o di base',universita:'No',
+    scala:'Alta — replicabile a scala nazionale o internazionale',
+    mercato:'Startup e PMI italiane che cercano finanziamenti agevolati Invitalia. Mercato potenziale: ~200.000 imprese/anno. TAM stimato €500M.',
+    competitor:'Non risultano piattaforme verticali comparabili nel mercato italiano. Competitor indiretti: consulenti tradizionali (lenti, costosi), strumenti generici AI (non specializzati).',
+    trazione:'3 — LOI o lettere di intento formali',loi:'10',ricavi:'0',
+    team:'Andrea Trojanis — CEO, 10 anni IT e finanza agevolata. Team tecnico in definizione con profili AI/ML.',
+    esperienza:'15',teamtech:'Parziale — un profilo tecnico',advisor:'No',
+    personale:'4–10 dipendenti',
+    mac:'10',soft:'60',opere:'0',cons:'20',altro:'10',
+    rischio:'Lenta adozione da parte delle PMI verso strumenti AI. Dipendenza da API esterne (Anthropic, OpenAI, xAI).',
+    dipendenze:'Anthropic Claude API, OpenAI GPT-4o API, xAI Grok API.',
+    impatti:'Digitale | Occupazione qualificata | Parità di genere | Sviluppo territoriale',
+    documenti:'Business plan | Demo / mockup / prototipo funzionante | LOI / accordi commerciali firmati'
+  };
+  try{
+    sessionStorage.setItem('starton_wizard_data',JSON.stringify(fakeData));
+    window.open('/dossier.html','_blank');
+    section('DOSSIER APERTO');
+    log('dossier-open','ok','sessionStorage iniettato con dati STARTON — dossier.html aperto in nuova tab','Progetto: '+fakeData.nome+' | '+fakeData.settore+' | €'+parseInt(fakeData.investimento).toLocaleString('it-IT'));
+  }catch(e){log('dossier-open','fail','Errore: '+e.message);}
+}
+
 const NAMES=['A01 Valutatore Formale','A02 Analista Strategico','A03 Esperto Territoriale','A04 Devil Advocate'];
 const J='Rispondi SOLO con JSON valido. Nessun testo prima o dopo. Nessun markdown.';
-
 const SCENARIOS=[
-  {id:'s1',name:'SCENARIO 1 — Campi vuoti',
-   d:'PROGETTO: — | SETTORE: — | INVESTIMENTO: 0 | TRL: 1 | LOI: 0 | TEAM: 0 anni | CAPITAL: 0 | DEMINIMIS: Non verificato'},
-  {id:'s2',name:'SCENARIO 2 — Dati medi',
-   d:'PROGETTO: TechFlow | SETTORE: SaaS B2B | REGIONE: Puglia | INVESTIMENTO: 500000 | TRL: 5 | LOI: 5 | TEAM: 8 anni | CAPITAL: 15000 | DEMINIMIS: verificato | FIDEIUSSIONE: da strutturare | BREAKEVEN: 18 mesi | IP: in corso'},
-  {id:'s3',name:'SCENARIO 3 — STARTON completo',
-   d:'PROGETTO: START ON piattaforma SaaS multi-agente AI per pre-valutazione finanziabilita startup PMI attraverso panel Claude GPT Grok con report strutturato score piano pre-candidatura semaforo mandato | SETTORE: SaaS B2B Fintech Finanza Agevolata | REGIONE: Puglia Lecce SUD | INVESTIMENTO: 900000 | TRL: 6 prototipo funzionante testato casi reali | LOI: 10 lettere intento firmate | TEAM: 15 anni esperienza cumulata IT finanza commerciale | CAPITAL: 30000 | DEMINIMIS: verificato | FIDEIUSSIONE: da strutturare | BREAKEVEN: 12 mesi | IP: algoritmo multi-agente deposito brevetto UIBM | COMPETITOR: non risultano piattaforme verticali comparabili | RISCHIO: lenta adozione dipendenza API AI evoluzione normativa | DIPENDENZE: Anthropic OpenAI xAI | IMPATTI: occupazione digitalizzazione inclusione genere | STARTUP: si | COMPAGINE: oltre 51% under36 donne | COINVESTITORI: in trattativa | REVENUE: 99 report 399 dossier 7% success fee'}
+  {id:'s1',name:'SCENARIO 1 — Campi vuoti',d:'PROGETTO: — | SETTORE: — | INVESTIMENTO: 0 | TRL: 1 | LOI: 0 | TEAM: 0 anni | CAPITAL: 0 | DEMINIMIS: Non verificato'},
+  {id:'s2',name:'SCENARIO 2 — Dati medi',d:'PROGETTO: TechFlow | SETTORE: SaaS B2B | REGIONE: Puglia | INVESTIMENTO: 500000 | TRL: 5 | LOI: 5 | TEAM: 8 anni | CAPITAL: 15000 | DEMINIMIS: verificato | FIDEIUSSIONE: da strutturare | BREAKEVEN: 18 mesi | IP: in corso'},
+  {id:'s3',name:'SCENARIO 3 — STARTON completo',d:'PROGETTO: START ON piattaforma SaaS multi-agente AI per pre-valutazione finanziabilita startup PMI attraverso panel Claude GPT Grok con report strutturato score piano pre-candidatura semaforo mandato | SETTORE: SaaS B2B Fintech Finanza Agevolata | REGIONE: Puglia Lecce SUD | INVESTIMENTO: 900000 | TRL: 6 prototipo funzionante testato casi reali | LOI: 10 lettere intento firmate | TEAM: 15 anni esperienza cumulata IT finanza commerciale | CAPITAL: 30000 | DEMINIMIS: verificato | FIDEIUSSIONE: da strutturare | BREAKEVEN: 12 mesi | IP: algoritmo multi-agente deposito brevetto UIBM | COMPETITOR: non risultano piattaforme verticali comparabili | RISCHIO: lenta adozione dipendenza API AI evoluzione normativa | DIPENDENZE: Anthropic OpenAI xAI | IMPATTI: occupazione digitalizzazione inclusione genere | STARTUP: si | COMPAGINE: oltre 51% under36 donne | COINVESTITORI: in trattativa | REVENUE: 99 report 399 dossier 7% success fee'}
 ];
 
 function buildP(d){return[
@@ -152,6 +215,7 @@ async function runAll(){
   await runAgents();
   await testGPT();
   await testGrok();
+  await testGenerate();
 }
 </script>
 </body>
