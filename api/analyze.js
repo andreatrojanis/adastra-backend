@@ -37,7 +37,9 @@ module.exports = async function handler(req, res) {
 
     const GROK_PREFIX = 'Sei un analista di rischio specializzato in finanza agevolata italiana. Il tuo compito è proteggere i fondi pubblici da progetti non meritevoli. Sei scettico, preciso e ancorato ai fatti. Dati mancanti = penalità severe. Zero investimento = progetto non finanziabile, score massimo 25. Zero trazione = -25 punti. Team senza esperienza tecnica su progetto tech = -20 punti. Non esistono punti di forza se non esplicitamente documentati. La vaghezza è una red flag. Rispondi SOLO con JSON valido. Nessun testo prima o dopo.\n\n';
 
-    // ── CLAUDE SONNET ──
+    const delay = ms => new Promise(r => setTimeout(r, ms));
+
+    // ── CLAUDE HAIKU ──
     async function callClaude(prompt, idx, debug) {
       if (!ANTHROPIC_KEY) return null;
       const r = await fetch('https://api.anthropic.com/v1/messages', {
@@ -53,7 +55,18 @@ module.exports = async function handler(req, res) {
           messages: [{ role: 'user', content: CLAUDE_PREFIX + prompt }]
         })
       });
+      // Log HTTP errors (rate limit, overload, etc.)
+      if (!r.ok) {
+        const errBody = await r.text();
+        console.error(`[A${idx}] HTTP ${r.status}: ${errBody.substring(0, 200)}`);
+        return null;
+      }
       const d = await r.json();
+      // Log API-level errors
+      if (d.error) {
+        console.error(`[A${idx}] API error: ${JSON.stringify(d.error)}`);
+        return null;
+      }
       const text = (d.content || []).map(i => i.text || '').join('').trim();
       const parsed = parseJSON(text);
       if (debug && idx !== undefined) debug[idx] = { raw: text.substring(0, 300), parsed: !!parsed };
@@ -110,15 +123,12 @@ module.exports = async function handler(req, res) {
     // ── JSON PARSER ──
     function parseJSON(text) {
       if (!text) return null;
-      // Extract content inside ```json ... ``` blocks first
       const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
       if (fence) {
         try { return JSON.parse(fence[1].trim()); } catch(e) {}
       }
-      // Try direct parse
       const clean = text.trim();
       try { return JSON.parse(clean); } catch(e) {}
-      // Extract first { ... } block
       const m = clean.match(/\{[\s\S]*\}/);
       if (m) try { return JSON.parse(m[0]); } catch(e) {}
       return null;
@@ -128,14 +138,16 @@ module.exports = async function handler(req, res) {
     const requestedAI = ai || 'claude';
 
     if (requestedAI === 'claude') {
-      const delay = ms => new Promise(r => setTimeout(r, ms));
       const results = await Promise.all(prompts.map(async (p, i) => {
         await delay(i * 1500); // stagger 1.5s per evitare rate limit Haiku
-        let r = await callClaude(p);
-        if (!r) { await delay(500); r = await callClaude(p); } // retry con pausa
+        let r = await callClaude(p, i);
+        if (!r) {
+          await delay(2000); // retry con pausa più lunga (era 500ms)
+          r = await callClaude(p, i);
+        }
         return r || fallback();
       }));
-      return res.status(200).json({ results, multiAI: [{ ai: 'claude', name: 'Claude Sonnet (Anthropic)', results }] });
+      return res.status(200).json({ results, multiAI: [{ ai: 'claude', name: 'Claude Haiku (Anthropic)', results }] });
     }
 
     if (requestedAI === 'gpt') {
