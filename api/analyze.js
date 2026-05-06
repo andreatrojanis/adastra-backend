@@ -130,9 +130,9 @@ module.exports = async function handler(req, res) {
     if (requestedAI === 'claude') {
       const delay = ms => new Promise(r => setTimeout(r, ms));
       const results = await Promise.all(prompts.map(async (p, i) => {
-        await delay(i * 800); // stagger 800ms per evitare rate limit Haiku
+        await delay(i * 1000); // stagger 1s per evitare rate limit Haiku
         let r = await callClaude(p);
-        if (!r) r = await callClaude(p); // retry once on failure
+        if (!r) { await delay(500); r = await callClaude(p); } // retry con pausa
         return r || fallback();
       }));
       return res.status(200).json({ results, multiAI: [{ ai: 'claude', name: 'Claude Sonnet (Anthropic)', results }] });
