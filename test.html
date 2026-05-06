@@ -4,150 +4,141 @@
 <meta charset="UTF-8">
 <title>START ON — Test Suite</title>
 <style>
-body{font-family:monospace;background:#111;color:#eee;padding:20px;font-size:13px}
-h1{color:#c9a84c;letter-spacing:.2em;font-size:14px}
-.test{margin:8px 0;padding:8px 12px;border-radius:6px;background:#1a1a1a}
-.ok{border-left:3px solid #0a7f2e;color:#4caf50}
-.fail{border-left:3px solid #b00020;color:#f44336}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:monospace;background:#0d0d0d;color:#ddd;padding:24px;font-size:13px;line-height:1.5}
+h1{color:#c9a84c;letter-spacing:.2em;font-size:13px;margin-bottom:4px}
+p{color:#555;font-size:11px;margin-bottom:16px}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+button{padding:8px 18px;background:#c9a84c;color:#111;border:none;border-radius:6px;cursor:pointer;font-family:monospace;font-weight:bold;font-size:12px}
+button.sec{background:#222;color:#c9a84c;border:1px solid #c9a84c}
+.test{margin:4px 0;padding:8px 12px;border-radius:6px;background:#161616}
+.ok{border-left:3px solid #2e7d32;color:#81c784}
+.fail{border-left:3px solid #c62828;color:#ef9a9a}
 .pending{border-left:3px solid #c9a84c;color:#c9a84c}
-.log{margin-top:4px;font-size:11px;color:#888;white-space:pre-wrap;max-height:200px;overflow-y:auto}
-button{padding:8px 20px;background:#c9a84c;color:#111;border:none;border-radius:6px;cursor:pointer;font-family:monospace;font-weight:bold;margin:4px}
-#results{margin-top:20px}
+.info{border-left:3px solid #444;color:#666}
+.log{margin-top:4px;font-size:10px;color:#555;white-space:pre-wrap;max-height:120px;overflow-y:auto}
+.section{margin:16px 0 6px;color:#c9a84c;font-size:11px;letter-spacing:.15em;text-transform:uppercase;border-bottom:1px solid #222;padding-bottom:4px}
 </style>
 </head>
 <body>
 <h1>S T A R T  O N — TEST SUITE</h1>
-<p style="color:#888;font-size:11px">Test automatici sul backend Vercel</p>
-
-<button onclick="runAll()">▶ RUN ALL TESTS</button>
-<button onclick="runAgents()">▶ TEST AGENTI</button>
-<button onclick="testDocx()">▶ TEST DOCX</button>
-<button onclick="clearResults()">✕ CLEAR</button>
-
+<p>Apri su: adastra-backend-sigma.vercel.app/test.html</p>
+<div class="btns">
+  <button onclick="runAll()">RUN ALL</button>
+  <button onclick="runAgents()">AGENTI (3 scenari)</button>
+  <button onclick="testDocx()">DOCX</button>
+  <button onclick="testGPT()">GPT</button>
+  <button onclick="testGrok()">GROK</button>
+  <button class="sec" onclick="document.getElementById('results').innerHTML=''">CLEAR</button>
+</div>
 <div id="results"></div>
-
 <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
 <script>
-const BACKEND = '/api/analyze';
-const R = document.getElementById('results');
+const BACKEND='/api/analyze';
+const R=document.getElementById('results');
 
-function log(id, status, msg, detail) {
-  let el = document.getElementById(id);
-  if (!el) {
-    el = document.createElement('div');
-    el.id = id;
-    el.className = 'test pending';
-    R.appendChild(el);
-  }
-  el.className = 'test ' + status;
-  el.innerHTML = '<b>' + (status==='ok'?'✓':status==='fail'?'✗':'…') + ' ' + msg + '</b>' + (detail ? '<div class="log">' + detail + '</div>' : '');
+function log(id,status,msg,detail){
+  let el=document.getElementById('t-'+id);
+  if(!el){el=document.createElement('div');el.id='t-'+id;R.appendChild(el);}
+  el.className='test '+status;
+  el.innerHTML='<b>'+({'ok':'✓','fail':'✗','pending':'…','info':'—'}[status]||'?')+' '+msg+'</b>'+(detail?'<div class="log">'+detail+'</div>':'');
 }
 
-async function callClaude(prompts) {
-  const res = await fetch(BACKEND, {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ai:'claude', prompts})
-  });
+function section(t){const d=document.createElement('div');d.className='section';d.textContent=t;R.appendChild(d);}
+
+async function post(ai,prompts){
+  const res=await fetch(BACKEND,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ai,prompts})});
   return res.json();
 }
 
-const AGENT_NAMES = ['A01 Valutatore Formale','A02 Analista Strategico','A03 Esperto Territoriale','A04 Devil Advocate'];
-const s = 'PROGETTO: TestApp | SETTORE: SaaS | REGIONE: Puglia | INVESTIMENTO: 500000 | TRL: 6 | LOI: 5 | TEAM: 10 anni | CAPITAL: 30000 | DEMINIMIS: verificato';
-const j = 'Rispondi SOLO con JSON valido. Nessun testo prima o dopo.';
+async function testDocx(){
+  section('DOCX LIBRARY TEST');
+  try{
+    if(!window.docx) throw new Error('window.docx non definito');
+    const {Document,Packer,Paragraph,TextRun}=window.docx;
+    log('docx1','ok','window.docx caricato OK','Classi: '+Object.keys(window.docx).slice(0,6).join(', '));
+    const doc=new Document({sections:[{children:[new Paragraph({children:[new TextRun('START ON test OK')]})]}]});
+    const blob=await Packer.toBlob(doc);
+    log('docx2','ok','Packer.toBlob OK — '+blob.size+' bytes');
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download='test.docx';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    log('docx3','ok','Download avviato — verifica che il file si apra in Word');
+  }catch(e){log('docx1','fail','ERRORE: '+e.message);}
+}
 
-const prompts = [
-  `Sei un istruttore formale Invitalia specializzato in compliance.\n${s}\n\n${j}\n{"scoreON":75,"scoreSS":80,"sintesi":"analisi","puntiForza":["f1","f2"],"puntiDeboli":["d1"],"redFlags":["r1"]}`,
-  `Sei un analista strategico di startup. Valuta business case.\n${s}\n\n${j}\n{"scoreON":72,"scoreSS":78,"sintesi":"analisi","puntiForza":["f1"],"puntiDeboli":["d1"]}`,
-  `Sei un esperto di sviluppo territoriale italiano.\n${s}\n\n${j}\n{"scoreON":65,"scoreSS":70,"sintesi":"analisi","puntiForza":["f1"],"puntiDeboli":["d1"],"opportunita":["o1"]}`,
-  `Sei un devil advocate severo. Trova criticita bloccanti.\n${s}\n\n${j}\n{"scoreON":55,"scoreSS":60,"sintesi":"critiche","critiche":["c1","c2","c3"],"puntiForza":["f1"],"puntiDeboli":["d1"]}`
+const NAMES=['A01 Valutatore Formale','A02 Analista Strategico','A03 Esperto Territoriale','A04 Devil Advocate'];
+const J='Rispondi SOLO con JSON valido. Nessun testo prima o dopo. Nessun markdown.';
+
+const SCENARIOS=[
+  {id:'s1',name:'SCENARIO 1 — Campi vuoti',
+   d:'PROGETTO: — | SETTORE: — | INVESTIMENTO: 0 | TRL: 1 | LOI: 0 | TEAM: 0 anni | CAPITAL: 0 | DEMINIMIS: Non verificato'},
+  {id:'s2',name:'SCENARIO 2 — Dati medi',
+   d:'PROGETTO: TechFlow | SETTORE: SaaS B2B | REGIONE: Puglia | INVESTIMENTO: 500000 | TRL: 5 | LOI: 5 | TEAM: 8 anni | CAPITAL: 15000 | DEMINIMIS: verificato | FIDEIUSSIONE: da strutturare | BREAKEVEN: 18 mesi | IP: in corso'},
+  {id:'s3',name:'SCENARIO 3 — STARTON completo',
+   d:'PROGETTO: START ON piattaforma SaaS multi-agente AI per pre-valutazione finanziabilita startup PMI attraverso panel Claude GPT Grok con report strutturato score piano pre-candidatura semaforo mandato | SETTORE: SaaS B2B Fintech Finanza Agevolata | REGIONE: Puglia Lecce SUD | INVESTIMENTO: 900000 | TRL: 6 prototipo funzionante testato casi reali | LOI: 10 lettere intento firmate | TEAM: 15 anni esperienza cumulata IT finanza commerciale | CAPITAL: 30000 | DEMINIMIS: verificato | FIDEIUSSIONE: da strutturare | BREAKEVEN: 12 mesi | IP: algoritmo multi-agente deposito brevetto UIBM | COMPETITOR: non risultano piattaforme verticali comparabili | RISCHIO: lenta adozione dipendenza API AI evoluzione normativa | DIPENDENZE: Anthropic OpenAI xAI | IMPATTI: occupazione digitalizzazione inclusione genere | STARTUP: si | COMPAGINE: oltre 51% under36 donne | COINVESTITORI: in trattativa | REVENUE: 99 report 399 dossier 7% success fee'}
 ];
 
-async function runAgents() {
-  log('agent-start', 'pending', 'Test agenti in corso...');
-  
-  try {
-    const start = Date.now();
-    const data = await callClaude(prompts);
-    const elapsed = ((Date.now()-start)/1000).toFixed(1);
-    
-    if (!data.results) {
-      log('agent-start', 'fail', 'Nessun results nel response', JSON.stringify(data).substring(0,200));
-      return;
-    }
-    
-    log('agent-start', 'ok', `Risposta ricevuta in ${elapsed}s`);
-    
-    data.results.forEach((r, i) => {
-      const name = AGENT_NAMES[i];
-      const ok = r && r.sintesi && r.sintesi !== 'Analisi non disponibile per questo provider.';
-      const detail = `scoreON:${r?.scoreON} | scoreSS:${r?.scoreSS}\nsintesi: ${(r?.sintesi||'VUOTA').substring(0,100)}\ncampi: ${Object.keys(r||{}).join(', ')}`;
-      log('agent-'+i, ok?'ok':'fail', name + (ok?' ✓':' ✗ VUOTO'), detail);
-    });
-    
-    const passed = data.results.filter(r => r?.sintesi && r.sintesi !== 'Analisi non disponibile per questo provider.').length;
-    log('agent-summary', passed===4?'ok':'fail', `Totale: ${passed}/4 agenti popolati`);
-    
-  } catch(e) {
-    log('agent-start', 'fail', 'Errore: ' + e.message);
+function buildP(d){return[
+  'Sei un istruttore formale Invitalia specializzato in compliance.\n'+d+'\n\n'+J+'\n{"scoreON":75,"scoreSS":80,"sintesi":"analisi","puntiForza":["f1","f2"],"puntiDeboli":["d1"],"redFlags":["r1"]}',
+  'Sei un analista strategico di startup. Valuta business case.\n'+d+'\n\n'+J+'\n{"scoreON":72,"scoreSS":78,"sintesi":"analisi","puntiForza":["f1","f2"],"puntiDeboli":["d1","d2"]}',
+  'Sei un esperto di sviluppo territoriale italiano.\n'+d+'\n\n'+J+'\n{"scoreON":65,"scoreSS":70,"sintesi":"analisi","puntiForza":["f1"],"puntiDeboli":["d1"],"opportunita":["o1","o2"]}',
+  'Sei un devil advocate severo. Trova criticita bloccanti.\n'+d+'\n\n'+J+'\n{"scoreON":55,"scoreSS":60,"sintesi":"critiche","critiche":["c1","c2","c3"],"puntiForza":["f1"],"puntiDeboli":["d1"]}'
+];}
+
+async function runAgents(){
+  section('AGENTI CLAUDE — 3 SCENARI');
+  for(let si=0;si<SCENARIOS.length;si++){
+    const sc=SCENARIOS[si];
+    log(sc.id,'pending',sc.name);
+    try{
+      const t0=Date.now();
+      const data=await post('claude',buildP(sc.d));
+      const ms=((Date.now()-t0)/1000).toFixed(1)+'s';
+      if(!data.results){log(sc.id,'fail','no results — '+JSON.stringify(data).substring(0,100));continue;}
+      let ok=0;
+      data.results.forEach((r,i)=>{
+        const good=r&&r.sintesi&&!r.sintesi.includes('non disponibile');
+        if(good)ok++;
+        log(sc.id+'-'+i,good?'ok':'fail',NAMES[i]+(good?' OK':' VUOTO'),
+          'scoreON:'+r?.scoreON+' scoreSS:'+r?.scoreSS+'\nsintesi: '+(r?.sintesi||'—').substring(0,80)+'\ncampi: ['+Object.keys(r||{}).join(', ')+']');
+      });
+      log(sc.id,(ok===4?'ok':'fail'),(ok===4?'✓':'✗')+' '+sc.name+' — '+ok+'/4 — '+ms);
+    }catch(e){log(sc.id,'fail',sc.name+' ERRORE: '+e.message);}
+    if(si<SCENARIOS.length-1){log('p'+si,'info','pausa 2s...');await new Promise(r=>setTimeout(r,2000));}
   }
 }
 
-async function testDocx() {
-  log('docx-test', 'pending', 'Test libreria docx...');
-  try {
-    if (!window.docx) throw new Error('window.docx non definito');
-    const { Document, Packer, Paragraph, TextRun } = window.docx;
-    const doc = new Document({
-      sections: [{ children: [new Paragraph({ children: [new TextRun('Test OK')] })] }]
-    });
-    const buf = await Packer.toBuffer(doc);
-    log('docx-test', 'ok', `docx OK — buffer: ${buf.length} bytes`);
-    
-    // Test download
-    const blob = new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'test.docx';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    setTimeout(()=>URL.revokeObjectURL(url), 1000);
-    log('docx-download', 'ok', 'Download avviato');
-  } catch(e) {
-    log('docx-test', 'fail', 'docx ERRORE: ' + e.message);
-  }
+async function testGPT(){
+  section('GPT-4o TEST');
+  log('gpt','pending','Chiamata GPT...');
+  try{
+    const data=await post('gpt',['Progetto SaaS Puglia. '+J+' {"scoreON":70,"scoreSS":75,"sintesi":"test ok","puntiForza":["f1"],"puntiDeboli":["d1"]}']);
+    const r=data.results?.[0];
+    const ok=r?.sintesi&&!r.sintesi.includes('non disponibile');
+    log('gpt',ok?'ok':'fail','GPT '+(ok?'OK':'FALLITO'),JSON.stringify(r||data).substring(0,150));
+  }catch(e){log('gpt','fail','GPT errore: '+e.message);}
 }
 
-async function testGPT() {
-  log('gpt-test', 'pending', 'Test GPT...');
-  try {
-    const data = await fetch(BACKEND, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ai:'gpt',prompts:['Rispondi con JSON: {"score":42,"ok":true}']})}).then(r=>r.json());
-    const ok = data.results?.[0]?.score || data.results?.[0];
-    log('gpt-test', ok?'ok':'fail', 'GPT: ' + (ok?'OK':'FALLITO'), JSON.stringify(data.results?.[0]).substring(0,100));
-  } catch(e) {
-    log('gpt-test', 'fail', 'GPT errore: ' + e.message);
-  }
+async function testGrok(){
+  section('GROK TEST');
+  log('grok','pending','Chiamata Grok...');
+  try{
+    const data=await post('grok',['Progetto SaaS Puglia. '+J+' {"scoreON":70,"scoreSS":75,"sintesi":"test ok","puntiForza":["f1"],"puntiDeboli":["d1"]}']);
+    const r=data.results?.[0];
+    const ok=r?.sintesi&&!r.sintesi.includes('non disponibile');
+    log('grok',ok?'ok':'fail','Grok '+(ok?'OK':'FALLITO'),JSON.stringify(r||data).substring(0,150));
+  }catch(e){log('grok','fail','Grok errore: '+e.message);}
 }
 
-async function testGrok() {
-  log('grok-test', 'pending', 'Test Grok...');
-  try {
-    const data = await fetch(BACKEND, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ai:'grok',prompts:['Rispondi con JSON: {"score":42,"ok":true}']})}).then(r=>r.json());
-    const ok = data.results?.[0];
-    log('grok-test', ok?'ok':'fail', 'Grok: ' + (ok?'OK':'FALLITO'), JSON.stringify(data.results?.[0]).substring(0,100));
-  } catch(e) {
-    log('grok-test', 'fail', 'Grok errore: ' + e.message);
-  }
-}
-
-async function runAll() {
-  R.innerHTML = '';
+async function runAll(){
+  document.getElementById('results').innerHTML='';
   await testDocx();
   await runAgents();
   await testGPT();
   await testGrok();
 }
-
-function clearResults() { R.innerHTML = ''; }
 </script>
 </body>
 </html>
