@@ -176,10 +176,16 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
 
 </main>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js"></script>
+<script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
 <script>
-(function(){
-const docx = window.docx;
+// docx library alias
+let docx;
+document.addEventListener("DOMContentLoaded", function(){
+  docx = window.docx;
+  init();
+});
+
+function init(){
 
 const VERCEL_URL = 'https://adastra-backend-sigma.vercel.app/api/analyze';
 const SECTIONS = [
@@ -528,10 +534,8 @@ function getJSON(section){
 }
 
 async function buildDocx(){
-  const docxLib = window.docx || docx;
   const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType,
-          Table, TableRow, TableCell, BorderStyle, WidthType, ShadingType,
-          LevelFormat } = docxLib;
+          Table, TableRow, TableCell, BorderStyle, WidthType, ShadingType } = docx;
 
   const d = wizardData;
   const gold = 'C9A84C';
@@ -887,7 +891,7 @@ if(data){
   show('state-nodata');
 }
 
-})();
+} // end init
 </script>
 </body>
 </html>
