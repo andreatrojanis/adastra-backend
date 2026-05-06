@@ -177,3 +177,4 @@ function fallback() {
     puntiChiave: [], azioniImmediate: []
   };
 }
+
