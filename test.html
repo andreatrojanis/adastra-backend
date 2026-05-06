@@ -46,8 +46,13 @@ function log(id,status,msg,detail){
 
 function section(t){const d=document.createElement('div');d.className='section';d.textContent=t;R.appendChild(d);}
 
+// Fix: controlla HTTP status prima di parsare JSON
 async function post(ai,prompts){
   const res=await fetch(BACKEND,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ai,prompts})});
+  if(!res.ok){
+    const body=await res.text();
+    throw new Error('HTTP '+res.status+' — '+(body||'').substring(0,120));
+  }
   return res.json();
 }
 
