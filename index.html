@@ -1376,6 +1376,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       const code = 'SRTON-' + ts.substring(0,6) + '-' + (Math.random().toString(36).substring(2,8).toUpperCase());
       data._code = code;
       localStorage.setItem('starton_wizard_draft', JSON.stringify(data));
+      localStorage.setItem('starton_code_' + code, JSON.stringify(data));
 
       const overlay = document.createElement('div');
       overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
@@ -1402,11 +1403,10 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
 
   function restoreFromCode(code){
     try {
-      const clean = code.replace('SRTON-','').replace(/-/g,'');
-      const allKeys = Object.keys(localStorage).filter(k => k === STORAGE_KEY);
-      // Prova decodifica diretta
-      const base = decodeURIComponent(atob(clean + '===='));
-      const data = JSON.parse(base);
+      const clean = code.trim().toUpperCase();
+      const raw = localStorage.getItem('starton_code_' + clean);
+      if(!raw) return false;
+      const data = JSON.parse(raw);
       applyRestoredData(data);
       return true;
     } catch(e) { return false; }
