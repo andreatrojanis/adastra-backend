@@ -32,9 +32,7 @@ button.sec{background:#222;color:#c9a84c;border:1px solid #c9a84c}
   <button class="sec" onclick="document.getElementById('results').innerHTML=''">CLEAR</button>
 </div>
 <div id="results"></div>
-<script src="https://cdn.jsdelivr.net/npm/buffer@6.0.3/index.min.js"></script>
-<script>window.Buffer = window.Buffer || buffer.Buffer;</script>
-<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
+
 <script>
 const BACKEND='/api/analyze';
 const R=document.getElementById('results');
@@ -54,19 +52,28 @@ async function post(ai,prompts){
 }
 
 async function testDocx(){
-  section('DOCX LIBRARY TEST');
+  section('DOCX SERVER-SIDE TEST');
+  log('docx1','pending','Chiamata /api/docx...');
   try{
-    if(!window.docx) throw new Error('window.docx non definito');
-    const {Document,Packer,Paragraph,TextRun}=window.docx;
-    log('docx1','ok','window.docx caricato OK','Classi: '+Object.keys(window.docx).slice(0,6).join(', '));
-    const doc=new Document({sections:[{children:[new Paragraph({children:[new TextRun('START ON test OK')]})]}]});
-    const blob=await Packer.toBlob(doc);
-    log('docx2','ok','Packer.toBlob OK — '+blob.size+' bytes');
+    const res=await fetch('/api/docx',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        projectName:'Test START ON',
+        sections:{
+          executive:'Questo e un test di generazione dossier lato server. Il sistema funziona correttamente.',
+          mercato:'Analisi di mercato di test. Mercato target: startup italiane.'
+        }
+      })
+    });
+    if(!res.ok){const e=await res.json().catch(()=>({error:'unknown'}));throw new Error(e.error||'HTTP '+res.status);}
+    const blob=await res.blob();
+    log('docx1','ok','Word generato: '+blob.size+' bytes');
     const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');a.href=url;a.download='test.docx';
+    const a=document.createElement('a');a.href=url;a.download='test_starton.docx';
     document.body.appendChild(a);a.click();document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url),1000);
-    log('docx3','ok','Download avviato — verifica che il file si apra in Word');
+    log('docx2','ok','Download avviato — verifica che il file si apra in Word');
   }catch(e){log('docx1','fail','ERRORE: '+e.message);}
 }
 
