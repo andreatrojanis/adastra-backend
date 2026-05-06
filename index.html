@@ -651,7 +651,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
 
   function buildPrompts(){
     let s=projectSummary();
-    if(s.length>1800) s=s.substring(0,1800)+'\n[...troncato]';
+    if(s.length>1400) s=s.substring(0,1400)+'\n[...troncato]';
     const j='Rispondi SOLO con JSON valido. Nessun testo prima o dopo. Nessun markdown.';
     return [
       'Sei un istruttore formale Invitalia specializzato in compliance e requisiti di ammissibilita. Valuta esclusioni automatiche, requisiti hard e conformita normativa di ON e Smart&Start.\n'+s+'\n\n'+j+'\n{"scoreON":75,"scoreSS":80,"sintesi":"analisi specifica in 3-4 righe","puntiForza":["forza 1","forza 2"],"puntiDeboli":["debolezza 1","debolezza 2"],"redFlags":["criticita 1","criticita 2","criticita 3"]}',
