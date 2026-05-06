@@ -108,7 +108,6 @@ module.exports = async function handler(req, res) {
           }
         });
       }
-      children.push(pb());
     }
 
     // Disclaimer
