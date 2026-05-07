@@ -89,25 +89,192 @@ module.exports = async function handler(req, res) {
       fonti_impieghi: '10. Fonti e Impieghi'
     };
 
+    // Estrae il contenuto reale dalla sezione (gestisce sia {type,data} che valori diretti)
+    function extractContent(sec) {
+      if (!sec) return null;
+      if (typeof sec === 'string') return { type: 'text', data: sec };
+      if (typeof sec === 'object' && sec.type && sec.data !== undefined) return sec;
+      // oggetto JSON diretto (vecchio formato)
+      return { type: 'json', data: sec };
+    }
+
+    function formatEuro(n) {
+      if (typeof n !== 'number') return String(n || '—');
+      return '€ ' + parseInt(n).toLocaleString('it-IT');
+    }
+
+    function ceTable(ce) {
+      // Conto Economico: tabella anni in colonne
+      const anni = ['anno1', 'anno2', 'anno3'];
+      const righe = [
+        { k: 'ricavi_totali', label: 'RICAVI TOTALI', bold: true },
+        { k: 'costo_venduto', label: 'Costo del venduto' },
+        { k: 'margine_lordo', label: 'MARGINE LORDO', bold: true },
+        { k: 'costi_personale', label: 'Costi personale' },
+        { k: 'costi_marketing', label: 'Costi marketing' },
+        { k: 'costi_tech', label: 'Costi tecnologia' },
+        { k: 'costi_consulenze', label: 'Consulenze' },
+        { k: 'costi_amm', label: 'Costi amministrativi' },
+        { k: 'altri_costi', label: 'Altri costi' },
+        { k: 'costi_operativi_totali', label: 'TOTALE COSTI OPERATIVI', bold: true },
+        { k: 'ebitda', label: 'EBITDA', bold: true },
+        { k: 'ammortamenti', label: 'Ammortamenti' },
+        { k: 'ebit', label: 'EBIT', bold: true },
+        { k: 'oneri_finanziari', label: 'Oneri finanziari' },
+        { k: 'risultato_ante_imposte', label: 'Risultato ante imposte', bold: true },
+        { k: 'imposte', label: 'Imposte' },
+        { k: 'utile_netto', label: 'UTILE / PERDITA NETTO', bold: true },
+      ];
+
+      const headerRow = new TableRow({ children: [
+        new TableCell({ borders, width: { size: 3800, type: WidthType.DXA }, margins: cm, shading: { fill: 'C9A84C', type: ShadingType.CLEAR },
+          children: [new Paragraph({ children: [new TextRun({ text: 'Voce', bold: true, size: 18, color: 'FFFFFF', font: 'Arial' })] })] }),
+        ...anni.map(a => new TableCell({ borders, width: { size: 1850, type: WidthType.DXA }, margins: cm, shading: { fill: 'C9A84C', type: ShadingType.CLEAR },
+          children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: a.replace('anno', 'Anno '), bold: true, size: 18, color: 'FFFFFF', font: 'Arial' })] })] }))
+      ]});
+
+      const dataRows = righe.map((riga, idx) => {
+        const fill = riga.bold ? 'F8F4EC' : (idx % 2 === 0 ? 'FFFFFF' : 'FAFAFA');
+        return new TableRow({ children: [
+          new TableCell({ borders, width: { size: 3800, type: WidthType.DXA }, margins: cm, shading: { fill, type: ShadingType.CLEAR },
+            children: [new Paragraph({ children: [new TextRun({ text: riga.label, bold: riga.bold || false, size: 18, color: dark, font: 'Arial' })] })] }),
+          ...anni.map(a => {
+            const val = ce[a] ? ce[a][riga.k] : null;
+            const txt = val !== undefined && val !== null ? formatEuro(val) : '—';
+            const color = typeof val === 'number' && val < 0 ? 'B00020' : dark;
+            return new TableCell({ borders, width: { size: 1850, type: WidthType.DXA }, margins: cm, shading: { fill, type: ShadingType.CLEAR },
+              children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: txt, bold: riga.bold || false, size: 18, color, font: 'Arial' })] })] });
+          })
+        ]});
+      });
+
+      return new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3800, 1850, 1850, 1860], rows: [headerRow, ...dataRows] });
+    }
+
+    function fiTable(fi) {
+      const rows = [];
+      function addRow(label, value, bold, fill) {
+        rows.push(new TableRow({ children: [
+          new TableCell({ borders, width: { size: 5000, type: WidthType.DXA }, margins: cm, shading: { fill: fill || 'FFFFFF', type: ShadingType.CLEAR },
+            children: [new Paragraph({ children: [new TextRun({ text: label, bold: bold || false, size: 18, color: dark, font: 'Arial' })] })] }),
+          new TableCell({ borders, width: { size: 4360, type: WidthType.DXA }, margins: cm, shading: { fill: fill || 'FFFFFF', type: ShadingType.CLEAR },
+            children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: formatEuro(value), bold: bold || false, size: 18, font: 'Arial' })] })] }),
+        ]}));
+      }
+      function headerRow(label) {
+        rows.push(new TableRow({ children: [
+          new TableCell({ borders, columnSpan: 2, width: { size: 9360, type: WidthType.DXA }, margins: cm, shading: { fill: 'C9A84C', type: ShadingType.CLEAR },
+            children: [new Paragraph({ children: [new TextRun({ text: label, bold: true, size: 19, color: 'FFFFFF', font: 'Arial' })] })] }),
+        ]}));
+      }
+
+      const imp = fi.impieghi || {};
+      const fon = fi.fonti || {};
+
+      headerRow('IMPIEGHI');
+      if (imp.immateriali) addRow('Immobilizzazioni immateriali — ' + (imp.immateriali.descrizione || ''), imp.immateriali.importo);
+      if (imp.materiali) addRow('Immobilizzazioni materiali — ' + (imp.materiali.descrizione || ''), imp.materiali.importo);
+      if (imp.circolante) addRow('Capitale circolante — ' + (imp.circolante.descrizione || ''), imp.circolante.importo);
+      addRow('TOTALE IMPIEGHI', imp.totale, true, 'F8F4EC');
+
+      headerRow('FONTI');
+      if (fon.smartstart_prestito) addRow('Finanziamento Smart&Start (prestito) — ' + (fon.smartstart_prestito.descrizione || ''), fon.smartstart_prestito.importo);
+      if (fon.smartstart_fondo_perduto) addRow('Contributo a fondo perduto Smart&Start — ' + (fon.smartstart_fondo_perduto.descrizione || ''), fon.smartstart_fondo_perduto.importo);
+      if (fon.capitale_proprio) addRow('Capitale proprio soci — ' + (fon.capitale_proprio.descrizione || ''), fon.capitale_proprio.importo);
+      if (fon.co_investitori && fon.co_investitori.importo > 0) addRow('Co-investitori — ' + (fon.co_investitori.descrizione || ''), fon.co_investitori.importo);
+      addRow('TOTALE FONTI', fon.totale, true, 'F8F4EC');
+
+      return new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [5000, 4360], rows });
+    }
+
+    function vpcSection(vpc) {
+      const campi = [
+        { k: 'attivita', label: 'Attività del cliente' },
+        { k: 'difficolta', label: 'Difficoltà del cliente' },
+        { k: 'vantaggi', label: 'Vantaggi attesi' },
+        { k: 'prodotti', label: 'Prodotti e servizi' },
+        { k: 'attenuatori', label: 'Attenuatori di difficoltà' },
+        { k: 'generatori', label: 'Generatori di vantaggi' },
+      ];
+      const result = [];
+      campi.forEach(({ k, label }) => {
+        if (vpc[k]) {
+          result.push(h2(label));
+          result.push(p(vpc[k], { before: 60, after: 120 }));
+        }
+      });
+      return result;
+    }
+
+    function bmcSection(bmc) {
+      const campi = [
+        { k: 'segmenti', label: 'Segmenti di clientela' },
+        { k: 'proposta', label: 'Proposta di valore' },
+        { k: 'canali', label: 'Canali' },
+        { k: 'relazioni', label: 'Relazioni con i clienti' },
+        { k: 'ricavi', label: 'Flussi di ricavi' },
+        { k: 'risorse', label: 'Risorse chiave' },
+        { k: 'attivita', label: 'Attività chiave' },
+        { k: 'partner', label: 'Partner chiave' },
+        { k: 'costi', label: 'Struttura dei costi' },
+      ];
+      const result = [];
+      campi.forEach(({ k, label }) => {
+        if (bmc[k]) {
+          result.push(h2(label));
+          result.push(p(bmc[k], { before: 60, after: 120 }));
+        }
+      });
+      return result;
+    }
+
     for (const key of sectionOrder) {
-      const sec = sections[key];
+      const raw = sections[key];
+      if (!raw) continue;
+      const sec = extractContent(raw);
       if (!sec) continue;
+
       children.push(h1(sectionTitles[key]));
 
-      if (typeof sec === 'string') {
-        children.push(p(sec, { before: 80, after: 80 }));
-      } else if (typeof sec === 'object') {
-        // JSON sections (VPC, BMC, CE, FI)
-        Object.entries(sec).forEach(([k, v]) => {
-          if (typeof v === 'string' && v.length > 0) {
-            children.push(h2(k.replace(/_/g, ' ').toUpperCase()));
-            children.push(p(v, { before: 60, after: 100 }));
-          } else if (typeof v === 'number') {
-            children.push(lv(k.replace(/_/g, ' '), '€ ' + parseInt(v).toLocaleString('it-IT')));
-            children.push(sp());
-          }
-        });
+      if (sec.type === 'text') {
+        // Testo narrativo: spezza per paragrafi
+        const testo = String(sec.data || '');
+        const paragrafi = testo.split(/\n{2,}/).filter(Boolean);
+        if (paragrafi.length > 1) {
+          paragrafi.forEach(par => children.push(p(par.trim(), { before: 80, after: 100 })));
+        } else {
+          // spezza per singole newline
+          testo.split('\n').filter(Boolean).forEach(riga => children.push(p(riga.trim(), { before: 60, after: 80 })));
+        }
+      } else if (sec.type === 'json') {
+        const data = sec.data || {};
+        if (key === 'vpc') {
+          vpcSection(data).forEach(el => children.push(el));
+        } else if (key === 'bmc') {
+          bmcSection(data).forEach(el => children.push(el));
+        } else if (key === 'conto_economico') {
+          children.push(ceTable(data));
+          children.push(sp());
+          if (data.note) children.push(p('Note: ' + data.note, { before: 120, after: 80, color: gray, italic: true }));
+        } else if (key === 'fonti_impieghi') {
+          children.push(fiTable(data));
+          children.push(sp());
+          if (data.note) children.push(p('Note: ' + data.note, { before: 120, after: 80, color: gray, italic: true }));
+        } else {
+          // fallback: dump chiave/valore
+          Object.entries(data).forEach(([k, v]) => {
+            if (typeof v === 'string' && v.length > 0) {
+              children.push(h2(k.replace(/_/g, ' ')));
+              children.push(p(v, { before: 60, after: 100 }));
+            }
+          });
+        }
+      } else {
+        // stringa diretta (compatibilità)
+        children.push(p(String(sec), { before: 80, after: 80 }));
       }
+
+      children.push(pb());
     }
 
     // Disclaimer
