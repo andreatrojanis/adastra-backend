@@ -30,7 +30,8 @@ button.sec{background:#222;color:#c9a84c;border:1px solid #c9a84c}
   <button onclick="testGPT()">GPT</button>
   <button onclick="testGrok()">GROK</button>
   <button onclick="testGenerate()">GENERATE</button>
-  <button class="sec" onclick="openDossierWithData()">APRI DOSSIER →</button>
+  <button class="sec" onclick="openDossierWithData()">APRI DOSSIER SS →</button>
+  <button class="sec" onclick="openDossierON()">APRI DOSSIER ON →</button>
   <button class="sec" onclick="document.getElementById('results').innerHTML=''">CLEAR</button>
 </div>
 <div id="results"></div>
@@ -109,7 +110,47 @@ async function testGenerate(){
   }catch(e){log('gen2','fail','ERRORE VPC: '+e.message);}
 }
 
-// ── APRI DOSSIER CON DATI STARTON FINTI ──
+// ── APRI DOSSIER ON CON DATI STARTON FINTI ──
+function openDossierON(){
+  const fakeData={
+    nome:'START ON',
+    descrizione:'Piattaforma SaaS multi-agente AI per pre-valutazione finanziabilità startup e PMI attraverso panel Claude, GPT-4o e Grok con report strutturato, score, piano pre-candidatura e dossier automatico.',
+    settore:'SaaS B2B Fintech — Finanza Agevolata',
+    regione:'Puglia',provincia:'LE',comune:'Lecce',isSud:true,
+    investimento:'450000',revenue:'SaaS / abbonamento',breakeven:'12–24 mesi',
+    export:'Sì — Europa nei primi 3 anni',
+    anzianita:'0–12 mesi',
+    compagine:'≥51% under 36 e/o donne',
+    startup:'Sì / molto probabile',
+    deminimis:'Verificato — nessun problema',
+    fideiussione:'Da strutturare',fatturato:'Zero — pre-revenue',
+    capitale:'20000',coinvestitori:'No',
+    trl:'TRL 6 — prototipo avanzato e dimostrato',
+    tipoInnovazione:'Innovazione di prodotto — nuovo prodotto o servizio',
+    ip:'In corso di deposito',techprop:'Sì — tecnologia proprietaria',
+    rd:'Alta — ricerca applicata o di base',universita:'No',
+    scala:'Alta — replicabile a scala nazionale o internazionale',
+    mercato:'Startup e PMI italiane che cercano finanziamenti agevolati Invitalia. Mercato potenziale: ~200.000 imprese/anno.',
+    competitor:'Non risultano piattaforme verticali comparabili nel mercato italiano.',
+    trazione:'3 — LOI o lettere di intento formali',loi:'5',ricavi:'0',
+    team:'Andrea Trojanis — CEO, 10 anni IT e finanza agevolata.',
+    esperienza:'10',teamtech:'Parziale — un profilo tecnico',advisor:'No',
+    personale:'1–3 dipendenti',
+    mac:'5',soft:'55',opere:'0',cons:'25',altro:'15',
+    rischio:'Lenta adozione da parte delle PMI verso strumenti AI.',
+    dipendenze:'Anthropic Claude API, OpenAI GPT-4o API.',
+    impatti:'Digitale | Occupazione qualificata | Parità di genere | Sviluppo territoriale',
+    documenti:'Business plan | Demo / mockup / prototipo funzionante | LOI / accordi commerciali firmati'
+  };
+  try{
+    sessionStorage.setItem('starton_wizard_data',JSON.stringify(fakeData));
+    window.open('/dossier-on.html','_blank');
+    section('DOSSIER ON APERTO');
+    log('dossier-on-open','ok','sessionStorage iniettato con dati ON — dossier-on.html aperto','Progetto: '+fakeData.nome+' | Investimento: €'+parseInt(fakeData.investimento).toLocaleString('it-IT')+' | Compagine: '+fakeData.compagine);
+  }catch(e){log('dossier-on-open','fail','Errore: '+e.message);}
+}
+
+// ── APRI DOSSIER SS CON DATI STARTON FINTI ──
 function openDossierWithData(){
   const fakeData={
     nome:'START ON',
