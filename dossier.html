@@ -270,28 +270,17 @@ function projectContext(){
     '\nDOCUMENTI DISPONIBILI: '+(d.documenti||'Nessuno');
 }
 
+// buildPrompt ora passa solo il projectContext — i prompt strutturati sono in api/generate.js
 function buildPrompt(sectionId){
+  return projectContext();
+}
+
+// LEGACY — non più usato ma mantenuto per compatibilità
+function buildPromptLegacy(sectionId){
   const ctx = projectContext();
   const prompts = {
 
-executive: `Sei un consulente senior di finanza agevolata italiana con 15 anni di esperienza in candidature Invitalia Smart&Start. Scrivi un Executive Summary professionale, abbondante e convincente.
-
-DATI PROGETTO:
-${ctx}
-
-Scrivi un Executive Summary di ALMENO 600-800 parole che includa obbligatoriamente:
-1. Il problema reale che il progetto risolve — con dati di contesto sul settore
-2. La soluzione proposta, la sua unicità e il vantaggio competitivo
-3. L'innovazione tecnologica e lo stato di sviluppo attuale (TRL)
-4. Il mercato target con dimensioni stimate (TAM/SAM se possibile)
-5. Il modello di business, le fonti di ricavo e la sostenibilità economica
-6. Il team: competenze, ruoli e track record rilevante
-7. I risultati attesi a 12, 24 e 36 mesi con KPI concreti
-8. Perché Smart&Start è il bando più adatto — citando esplicitamente i requisiti soddisfatti
-9. L'impatto occupazionale e territoriale atteso
-
-Tono autorevole, specifico, orientato alla commissione istruttoria Invitalia. Zero genericità. Ogni affermazione deve essere supportata dai dati del progetto.
-Rispondi SOLO con il testo, senza titoli o intestazioni.`,
+executive: ctx,
 
 vpc: `Sei un consulente senior di finanza agevolata italiana. Compila il Value Proposition Canvas per Smart&Start Invitalia.
 
