@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>START ON — Dossier ON Oltre Nuove Imprese</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif}
+:root{--gold:#c9a84c;--gold-light:#a07820;--gold-bg:#f0ece6;--border:rgba(201,168,76,0.28);--radius:12px;--fd:'Avenir Next','Century Gothic',Futura,sans-serif;--fb:'Helvetica Neue',Arial,sans-serif}
+.page-header{background:#fff;border-bottom:1px solid var(--border);padding:16px 40px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:var(--fd);font-size:13px;font-weight:500;letter-spacing:.25em;text-transform:uppercase;color:#111;text-decoration:none}
+.logo span{color:var(--gold)}
+.back-link{font-family:var(--fd);font-size:11px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:#999;text-decoration:none;cursor:pointer}
+.back-link:hover{color:var(--gold)}
+.page-main{max-width:720px;margin:0 auto;padding:48px 24px 100px}
+@media(max-width:600px){.page-header{padding:14px 20px}.page-main{padding:32px 16px 80px}}
+.eyebrow{font-family:var(--fd);font-size:10px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.eyebrow::before{content:'';display:block;width:18px;height:1px;background:var(--gold)}
+.page-title{font-family:var(--fd);font-size:clamp(22px,4vw,32px);font-weight:600;color:#111;line-height:1.15;margin-bottom:8px;letter-spacing:-.02em}
+.page-title em{font-style:normal;font-weight:300;color:var(--gold-light)}
+.page-sub{font-family:var(--fb);font-size:13px;font-weight:300;color:#666;line-height:1.7;margin-bottom:32px;max-width:500px}
+#state-nodata{display:block}
+#state-loading{display:none}
+#state-done{display:none}
+#state-error{display:none}
+.info-box{border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;background:#fff;margin-bottom:16px}
+.info-box-title{font-family:var(--fd);font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
+.info-row:last-child{border-bottom:none}
+.info-lbl{color:#666;font-weight:300}
+.info-val{color:#111;font-weight:500;font-size:12px;text-align:right;max-width:60%}
+.section-list{display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
+.section-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border:1px solid var(--border);border-radius:10px;background:#fff}
+.section-num{font-family:var(--fd);font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--gold);flex-shrink:0;width:24px}
+.section-name{font-family:var(--fb);font-size:13px;font-weight:300;color:#333;flex:1}
+.section-status{font-family:var(--fd);font-size:9px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:#bbb;flex-shrink:0}
+.section-status.done{color:#0a7f2e}
+.section-status.active{color:var(--gold)}
+.section-status.error{color:#b00020}
+.spinner{width:28px;height:28px;border:2px solid rgba(201,168,76,0.15);border-top-color:var(--gold);border-radius:50%;margin:0 auto 14px;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn-main{padding:15px 32px;background:var(--gold);color:#fff;border:none;border-radius:999px;font-family:var(--fd);font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .22s}
+.btn-main:hover{background:var(--gold-light);transform:translateY(-1px)}
+.btn-outline{padding:13px 28px;background:transparent;color:var(--gold);border:1px solid var(--gold);border-radius:999px;font-family:var(--fd);font-size:11px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .22s}
+.btn-outline:hover{background:var(--gold-bg)}
+.progress-bar{height:4px;background:rgba(201,168,76,0.12);border-radius:2px;margin-bottom:4px;overflow:hidden}
+.progress-fill{height:100%;background:var(--gold);border-radius:2px;transition:width .5s ease}
+.progress-label{font-family:var(--fd);font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);text-align:right;margin-bottom:20px}
+.done-card{border:1px solid rgba(10,127,46,0.2);border-radius:var(--radius);padding:24px;background:rgba(10,127,46,0.04);margin-bottom:20px;text-align:center}
+.done-icon{font-size:32px;margin-bottom:12px}
+.done-title{font-family:var(--fd);font-size:16px;font-weight:600;color:#0a7f2e;margin-bottom:6px}
+.done-sub{font-family:var(--fb);font-size:13px;font-weight:300;color:#555;line-height:1.6}
+.badge-on{display:inline-block;padding:4px 14px;background:#0a7f2e;color:#fff;border-radius:999px;font-family:var(--fd);font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px}
+.disclaimer{margin-top:24px;padding:14px 16px;background:rgba(201,168,76,0.05);border-radius:8px;border:1px solid rgba(201,168,76,0.15);font-family:var(--fb);font-size:11px;font-weight:300;color:#888;line-height:1.6}
+</style>
+</head>
+<body>
+<header class="page-header">
+  <a href="index.html" class="logo">S T A R T <span>O</span> N</a>
+  <a class="back-link" onclick="history.back()">← Torna al report</a>
+</header>
+<main class="page-main">
+
+  <!-- STATO: nessun dato -->
+  <div id="state-nodata">
+    <div class="eyebrow">Dossier ON</div>
+    <div class="page-title">Genera il tuo<br><em>dossier completo.</em></div>
+    <div class="page-sub">Per generare il dossier ON devi prima completare il wizard e ottenere il report. Torna alla pagina principale.</div>
+    <a href="index.html" class="btn-main" style="display:inline-block;text-decoration:none;margin-top:8px">Vai al wizard →</a>
+  </div>
+
+  <!-- STATO: pronto -->
+  <div id="state-ready" style="display:none">
+    <div class="badge-on">ON — Oltre Nuove Imprese a Tasso Zero</div>
+    <div class="eyebrow">Dossier Bando ON</div>
+    <div class="page-title">Il tuo dossier ON<br><em>è pronto per essere generato.</em></div>
+    <div class="page-sub">Claude Sonnet genererà le 9 sezioni richieste dal bando ON — Invitalia, con focus su compagine giovanile/femminile, piano occupazionale e impatto territoriale.</div>
+
+    <div class="info-box" style="margin-top:8px">
+      <div class="info-box-title">Progetto da candidare</div>
+      <div id="project-summary"></div>
+    </div>
+
+    <div class="info-box">
+      <div class="info-box-title">Sezioni che verranno generate — Bando ON</div>
+      <div class="section-list">
+        <div class="section-item"><span class="section-num">01</span><span class="section-name">Executive Summary — score ON, scoring card, radar dimensioni</span><span class="section-status">—</span></div>
+        <div class="section-item"><span class="section-num">02</span><span class="section-name">Compagine Societaria — requisito >50% under 35/donne</span><span class="section-status">—</span></div>
+        <div class="section-item"><span class="section-num">03</span><span class="section-name">Descrizione Progetto — investimento e spese ammissibili ON</span><span class="section-status">—</span></div>
+        <div class="section-item"><span class="section-num">04</span><span class="section-name">Analisi di mercato e posizionamento competitivo</span><span class="section-status">—</span></div>
+        <div class="section-item"><span class="section-num">05</span><span class="section-name">Piano operativo e milestones a 36 mesi</span><span class="section-status">—</span></div>
+        <div class="section-item"><span class="section-num">06</span><span class="section-name">Piano Occupazionale — criterio prioritario ON</span><span class="section-status">—</span></div>
+        <div class="section-item"><span class="section-num">07</span><span class="section-name">Impatto sociale, ambientale e territoriale</span><span class="section-status">—</span></div>
+        <div class="section-item"><span class="section-num">08</span><span class="section-name">Piano Economico-Finanziario — CE + rimborso ON</span><span class="section-status">—</span></div>
+        <div class="section-item"><span class="section-num">09</span><span class="section-name">Fonti e Impieghi — struttura finanziaria ON</span><span class="section-status">—</span></div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <button class="btn-main" onclick="startGeneration()">Genera Dossier ON →</button>
+      <button class="btn-outline" onclick="history.back()">Torna al report</button>
+    </div>
+
+    <div class="disclaimer">
+      Il dossier è generato da Claude Sonnet (Anthropic) — specializzato sui criteri ON. Costituisce una bozza professionale da revisionare con il team AdAstra prima della presentazione formale a Invitalia. Punteggio massimo ON: 50 punti — soglia ammissibilità: 26 punti.
+    </div>
+  </div>
+
+  <!-- STATO: generazione in corso -->
+  <div id="state-loading">
+    <div class="eyebrow">Generazione in corso</div>
+    <div class="page-title">Claude Sonnet sta<br><em>costruendo il dossier ON.</em></div>
+    <div class="page-sub">Il processo richiede 3-5 minuti. Non chiudere questa pagina.</div>
+    <div class="progress-label" id="progress-label">Sezione 0 / 9</div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <div class="section-list" id="section-list-loading"></div>
+  </div>
+
+  <!-- STATO: completato -->
+  <div id="state-done">
+    <div class="done-card">
+      <div class="done-icon">✓</div>
+      <div class="done-title">Dossier ON generato con successo</div>
+      <div class="done-sub">Il documento Word è stato scaricato automaticamente.<br>Revisionalo con il team AdAstra e presentalo su Invitalia.</div>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px">
+      <button class="btn-main" id="btn-download-again">Scarica di nuovo →</button>
+      <button class="btn-outline" onclick="startGeneration()">Rigenera dossier</button>
+    </div>
+    <div class="info-box">
+      <div class="info-box-title">Prossimi passi — Bando ON</div>
+      <div class="section-list">
+        <div class="section-item"><span class="section-num">→</span><span class="section-name">Verifica requisito compagine: >50% under 35 e/o donne — calcolo quote</span></div>
+        <div class="section-item"><span class="section-num">→</span><span class="section-name">Verifica De Minimis — registro nazionale aiuti di Stato</span></div>
+        <div class="section-item"><span class="section-num">→</span><span class="section-name">Raccolta preventivi fornitori per spese ammissibili</span></div>
+        <div class="section-item"><span class="section-num">→</span><span class="section-name">Presentazione domanda su piattaforma Invitalia (sportello aperto)</span></div>
+      </div>
+    </div>
+    <div class="disclaimer">Dossier generato da Claude Sonnet (Anthropic) sui criteri ON — Invitalia. Non costituisce garanzia di ammissibilità. Revisionare con un professionista prima della presentazione.</div>
+  </div>
+
+  <!-- STATO: errore -->
+  <div id="state-error">
+    <div style="border:1px solid rgba(176,0,32,0.2);border-radius:var(--radius);padding:24px;background:rgba(176,0,32,0.03);margin-bottom:20px">
+      <div style="font-family:var(--fd);font-size:14px;font-weight:600;color:#b00020;margin-bottom:8px">Errore durante la generazione</div>
+      <div id="error-msg" style="font-family:var(--fb);font-size:13px;font-weight:300;color:#555;line-height:1.6;margin-bottom:14px"></div>
+      <button class="btn-outline" onclick="startGeneration()">Riprova</button>
+    </div>
+  </div>
+
+</main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){ init(); });
+
+function init(){
+
+const GENERATE_URL = 'https://adastra-backend-sigma.vercel.app/api/generate-on';
+const DOCX_URL = '/api/docx-on';
+
+const SECTIONS = [
+  {id:'executive',      label:'Executive Summary'},
+  {id:'compagine',      label:'Compagine Societaria'},
+  {id:'progetto',       label:'Descrizione Progetto'},
+  {id:'mercato',        label:'Analisi di mercato'},
+  {id:'operativo',      label:'Piano operativo'},
+  {id:'occupazione',    label:'Piano Occupazionale'},
+  {id:'impatto',        label:'Impatto sociale e territoriale'},
+  {id:'piano_economico',label:'Piano Economico-Finanziario'},
+  {id:'fonti_impieghi', label:'Fonti e Impieghi'},
+];
+
+let wizardData = null;
+let generatedSections = {};
+let docxBlob = null;
+
+function loadData(){
+  try {
+    const raw = sessionStorage.getItem('starton_wizard_data');
+    if(raw) wizardData = JSON.parse(raw);
+  } catch(e) {}
+  return wizardData;
+}
+
+function show(id){
+  ['state-nodata','state-ready','state-loading','state-done','state-error'].forEach(function(s){
+    document.getElementById(s).style.display = s === id ? 'block' : 'none';
+  });
+}
+
+function buildProjectSummary(){
+  if(!wizardData) return '';
+  const d = wizardData;
+  const rows = [
+    ['Progetto', d.nome || '—'],
+    ['Settore', d.settore || '—'],
+    ['Sede', [d.comune, d.provincia ? '('+d.provincia+')' : '', d.regione].filter(Boolean).join(' ') || '—'],
+    ['Investimento', d.investimento ? '€ ' + parseInt(d.investimento).toLocaleString('it-IT') : '—'],
+    ['Compagine', d.compagine || '—'],
+    ['Anzianità impresa', d.anzianita || '—'],
+  ];
+  return rows.map(function(r){ return '<div class="info-row"><span class="info-lbl">'+r[0]+'</span><span class="info-val">'+r[1]+'</span></div>'; }).join('');
+}
+
+function projectContext(){
+  if(!wizardData) return '';
+  const d = wizardData;
+  return 'PROGETTO: '+(d.nome||'—')+
+    '\nDESCRIZIONE: '+(d.descrizione||'—')+
+    '\nSETTORE: '+(d.settore||'—')+
+    '\nREGIONE: '+(d.regione||'—')+(d.provincia?' ('+d.provincia+')':'')+' — '+(d.isSud?'SUD ITALIA':'Centro/Nord')+
+    '\nCOMUNE: '+(d.comune||'—')+
+    '\nINVESTIMENTO: €'+parseInt(d.investimento||0).toLocaleString('it-IT')+
+    '\nMODELLO REVENUE: '+(d.revenue||'—')+
+    '\nBREAK-EVEN: '+(d.breakeven||'—')+
+    '\nANZIANITA IMPRESA: '+(d.anzianita||'—')+
+    '\nCOMPAGINE: '+(d.compagine||'—')+' — REQUISITO ON: >50% under 35 e/o donne'+
+    '\nSTARTUP INNOVATIVA: '+(d.startup||'—')+
+    '\nDE MINIMIS: '+(d.deminimis||'—')+
+    '\nFATTURATOATTUALE: '+(d.fatturato||'—')+
+    '\nCAPITALE INIZIALE: €'+parseInt(d.capitale||0).toLocaleString('it-IT')+
+    '\nCO-INVESTITORI: '+(d.coinvestitori||'—')+
+    '\nTRL: '+(d.trl||'—')+
+    '\nTIPO INNOVAZIONE: '+(d.tipoInnovazione||'—')+
+    '\nIP / BREVETTI: '+(d.ip||'—')+
+    '\nSCALABILITA: '+(d.scala||'—')+
+    '\nMERCATO TARGET: '+(d.mercato||'—')+
+    '\nCOMPETITOR: '+(d.competitor||'—')+
+    '\nTRAZIONE: '+(d.trazione||'—')+
+    '\nLOI: '+(d.loi||'0')+
+    '\nRICAVI MENSILI: €'+parseInt(d.ricavi||0).toLocaleString('it-IT')+
+    '\nTEAM: '+(d.team||'—')+
+    '\nESPERIENZA CUMULATA: '+(d.esperienza||'0')+' anni'+
+    '\nTEAM TECNICO: '+(d.teamtech||'—')+
+    '\nADVISOR: '+(d.advisor||'—')+
+    '\nPERSONALE 36 MESI: '+(d.personale||'—')+
+    '\nSPESE: Macchinari '+(d.mac||0)+'% Software '+(d.soft||0)+'% Opere '+(d.opere||0)+'% Consulenze '+(d.cons||0)+'% Altro '+(d.altro||0)+'%'+
+    '\nRISCHIO PRINCIPALE: '+(d.rischio||'—')+
+    '\nIMPATTI: '+(d.impatti||'—')+
+    '\nDOCUMENTI: '+(d.documenti||'—');
+}
+
+async function callGenerate(sectionId){
+  const res = await fetch(GENERATE_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ sectionId: sectionId, prompt: projectContext() })
+  });
+  if(!res.ok){
+    const errBody = await res.text();
+    throw new Error('HTTP ' + res.status + ' — ' + errBody.substring(0, 150));
+  }
+  const data = await res.json();
+  if(data.error) throw new Error(data.error);
+  return data;
+}
+
+function updateSection(idx, status){
+  const list = document.getElementById('section-list-loading');
+  if(!list) return;
+  const items = list.querySelectorAll('.section-item');
+  if(items[idx]){
+    const statusEl = items[idx].querySelector('.section-status');
+    if(statusEl){
+      statusEl.className = 'section-status ' + status;
+      statusEl.textContent = status==='done' ? '✓ Completata' : status==='active' ? 'In corso...' : status==='error' ? '✗ Errore' : '—';
+    }
+  }
+  const fill = document.getElementById('progress-fill');
+  const label = document.getElementById('progress-label');
+  const done = list.querySelectorAll('.section-status.done').length;
+  if(fill) fill.style.width = Math.round((done/SECTIONS.length)*100) + '%';
+  if(label) label.textContent = 'Sezione ' + done + ' / ' + SECTIONS.length;
+}
+
+async function startGeneration(){
+  if(!wizardData){ show('state-nodata'); return; }
+  show('state-loading');
+  generatedSections = {};
+
+  const list = document.getElementById('section-list-loading');
+  list.innerHTML = SECTIONS.map(function(s,i){
+    return '<div class="section-item"><span class="section-num">'+String(i+1).padStart(2,'0')+'</span><span class="section-name">'+s.label+'</span><span class="section-status" id="sec-'+s.id+'">In attesa</span></div>';
+  }).join('');
+
+  try {
+    for(var i = 0; i < SECTIONS.length; i++){
+      var s = SECTIONS[i];
+      updateSection(i, 'active');
+      try {
+        var result = await callGenerate(s.id);
+        generatedSections[s.id] = result;
+        updateSection(i, 'done');
+      } catch(e) {
+        generatedSections[s.id] = {type:'text', data:'Sezione non disponibile — errore: '+e.message+'. Da completare manualmente.'};
+        updateSection(i, 'error');
+      }
+      await new Promise(function(r){ setTimeout(r, 500); });
+    }
+    await buildDocx();
+    show('state-done');
+  } catch(err){
+    document.getElementById('error-msg').textContent = err.message;
+    show('state-error');
+  }
+}
+
+async function buildDocx(){
+  var sections = {};
+  SECTIONS.forEach(function(s){
+    var res = generatedSections[s.id];
+    if(res) sections[s.id] = res.type === 'json' ? res.data : res.data;
+  });
+
+  var response = await fetch(DOCX_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      projectName: wizardData ? wizardData.nome || 'Progetto' : 'Progetto',
+      sections: sections
+    })
+  });
+
+  if(!response.ok){
+    var err = await response.json().catch(function(){ return {error:'Errore sconosciuto'}; });
+    throw new Error(err.error || 'Errore generazione Word');
+  }
+
+  docxBlob = await response.blob();
+  downloadDocx();
+  document.getElementById('btn-download-again').onclick = downloadDocx;
+}
+
+function downloadDocx(){
+  if(!docxBlob) return;
+  var url = URL.createObjectURL(docxBlob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'Dossier_ON_' + ((wizardData && wizardData.nome)||'progetto').replace(/\s+/g,'_') + '_' + new Date().toISOString().slice(0,10) + '.docx';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+}
+
+window.startGeneration = startGeneration;
+
+var data = loadData();
+if(data){
+  document.getElementById('project-summary').innerHTML = buildProjectSummary();
+  show('state-ready');
+} else {
+  show('state-nodata');
+}
+
+} // end init
+</script>
+</body>
+</html>
