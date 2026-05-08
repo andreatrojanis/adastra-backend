@@ -1,9 +1,11 @@
 {
   "version": 2,
   "functions": {
-    "api/analyze.js": { "maxDuration": 60 },
-    "api/docx.js": { "maxDuration": 60 },
-    "api/generate.js": { "maxDuration": 300 }
+    "api/analyze.js":    { "maxDuration": 60 },
+    "api/docx.js":       { "maxDuration": 60 },
+    "api/generate.js":   { "maxDuration": 300 },
+    "api/generate-on.js":{ "maxDuration": 300 },
+    "api/docx-on.js":    { "maxDuration": 60 }
   },
   "headers": [
     {
