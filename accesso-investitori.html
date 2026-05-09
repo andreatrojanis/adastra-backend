@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Starton — Accesso Investitori</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --cream: #f0ece3;
+    --gold: #c9a84c;
+    --gold-border: rgba(201,168,76,0.25);
+    --gold-dim: rgba(201,168,76,0.08);
+    --text: #1a1a1a;
+    --text-dim: rgba(26,26,26,0.5);
+    --text-muted: rgba(26,26,26,0.3);
+    --border: rgba(26,26,26,0.1);
+    --fv: 'Verdana', Geneva, sans-serif;
+    --fb: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  }
+  body {
+    background: var(--cream);
+    color: var(--text);
+    font-family: var(--fb);
+    font-weight: 300;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.025'/%3E%3C/svg%3E");
+    pointer-events: none;
+  }
+  .box {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+    border: 1px solid var(--gold-border);
+    background: var(--gold-dim);
+    padding: 48px 40px;
+    text-align: center;
+  }
+  .box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--gold);
+  }
+  .logo {
+    font-family: var(--fv);
+    font-size: 12px;
+    letter-spacing: 0.45em;
+    color: var(--text);
+    margin-bottom: 32px;
+    display: block;
+  }
+  .box-tag {
+    font-family: var(--fv);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 12px;
+  }
+  .box-title {
+    font-family: var(--fv);
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+  }
+  .box-sub {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 32px;
+    line-height: 1.6;
+  }
+  input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    background: var(--cream);
+    font-family: var(--fv);
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    color: var(--text);
+    outline: none;
+    margin-bottom: 12px;
+    text-align: center;
+    transition: border-color 0.2s;
+  }
+  input:focus { border-color: var(--gold); }
+  input::placeholder { color: var(--text-muted); letter-spacing: 0.1em; }
+  button {
+    width: 100%;
+    padding: 14px;
+    background: var(--gold);
+    color: #fff;
+    border: none;
+    font-family: var(--fv);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  button:hover { background: #d4b05a; }
+  .error {
+    font-size: 12px;
+    color: #c62828;
+    margin-top: 12px;
+    font-family: var(--fv);
+    letter-spacing: 0.05em;
+    display: none;
+  }
+  .back {
+    margin-top: 24px;
+    font-family: var(--fv);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-decoration: none;
+    display: block;
+    transition: color 0.2s;
+  }
+  .back:hover { color: var(--gold); }
+</style>
+</head>
+<body>
+<div class="box">
+  <span class="logo">S T A R T O N</span>
+  <div class="box-tag">Area riservata</div>
+  <div class="box-title">Accesso Investitori</div>
+  <p class="box-sub">Inserisci il codice di accesso per visualizzare il documento riservato agli investitori.</p>
+  <input type="password" id="pwd" placeholder="Codice di accesso" onkeydown="if(event.key==='Enter') check()">
+  <button onclick="check()">Accedi →</button>
+  <div class="error" id="err">Codice non valido. Contatta il team Starton.</div>
+  <a href="/" class="back">← Torna alla home</a>
+</div>
+<script>
+  function check() {
+    const pwd = document.getElementById('pwd').value.trim().toLowerCase();
+    const err = document.getElementById('err');
+    // Cambia questa password con quella che vuoi
+    if (pwd === 'starton2026') {
+      window.location.href = '/investitori';
+    } else {
+      err.style.display = 'block';
+      document.getElementById('pwd').value = '';
+      document.getElementById('pwd').focus();
+    }
+  }
+</script>
+</body>
+</html>
