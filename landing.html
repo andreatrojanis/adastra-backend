@@ -166,12 +166,10 @@
 
 <nav>
   <div class="nav-logo">S T A R T O N</div>
-  <ul class="nav-links">
-    <li><a href="#come-funziona">Come funziona</a></li>
-    <li><a href="#output">Cosa ottieni</a></li>
-    <li><a href="#bandi">I bandi</a></li>
-    <li><a href="/analisi" class="nav-cta">Analizza la tua startup</a></li>
-  </ul>
+  <div style="display:flex; align-items:center; gap:24px;">
+    <a href="/accesso-investitori" style="font-family:var(--fv); font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-muted); text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text-muted)'">Investitori</a>
+    <a href="/analisi" style="font-family:var(--fv); font-size:10px; letter-spacing:0.15em; text-transform:uppercase; background:var(--gold); color:#fff; padding:10px 20px; text-decoration:none; transition:background 0.2s;">Analizza la tua startup</a>
+  </div>
 </nav>
 
 <div class="wrap">
@@ -183,7 +181,7 @@
   <p class="hero-sub">Per le startup italiane esistono <strong>tre bandi Invitalia</strong> con fondo perduto reale. Pochi, selettivi, con criteri precisi. Starton analizza la tua impresa e <strong>costruisce l'intero dossier</strong> per ottenerlo.</p>
   <div class="hero-actions">
     <a href="/analisi" class="btn-primary">Analizza la tua startup →</a>
-    <a href="#come-funziona" class="btn-ghost">Come funziona</a>
+    <a href="/#come-funziona" class="btn-ghost">Come funziona</a>
   </div>
   <div class="stats-strip reveal">
     <div class="h-stat">
@@ -373,26 +371,73 @@
   </div>
 </div>
 
-<!-- VS -->
+<!-- 4 AGENTI -->
 <div class="section">
-  <div class="section-tag">Perché Starton</div>
-  <h2 class="section-title">Starton non cerca bandi.<br><em>Li vince.</em></h2>
-  <table class="vs-table reveal">
-    <thead>
-      <tr>
-        <th style="width:36%">Capacità</th>
-        <th class="col-s" style="width:32%">S T A R T O N</th>
-        <th style="width:32%">Altri strumenti</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr><td class="feat">Score finanziabilità su criteri reali</td><td class="col-s"><span class="check">✓</span> Invitalia-specific</td><td class="col-b"><span class="cross">—</span> Prefattibilità generica</td></tr>
-      <tr><td class="feat">Business plan completo</td><td class="col-s"><span class="check">✓</span> Generato dall'AI</td><td class="col-b"><span class="cross">—</span> Non disponibile</td></tr>
-      <tr><td class="feat">Piano finanziario ottimizzato</td><td class="col-s"><span class="check">✓</span> Sul bando specifico</td><td class="col-b"><span class="cross">—</span> Non disponibile</td></tr>
-      <tr><td class="feat">Strategia doppia candidatura</td><td class="col-s"><span class="check">✓</span> ON + Smart&Start</td><td class="col-b"><span class="cross">—</span> Non disponibile</td></tr>
-      <tr><td class="feat">Success fee allineato</td><td class="col-s"><span class="check">✓</span> Solo se vinci</td><td class="col-b"><span class="cross">—</span> Costo anticipato fisso</td></tr>
-    </tbody>
-  </table>
+  <div class="section-tag">La tecnologia</div>
+  <h2 class="section-title">Non un'AI.<br><em>Un panel di esperti.</em></h2>
+  <div class="two-col">
+    <div class="prose reveal">
+      <p>Starton analizza la tua startup attraverso <strong>4 agenti AI specializzati</strong> che lavorano in parallelo — come farebbe un team di valutatori senior Invitalia. Ognuno guarda una dimensione diversa, con criteri e priorità proprie.</p>
+      <p>Il risultato non è un punteggio generico: è una <strong>mappa precisa di forza e criticità</strong> su 6 assi — requisiti formali, innovazione, mercato, team, numeri, impatti. Ogni asse viene pesato secondo i criteri reali di istruttoria.</p>
+    </div>
+    <div class="flow reveal">
+      <div class="flow-row accent">
+        <span class="flow-text">Agente 01 — Valutatore Formale</span>
+        <span style="font-family:var(--fv); font-size:10px; color:var(--text-muted);">Compliance · requisiti hard · esclusioni</span>
+      </div>
+      <div class="flow-row">
+        <span class="flow-text">Agente 02 — Analista Strategico</span>
+        <span style="font-family:var(--fv); font-size:10px; color:var(--text-muted);">Business case · scalabilità · trazione</span>
+      </div>
+      <div class="flow-row">
+        <span class="flow-text">Agente 03 — Esperto Territoriale</span>
+        <span style="font-family:var(--fv); font-size:10px; color:var(--text-muted);">Impatti · premialità geografiche · Sud</span>
+      </div>
+      <div class="flow-row">
+        <span class="flow-text">Agente 04 — Devil's Advocate</span>
+        <span style="font-family:var(--fv); font-size:10px; color:var(--text-muted);">Cerca tutto ciò che può bloccare</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MINORITY REPORT -->
+<div class="section">
+  <div class="section-tag">Il controllo incrociato</div>
+  <h2 class="section-title">Il Minority Report.<br><em>Tre AI. Un verdetto.</em></h2>
+  <div class="two-col">
+    <div class="prose reveal">
+      <p>Dopo i 4 agenti interni, Starton attiva il <strong>Minority Report</strong>: tre intelligenze artificiali indipendenti — Claude di Anthropic, GPT-4o di OpenAI e Grok 3 di xAI — valutano in autonomia la tua startup e danno ciascuna il proprio score.</p>
+      <p>Se le tre AI concordano, il verdetto è solido. <strong>Se divergono, il dissenso emerge chiaramente</strong> — e quella divergenza è informazione preziosa: indica esattamente dove il tuo progetto ha punti deboli non ovvi.</p>
+      <p>Nessuna bolla di conferma. Nessun punto cieco. È il livello di rigore che un'istruttoria Invitalia applica — applicato prima, da te.</p>
+    </div>
+    <div class="reveal">
+      <div style="display:flex; flex-direction:column; gap:1px; background:var(--border); border:1px solid var(--gold-border);">
+        <div style="padding:20px 24px; background:var(--gold-dim); border-bottom:1px solid var(--gold-border);">
+          <div style="font-family:var(--fv); font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--gold); margin-bottom:6px;">Minority Report</div>
+          <div style="font-family:var(--fv); font-size:13px; color:var(--text);">Tre AI indipendenti · Score separato per ognuna · Verdetto per consenso</div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1px; background:var(--border);">
+          <div style="padding:20px 16px; background:var(--cream); text-align:center;">
+            <div style="font-family:var(--fv); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">Anthropic</div>
+            <div style="font-family:var(--fv); font-size:16px; color:var(--text);">Claude</div>
+          </div>
+          <div style="padding:20px 16px; background:var(--cream); text-align:center; border-left:1px solid var(--border); border-right:1px solid var(--border);">
+            <div style="font-family:var(--fv); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">OpenAI</div>
+            <div style="font-family:var(--fv); font-size:16px; color:var(--text);">GPT-4o</div>
+          </div>
+          <div style="padding:20px 16px; background:var(--cream); text-align:center;">
+            <div style="font-family:var(--fv); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">xAI</div>
+            <div style="font-family:var(--fv); font-size:16px; color:var(--text);">Grok 3</div>
+          </div>
+        </div>
+        <div style="padding:16px 24px; background:var(--cream2); display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-family:var(--fv); font-size:12px; color:var(--text-dim);">Score medio ponderato</span>
+          <span style="font-family:var(--fv); font-size:12px; color:var(--gold);">Verdetto per consenso →</span>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- CTA -->
