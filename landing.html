@@ -2,6 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Starton — Il dossier che fa ottenere il finanziamento</title>
 <style>
@@ -18,13 +19,14 @@
     --text-dim: rgba(26,26,26,0.5);
     --text-muted: rgba(26,26,26,0.3);
     --border: rgba(26,26,26,0.1);
-    --fv: 'Verdana', Geneva, sans-serif;
+    --fv: 'Avenir Next', 'Avenir', 'Century Gothic', 'Futura', sans-serif;
     --fb: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   }
   body { background:var(--cream); color:var(--text); font-family:var(--fb); font-weight:300; line-height:1.7; overflow-x:hidden; }
   body::before { content:''; position:fixed; inset:0; z-index:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.025'/%3E%3C/svg%3E"); pointer-events:none; }
 
-  nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:20px 80px; background:rgba(240,236,227,0.92); backdrop-filter:blur(16px); border-bottom:1px solid var(--border); }
+  .nav-claim { font-family: "Amatic SC", cursive; font-size: 15px; font-weight: 700; letter-spacing: 0.25em; color: var(--gold); text-transform: uppercase; display: block; margin-top: 2px; line-height: 1.2; }
+  nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:20px 80px; background:rgba(240,236,227,0.92); backdrop-filter:blur(16px); border-bottom:1px solid var(--border); }
   .nav-logo { font-family:var(--fv); font-size:12px; font-weight:400; letter-spacing:0.45em; color:var(--text); }
   .nav-links { display:flex; align-items:center; gap:32px; list-style:none; }
   .nav-links a { font-family:var(--fv); font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-dim); text-decoration:none; transition:color 0.2s; }
@@ -142,7 +144,7 @@
   .cta-sub { font-size:15px; color:var(--text-dim); max-width:480px; margin:0 auto 32px; line-height:1.7; }
 
   footer { padding:48px 80px; display:flex; align-items:center; justify-content:space-between; border-top:1px solid var(--border); }
-  .footer-logo { font-family:var(--fv); font-size:11px; letter-spacing:0.45em; color:var(--text); }
+  .footer-logo { font-family:var(--fv); font-size:12px; font-weight:400; letter-spacing:0.45em; color:var(--text); }
   .footer-copy { font-size:11px; color:var(--text-muted); letter-spacing:0.06em; }
 
   .reveal { opacity:0; transform:translateY(18px); transition:opacity 0.65s ease, transform 0.65s ease; }
@@ -151,7 +153,8 @@
   .hero-actions { display:flex; gap:16px; flex-wrap:wrap; }
 
   @media(max-width:900px) {
-    nav { padding:16px 24px; }
+    .nav-claim { font-family: "Amatic SC", cursive; font-size: 15px; font-weight: 700; letter-spacing: 0.25em; color: var(--gold); text-transform: uppercase; display: block; margin-top: 2px; line-height: 1.2; }
+  nav { padding:16px 24px; }
     .nav-links { display:none; }
     .hero,.section { padding:80px 24px; }
     .two-col { grid-template-columns:1fr; gap:32px; }
@@ -165,7 +168,10 @@
 <body>
 
 <nav>
-  <div class="nav-logo">S T A R T O N</div>
+  <div style="display:flex; flex-direction:column; gap:2px;">
+    <div class="nav-logo">S T A R T O N</div>
+    <span class="nav-claim">From Know How to Know AI</span>
+  </div>
   <div style="display:flex; align-items:center; gap:24px;">
     <a href="/accesso-investitori" style="font-family:var(--fv); font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-muted); text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text-muted)'">Investitori</a>
     <a href="/analisi" style="font-family:var(--fv); font-size:10px; letter-spacing:0.15em; text-transform:uppercase; background:var(--gold); color:#fff; padding:10px 20px; text-decoration:none; transition:background 0.2s;">Analizza la tua startup</a>
@@ -452,8 +458,11 @@
 </div>
 
 <footer>
-  <div class="footer-logo">S T A R T O N</div>
-  <div class="footer-copy">Puglia · Italia · 2026 — From know-how to know-AI</div>
+  <div style="display:flex; flex-direction:column; gap:3px;">
+    <div class="footer-logo">S T A R T O N</div>
+    <span class="nav-claim">From Know How to Know AI</span>
+  </div>
+  <div class="footer-copy">Puglia · Italia · 2026 · Deposito registrazione in corso</div>
 </footer>
 
 <script>
