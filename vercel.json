@@ -2,11 +2,12 @@
   "version": 2,
   "functions": {
     "api/analyze.js": { "maxDuration": 30 },
-    "api/generate.js": { "maxDuration": 60 }
+    "api/generate.js": { "maxDuration": 60 },
+    "api/docx.js": { "maxDuration": 60 }
   },
   "routes": [
+    { "src": "/", "dest": "/landing.html" },
     { "src": "/analisi", "dest": "/index.html" },
-    { "src": "/investitori", "dest": "/investitori.html" },
-    { "src": "/", "dest": "/landing.html" }
+    { "src": "/investitori", "dest": "/investitori.html" }
   ]
 }
