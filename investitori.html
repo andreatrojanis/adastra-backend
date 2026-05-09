@@ -2,6 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Starton — Investor Overview</title>
 <style>
@@ -17,13 +18,14 @@
     --text-dim: rgba(26,26,26,0.5);
     --text-muted: rgba(26,26,26,0.3);
     --border: rgba(26,26,26,0.1);
-    --fv: 'Verdana', Geneva, sans-serif;
+    --fv: 'Avenir Next', 'Avenir', 'Century Gothic', 'Futura', sans-serif;
     --fb: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   }
   body { background:var(--cream); color:var(--text); font-family:var(--fb); font-weight:300; line-height:1.7; overflow-x:hidden; }
   body::before { content:''; position:fixed; inset:0; z-index:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.025'/%3E%3C/svg%3E"); pointer-events:none; }
 
-  nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:20px 80px; background:rgba(240,236,227,0.92); backdrop-filter:blur(16px); border-bottom:1px solid var(--border); }
+  .nav-claim { font-family: "Amatic SC", cursive; font-size: 15px; font-weight: 700; letter-spacing: 0.25em; color: var(--gold); text-transform: uppercase; display: block; margin-top: 2px; line-height: 1.2; }
+  nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:20px 80px; background:rgba(240,236,227,0.92); backdrop-filter:blur(16px); border-bottom:1px solid var(--border); }
   .nav-logo { font-family:var(--fv); font-size:12px; font-weight:400; letter-spacing:0.45em; color:var(--text); }
   .nav-tag { font-family:var(--fv); font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); border:1px solid var(--gold-border); padding:5px 12px; }
 
@@ -142,7 +144,7 @@
   .ask-use-desc { color:var(--text-dim); }
 
   footer { padding:48px 80px; display:flex; align-items:center; justify-content:space-between; }
-  .footer-logo { font-family:var(--fv); font-size:11px; letter-spacing:0.45em; color:var(--text); }
+  .footer-logo { font-family:var(--fv); font-size:12px; font-weight:400; letter-spacing:0.45em; color:var(--text); }
   .footer-copy { font-size:11px; color:var(--text-muted); letter-spacing:0.06em; }
 
   /* REVEAL */
@@ -150,7 +152,8 @@
   .reveal.visible { opacity:1; transform:translateY(0); }
 
   @media(max-width:900px) {
-    nav { padding:16px 24px; }
+    .nav-claim { font-family: "Amatic SC", cursive; font-size: 15px; font-weight: 700; letter-spacing: 0.25em; color: var(--gold); text-transform: uppercase; display: block; margin-top: 2px; line-height: 1.2; }
+  nav { padding:16px 24px; }
     .hero,.section { padding:80px 24px; }
     .two-col,.team-grid,.phases { grid-template-columns:1fr; gap:24px; }
     .market-grid,.bandi-row,.rev-grid { grid-template-columns:1fr 1fr; }
@@ -162,7 +165,10 @@
 <body>
 
 <nav>
-  <div class="nav-logo">S T A R T O N</div>
+  <div style="display:flex; flex-direction:column; gap:2px;">
+    <div class="nav-logo">S T A R T O N</div>
+    <span class="nav-claim">From Know How to Know AI</span>
+  </div>
   <div class="nav-tag">Investor Overview · Confidenziale</div>
 </nav>
 
@@ -373,7 +379,7 @@
       <tr><td class="feat">Piano finanziario ottimizzato</td><td class="col-s"><span class="check">✓</span> Sul bando specifico</td><td class="col-b"><span class="cross">—</span> Non disponibile</td></tr>
       <tr><td class="feat">Strategia doppia candidatura</td><td class="col-s"><span class="check">✓</span> Roadmap Q3 2026</td><td class="col-b"><span class="cross">—</span> Non disponibile</td></tr>
       <tr><td class="feat">Modello di revenue</td><td class="col-s"><span class="check">✓</span> Success fee allineato</td><td class="col-b"><span class="cross">—</span> Abbonamento flat</td></tr>
-      <tr><td class="feat">Moat difendibile</td><td class="col-s">Conoscenza dominio Invitalia</td><td class="col-b">Volume e velocità</td></tr>
+      <tr><td class="feat">Moat difendibile</td><td class="col-s"><span class="check">✓</span> Conoscenza dominio Invitalia</td><td class="col-b"><span class="cross">—</span> Volume e velocità</td></tr>
     </tbody>
   </table>
 </div>
@@ -420,7 +426,10 @@
 </div><!-- end wrap -->
 
 <footer>
-  <div class="footer-logo">S T A R T O N</div>
+  <div style="display:flex; flex-direction:column; gap:3px;">
+    <div class="footer-logo">S T A R T O N</div>
+    <span class="nav-claim">From Know How to Know AI</span>
+  </div>
   <div class="footer-copy">Documento confidenziale · Solo per investitori · 2026</div>
 </footer>
 
