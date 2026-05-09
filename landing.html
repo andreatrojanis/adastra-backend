@@ -22,68 +22,107 @@
     --fv: 'Avenir Next', 'Avenir', 'Century Gothic', 'Futura', sans-serif;
     --fb: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   }
-  body { background:var(--cream); color:var(--text); font-family:var(--fb); font-weight:300; line-height:1.7; overflow-x:hidden; }
+
+  html { scroll-behavior: smooth; }
+  body { background:var(--cream); color:var(--text); font-family:var(--fb); font-weight:300; line-height:1.7; overflow-x:hidden; cursor:none; }
+
+  /* CUSTOM CURSOR */
+  .cursor { position:fixed; width:8px; height:8px; background:var(--gold); border-radius:50%; pointer-events:none; z-index:9999; transform:translate(-50%,-50%); transition:transform 0.1s, width 0.3s, height 0.3s, background 0.3s; }
+  .cursor-ring { position:fixed; width:32px; height:32px; border:1px solid rgba(201,168,76,0.5); border-radius:50%; pointer-events:none; z-index:9998; transform:translate(-50%,-50%); transition:transform 0.15s ease-out, width 0.3s, height 0.3s, opacity 0.3s; }
+  body:hover .cursor { opacity:1; }
+
+  /* NOISE */
   body::before { content:''; position:fixed; inset:0; z-index:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.025'/%3E%3C/svg%3E"); pointer-events:none; }
 
-  .nav-claim { font-family: "Amatic SC", cursive; font-size: 15px; font-weight: 700; letter-spacing: 0.25em; color: var(--gold); text-transform: uppercase; display: block; margin-top: 2px; line-height: 1.2; }
-  nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:20px 80px; background:rgba(240,236,227,0.92); backdrop-filter:blur(16px); border-bottom:1px solid var(--border); }
-  .nav-logo { font-family:var(--fv); font-size:12px; font-weight:400; letter-spacing:0.45em; color:var(--text); }
-  .nav-links { display:flex; align-items:center; gap:32px; list-style:none; }
-  .nav-links a { font-family:var(--fv); font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-dim); text-decoration:none; transition:color 0.2s; }
-  .nav-links a:hover { color:var(--gold); }
-  .nav-cta { background:var(--gold) !important; color:#fff !important; padding:10px 20px; font-weight:400 !important; }
-  .nav-cta:hover { background:var(--gold-light) !important; }
+  /* GOLD ORBS */
+  body::after { content:''; position:fixed; top:-20%; right:-10%; width:600px; height:600px; background:radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%); pointer-events:none; z-index:0; animation:orbFloat 12s ease-in-out infinite; }
+  @keyframes orbFloat { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-30px,40px)} }
 
-  .wrap { max-width:1060px; margin:0 auto; }
+  /* NAV */
+  .nav-claim { font-family:"Amatic SC",cursive; font-size:15px; font-weight:700; letter-spacing:0.25em; color:var(--gold); text-transform:uppercase; display:block; margin-top:2px; line-height:1.2; }
+  nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:20px 80px; background:rgba(240,236,227,0.85); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); transition:padding 0.4s, background 0.4s; }
+  nav.scrolled { padding:14px 80px; background:rgba(240,236,227,0.95); }
+  .nav-logo { font-family:var(--fv); font-size:12px; font-weight:400; letter-spacing:0.45em; color:var(--text); }
+  .nav-cta { background:var(--gold); color:#fff; padding:10px 20px; font-family:var(--fv); font-size:10px; letter-spacing:0.15em; text-transform:uppercase; text-decoration:none; transition:all 0.2s; position:relative; overflow:hidden; }
+  .nav-cta::after { content:''; position:absolute; inset:0; background:rgba(255,255,255,0.1); transform:translateX(-100%); transition:transform 0.3s; }
+  .nav-cta:hover::after { transform:translateX(0); }
+  .nav-investor { font-family:var(--fv); font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-muted); text-decoration:none; transition:color 0.2s; }
+  .nav-investor:hover { color:var(--gold); }
+
+  .wrap { max-width:1060px; margin:0 auto; position:relative; z-index:1; }
   .section { padding:100px 80px; border-bottom:1px solid var(--border); }
 
   .section-tag { display:inline-flex; align-items:center; gap:8px; font-family:var(--fv); font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:20px; }
   .section-tag::before { content:''; width:20px; height:1px; background:var(--gold); display:block; }
-
   .section-title { font-family:var(--fv); font-size:clamp(26px,3.5vw,44px); font-weight:400; line-height:1.05; letter-spacing:-0.01em; color:var(--text); margin-bottom:40px; }
   .section-title em { font-style:normal; color:var(--gold); }
 
   /* HERO */
-  .hero { padding:160px 80px 100px; border-bottom:1px solid var(--border); }
-  .hero-eyebrow { display:inline-flex; align-items:center; gap:8px; font-family:var(--fv); font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:28px; }
+  .hero { padding:180px 80px 120px; border-bottom:1px solid var(--border); position:relative; overflow:hidden; min-height:100vh; display:flex; align-items:center; }
+  .hero-bg-line { position:absolute; right:0; top:0; bottom:0; width:1px; background:linear-gradient(180deg, transparent, var(--gold-border), transparent); }
+  .hero-bg-line2 { position:absolute; right:80px; top:0; bottom:0; width:1px; background:linear-gradient(180deg, transparent, rgba(201,168,76,0.1), transparent); }
+  .hero-content { position:relative; }
+
+  .hero-eyebrow { display:inline-flex; align-items:center; gap:8px; font-family:var(--fv); font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:28px; opacity:0; animation:heroUp 0.8s ease forwards 0.2s; }
   .hero-eyebrow::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--gold); animation:pulse 2s ease-in-out infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-  .hero h1 { font-family:var(--fv); font-size:clamp(32px,4.5vw,62px); font-weight:400; line-height:1.05; letter-spacing:-0.01em; color:var(--text); max-width:720px; margin-bottom:24px; }
+
+  .hero h1 { font-family:var(--fv); font-size:clamp(36px,5vw,72px); font-weight:400; line-height:1.0; letter-spacing:-0.02em; color:var(--text); max-width:720px; margin-bottom:28px; }
   .hero h1 em { font-style:normal; color:var(--gold); }
-  .hero-sub { font-size:17px; font-weight:300; color:var(--text-dim); max-width:520px; line-height:1.75; margin-bottom:40px; }
+  .hero h1 .word { display:inline-block; opacity:0; transform:translateY(30px); animation:heroUp 0.7s ease forwards; }
+  .hero h1 .word:nth-child(1) { animation-delay:0.3s; }
+  .hero h1 .word:nth-child(2) { animation-delay:0.45s; }
+  .hero h1 .word:nth-child(3) { animation-delay:0.6s; }
+  .hero h1 .word:nth-child(4) { animation-delay:0.75s; }
+  .hero h1 .word:nth-child(5) { animation-delay:0.9s; }
+
+  .hero-sub { font-size:17px; font-weight:300; color:var(--text-dim); max-width:520px; line-height:1.75; margin-bottom:40px; opacity:0; animation:heroUp 0.8s ease forwards 1s; }
   .hero-sub strong { color:var(--text); font-weight:400; }
 
-  .btn-primary { display:inline-flex; align-items:center; gap:10px; padding:16px 32px; background:var(--gold); color:#fff; font-family:var(--fv); font-size:11px; font-weight:400; letter-spacing:0.15em; text-transform:uppercase; text-decoration:none; border:1px solid var(--gold); transition:all 0.2s; cursor:pointer; }
-  .btn-primary:hover { background:var(--gold-light); transform:translateY(-1px); }
-  .btn-ghost { display:inline-flex; align-items:center; gap:8px; padding:16px 28px; background:transparent; color:var(--text-dim); font-family:var(--fv); font-size:10px; letter-spacing:0.15em; text-transform:uppercase; text-decoration:none; border:1px solid var(--border); transition:all 0.2s; }
+  .hero-actions { display:flex; gap:16px; flex-wrap:wrap; opacity:0; animation:heroUp 0.8s ease forwards 1.15s; }
+
+  @keyframes heroUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+
+  .btn-primary { display:inline-flex; align-items:center; gap:10px; padding:16px 32px; background:var(--gold); color:#fff; font-family:var(--fv); font-size:11px; font-weight:400; letter-spacing:0.15em; text-transform:uppercase; text-decoration:none; border:1px solid var(--gold); transition:all 0.25s; cursor:none; position:relative; overflow:hidden; }
+  .btn-primary::before { content:''; position:absolute; inset:0; background:rgba(255,255,255,0.15); transform:translateX(-100%) skewX(-12deg); transition:transform 0.4s; }
+  .btn-primary:hover::before { transform:translateX(120%) skewX(-12deg); }
+  .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(201,168,76,0.3); }
+
+  .btn-ghost { display:inline-flex; align-items:center; gap:8px; padding:16px 28px; background:transparent; color:var(--text-dim); font-family:var(--fv); font-size:10px; letter-spacing:0.15em; text-transform:uppercase; text-decoration:none; border:1px solid var(--border); transition:all 0.2s; cursor:none; }
   .btn-ghost:hover { border-color:var(--gold-border); color:var(--gold); }
 
-  .stats-strip { display:flex; border:1px solid var(--gold-border); max-width:620px; background:var(--gold-dim); margin-top:48px; }
-  .h-stat { flex:1; padding:18px 20px; border-right:1px solid var(--gold-border); text-align:center; }
+  .stats-strip { display:flex; border:1px solid var(--gold-border); max-width:620px; background:var(--gold-dim); margin-top:56px; opacity:0; animation:heroUp 0.8s ease forwards 1.3s; }
+  .h-stat { flex:1; padding:18px 20px; border-right:1px solid var(--gold-border); text-align:center; transition:background 0.2s; }
+  .h-stat:hover { background:rgba(201,168,76,0.18); }
   .h-stat:last-child { border-right:none; }
   .h-stat-val { font-family:var(--fv); font-size:22px; font-weight:400; color:var(--gold); margin-bottom:4px; letter-spacing:-0.01em; }
   .h-stat-label { font-size:10px; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-muted); line-height:1.4; }
 
-  /* MANIFESTO */
+  /* COUNTER ANIMATION */
+  .count-up { display:inline-block; }
+
+  /* TWO COL */
   .two-col { display:grid; grid-template-columns:1fr 1fr; gap:56px; align-items:start; }
   .prose p { font-size:15px; line-height:1.8; color:var(--text-dim); margin-bottom:14px; }
   .prose p strong { color:var(--text); font-weight:400; }
-  .quote-box { border-left:2px solid var(--gold); padding:18px 22px; background:var(--gold-dim); }
-  .quote-box p { font-family:var(--fv); font-size:13px; color:var(--text); line-height:1.65; font-weight:400; }
 
   /* FLOW */
   .flow { display:flex; flex-direction:column; gap:1px; background:var(--border); border:1px solid var(--border); }
-  .flow-row { display:flex; align-items:center; justify-content:space-between; padding:18px 24px; background:var(--cream); transition:background 0.2s; }
-  .flow-row:hover { background:var(--cream2); }
+  .flow-row { display:flex; align-items:center; justify-content:space-between; padding:18px 24px; background:var(--cream); transition:all 0.25s; cursor:none; }
+  .flow-row:hover { background:var(--cream2); padding-left:32px; }
   .flow-row.accent { background:var(--gold-dim); }
+  .flow-row.accent:hover { background:rgba(201,168,76,0.2); }
   .flow-text { font-family:var(--fv); font-size:14px; color:var(--text); }
   .flow-row.accent .flow-text { color:var(--gold); }
-  .flow-arrow { color:var(--gold); font-size:16px; }
+  .flow-arrow { color:var(--gold); font-size:16px; transition:transform 0.2s; }
+  .flow-row:hover .flow-arrow { transform:translateX(4px); }
 
   /* STEPS */
   .steps { display:flex; flex-direction:column; gap:1px; background:var(--border); border:1px solid var(--border); }
-  .step { display:grid; grid-template-columns:48px 1fr; background:var(--cream); transition:background 0.2s; }
+  .step { display:grid; grid-template-columns:48px 1fr; background:var(--cream); transition:all 0.25s; position:relative; overflow:hidden; }
+  .step::after { content:''; position:absolute; left:0; top:0; bottom:0; width:2px; background:var(--gold); transform:scaleY(0); transform-origin:top; transition:transform 0.3s; }
   .step:hover { background:var(--cream2); }
+  .step:hover::after { transform:scaleY(1); }
   .step-num { display:flex; align-items:flex-start; justify-content:center; padding:22px 0; font-family:var(--fv); font-size:10px; color:var(--text-muted); border-right:1px solid var(--border); }
   .step-body { padding:22px 26px; }
   .step-title { font-family:var(--fv); font-size:14px; font-weight:400; color:var(--text); margin-bottom:5px; }
@@ -91,10 +130,10 @@
 
   /* OUTPUT */
   .output-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); border:1px solid var(--border); }
-  .output-card { padding:28px; background:var(--cream); transition:background 0.2s; position:relative; overflow:hidden; }
-  .output-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,var(--gold),transparent); opacity:0; transition:opacity 0.3s; }
-  .output-card:hover { background:var(--cream2); }
-  .output-card:hover::before { opacity:1; }
+  .output-card { padding:28px; background:var(--cream); transition:all 0.3s; position:relative; overflow:hidden; cursor:none; }
+  .output-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--gold),var(--gold-light),transparent); transform:scaleX(0); transform-origin:left; transition:transform 0.4s; }
+  .output-card:hover { background:var(--cream2); transform:translateY(-2px); }
+  .output-card:hover::before { transform:scaleX(1); }
   .output-tag { font-family:var(--fv); font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--gold); margin-bottom:10px; display:flex; align-items:center; gap:6px; }
   .output-tag::before { content:''; width:4px; height:4px; border-radius:50%; background:var(--gold); display:block; }
   .output-title { font-family:var(--fv); font-size:15px; font-weight:400; color:var(--text); margin-bottom:8px; }
@@ -102,10 +141,10 @@
 
   /* BANDI */
   .bandi-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border); border:1px solid var(--border); }
-  .bando-card { padding:28px; background:var(--cream); transition:all 0.2s; position:relative; overflow:hidden; }
-  .bando-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,var(--gold),transparent); opacity:0; transition:opacity 0.3s; }
-  .bando-card:hover { background:var(--cream2); }
-  .bando-card:hover::before { opacity:1; }
+  .bando-card { padding:28px; background:var(--cream); transition:all 0.3s; position:relative; overflow:hidden; cursor:none; }
+  .bando-card::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; background:var(--gold); transform:scaleX(0); transition:transform 0.4s; }
+  .bando-card:hover { background:var(--cream2); transform:translateY(-3px); box-shadow:0 12px 32px rgba(201,168,76,0.12); }
+  .bando-card:hover::after { transform:scaleX(1); }
   .bando-tag { font-family:var(--fv); font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px; }
   .bando-name { font-family:var(--fv); font-size:16px; color:var(--text); margin-bottom:10px; }
   .bando-desc { font-size:12px; color:var(--text-dim); line-height:1.65; margin-bottom:20px; }
@@ -114,67 +153,99 @@
 
   /* PRICING */
   .pricing-grid { display:flex; flex-direction:column; gap:1px; background:var(--border); border:1px solid var(--border); }
-  .pricing-row { display:grid; grid-template-columns:48px 1fr auto; background:var(--cream); transition:background 0.2s; }
+  .pricing-row { display:grid; grid-template-columns:48px 1fr auto; background:var(--cream); transition:all 0.25s; position:relative; overflow:hidden; }
+  .pricing-row::before { content:''; position:absolute; left:0; top:0; bottom:0; width:0; background:var(--gold-dim); transition:width 0.4s; }
   .pricing-row:hover { background:var(--cream2); }
+  .pricing-row:hover::before { width:100%; }
   .pricing-row.gold { background:var(--gold-dim); }
-  .p-num { display:flex; align-items:flex-start; justify-content:center; padding:22px 0; font-family:var(--fv); font-size:10px; color:var(--text-muted); border-right:1px solid var(--border); }
-  .p-body { padding:22px 26px; }
+  .pricing-row.gold:hover { background:rgba(201,168,76,0.2); }
+  .p-num { display:flex; align-items:flex-start; justify-content:center; padding:22px 0; font-family:var(--fv); font-size:10px; color:var(--text-muted); border-right:1px solid var(--border); position:relative; z-index:1; }
+  .p-body { padding:22px 26px; position:relative; z-index:1; }
   .p-title { font-family:var(--fv); font-size:14px; color:var(--text); margin-bottom:5px; }
   .pricing-row.gold .p-title { color:var(--gold); }
   .p-desc { font-size:12px; color:var(--text-dim); line-height:1.65; }
-  .p-price { display:flex; align-items:center; padding:0 24px; border-left:1px solid var(--border); font-family:var(--fv); font-size:13px; color:var(--gold); white-space:nowrap; }
+  .p-price { display:flex; align-items:center; padding:0 24px; border-left:1px solid var(--border); font-family:var(--fv); font-size:13px; color:var(--gold); white-space:nowrap; position:relative; z-index:1; }
 
-  /* VS */
-  .vs-table { width:100%; border-collapse:collapse; border:1px solid var(--border); }
-  .vs-table th { padding:13px 18px; font-family:var(--fv); font-size:10px; letter-spacing:0.14em; text-transform:uppercase; text-align:left; border-bottom:1px solid var(--border); background:var(--cream2); color:var(--text-muted); }
-  .vs-table th.col-s { color:var(--gold); }
-  .vs-table td { padding:13px 18px; font-size:12px; border-bottom:1px solid var(--border); background:var(--cream); }
-  .vs-table tr:hover td { background:var(--cream2); }
-  .vs-table td.feat { color:var(--text-dim); }
-  .vs-table td.col-s { color:var(--text); }
-  .vs-table td.col-b { color:var(--text-muted); }
-  .check { color:var(--gold); }
-  .cross { color:var(--cream3); }
+  /* AGENTI */
+  .agent-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); border:1px solid var(--border); }
+  .agent-card { padding:28px; background:var(--cream); transition:all 0.3s; position:relative; overflow:hidden; cursor:none; }
+  .agent-card:hover { background:var(--cream2); }
+  .agent-num { font-family:var(--fv); font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--gold); margin-bottom:10px; }
+  .agent-title { font-family:var(--fv); font-size:16px; color:var(--text); margin-bottom:8px; }
+  .agent-desc { font-size:12px; color:var(--text-dim); line-height:1.65; }
+  .agent-card::before { content:''; position:absolute; top:0; left:0; bottom:0; width:2px; background:var(--gold); transform:scaleY(0); transform-origin:bottom; transition:transform 0.4s; }
+  .agent-card:hover::before { transform:scaleY(1); }
+
+  /* MINORITY REPORT */
+  .minority-box { border:1px solid var(--gold-border); background:var(--gold-dim); position:relative; overflow:hidden; }
+  .minority-box::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg, var(--gold), var(--gold-light), var(--gold)); background-size:200% 100%; animation:shimmer 3s linear infinite; }
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+  .minority-header { padding:24px 28px; border-bottom:1px solid var(--gold-border); }
+  .minority-tag { font-family:var(--fv); font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:6px; }
+  .minority-subtitle { font-family:var(--fv); font-size:13px; color:var(--text); }
+  .minority-ai-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1px; background:var(--border); }
+  .ai-card { padding:24px 16px; background:var(--cream); text-align:center; transition:all 0.25s; cursor:none; }
+  .ai-card:hover { background:var(--cream2); transform:translateY(-2px); }
+  .ai-provider { font-family:var(--fv); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px; }
+  .ai-name { font-family:var(--fv); font-size:18px; color:var(--text); }
+  .minority-footer { padding:16px 24px; background:var(--cream2); display:flex; justify-content:space-between; align-items:center; }
+  .minority-footer-l { font-family:var(--fv); font-size:12px; color:var(--text-dim); }
+  .minority-footer-r { font-family:var(--fv); font-size:12px; color:var(--gold); }
 
   /* CTA */
-  .cta-box { border:1px solid var(--gold-border); padding:64px 80px; background:var(--gold-dim); position:relative; text-align:center; }
+  .cta-box { border:1px solid var(--gold-border); padding:80px; background:var(--gold-dim); position:relative; text-align:center; overflow:hidden; }
   .cta-box::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--gold); }
-  .cta-title { font-family:var(--fv); font-size:clamp(28px,4vw,48px); font-weight:400; color:var(--text); letter-spacing:-0.01em; margin-bottom:16px; line-height:1.1; }
+  .cta-box::after { content:'FROM KNOW HOW TO KNOW AI'; position:absolute; bottom:24px; left:50%; transform:translateX(-50%); font-family:"Amatic SC",cursive; font-size:13px; font-weight:400; letter-spacing:0.2em; color:rgba(201,168,76,0.3); white-space:nowrap; }
+  .cta-title { font-family:var(--fv); font-size:clamp(28px,4vw,52px); font-weight:400; color:var(--text); letter-spacing:-0.01em; margin-bottom:16px; line-height:1.1; }
   .cta-title em { font-style:normal; color:var(--gold); }
-  .cta-sub { font-size:15px; color:var(--text-dim); max-width:480px; margin:0 auto 32px; line-height:1.7; }
+  .cta-sub { font-size:15px; color:var(--text-dim); max-width:480px; margin:0 auto 40px; line-height:1.7; }
 
-  footer { padding:48px 80px; display:flex; align-items:center; justify-content:space-between; border-top:1px solid var(--border); }
+  /* FOOTER */
+  footer { padding:48px 80px; display:flex; align-items:center; justify-content:space-between; border-top:1px solid var(--border); position:relative; z-index:1; }
   .footer-logo { font-family:var(--fv); font-size:12px; font-weight:400; letter-spacing:0.45em; color:var(--text); }
   .footer-copy { font-size:11px; color:var(--text-muted); letter-spacing:0.06em; }
 
-  .reveal { opacity:0; transform:translateY(18px); transition:opacity 0.65s ease, transform 0.65s ease; }
+  /* REVEAL ANIMATIONS */
+  .reveal { opacity:0; transform:translateY(32px); transition:opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1); }
   .reveal.visible { opacity:1; transform:translateY(0); }
+  .reveal-left { opacity:0; transform:translateX(-32px); transition:opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1); }
+  .reveal-left.visible { opacity:1; transform:translateX(0); }
+  .reveal-right { opacity:0; transform:translateX(32px); transition:opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1); }
+  .reveal-right.visible { opacity:1; transform:translateX(0); }
+  .reveal-scale { opacity:0; transform:scale(0.96); transition:opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1); }
+  .reveal-scale.visible { opacity:1; transform:scale(1); }
 
-  .hero-actions { display:flex; gap:16px; flex-wrap:wrap; }
-
+  /* MOBILE */
   @media(max-width:900px) {
-    .nav-claim { font-family: "Amatic SC", cursive; font-size: 15px; font-weight: 700; letter-spacing: 0.25em; color: var(--gold); text-transform: uppercase; display: block; margin-top: 2px; line-height: 1.2; }
-  nav { padding:16px 24px; }
-    .nav-links { display:none; }
+    nav { padding:16px 24px; }
+    .nav-claim { font-size:12px; }
+    nav a.nav-cta, nav a.nav-investor { display:none; }
     .hero,.section { padding:80px 24px; }
-    .two-col { grid-template-columns:1fr; gap:32px; }
+    .hero { min-height:auto; padding-top:120px; }
+    .two-col,.agent-grid { grid-template-columns:1fr; gap:32px; }
     .output-grid,.bandi-grid { grid-template-columns:1fr; }
     .stats-strip { flex-wrap:wrap; }
     footer { flex-direction:column; gap:16px; padding:40px 24px; text-align:center; }
     .cta-box { padding:48px 24px; }
+    body { cursor:auto; }
+    .cursor,.cursor-ring { display:none; }
   }
 </style>
 </head>
 <body>
 
-<nav>
+<!-- CURSOR -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<nav id="nav">
   <div style="display:flex; flex-direction:column; gap:2px;">
     <div class="nav-logo">S T A R T O N</div>
     <span class="nav-claim">From Know How to Know AI</span>
   </div>
   <div style="display:flex; align-items:center; gap:24px;">
-    <a href="/accesso-investitori" style="font-family:var(--fv); font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-muted); text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text-muted)'">Investitori</a>
-    <a href="/analisi" style="font-family:var(--fv); font-size:10px; letter-spacing:0.15em; text-transform:uppercase; background:var(--gold); color:#fff; padding:10px 20px; text-decoration:none; transition:background 0.2s;">Analizza la tua startup</a>
+    <a href="/accesso-investitori" class="nav-investor">Investitori</a>
+    <a href="/analisi" class="nav-cta">Analizza la tua startup</a>
   </div>
 </nav>
 
@@ -182,29 +253,39 @@
 
 <!-- HERO -->
 <div class="hero">
-  <div class="hero-eyebrow">Piattaforma AI per startup · Bandi Invitalia</div>
-  <h1>Hai una startup.<br><em>Massimizza</em><br>il finanziamento.</h1>
-  <p class="hero-sub">Per le startup italiane esistono <strong>tre bandi Invitalia</strong> con fondo perduto reale. Pochi, selettivi, con criteri precisi. Starton analizza la tua impresa e <strong>costruisce l'intero dossier</strong> per ottenerlo.</p>
-  <div class="hero-actions">
-    <a href="/analisi" class="btn-primary">Analizza la tua startup →</a>
-    <a href="/#come-funziona" class="btn-ghost">Come funziona</a>
-  </div>
-  <div class="stats-strip reveal">
-    <div class="h-stat">
-      <div class="h-stat-val">€300k</div>
-      <div class="h-stat-label">FP max<br>per progetto</div>
+  <div class="hero-bg-line"></div>
+  <div class="hero-bg-line2"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">Piattaforma AI per startup · Bandi Invitalia</div>
+    <h1>
+      <span class="word">Hai</span>
+      <span class="word">una</span>
+      <span class="word">startup.</span><br>
+      <span class="word"><em>Massimizza</em></span>
+      <span class="word">il&nbsp;finanziamento.</span>
+    </h1>
+    <p class="hero-sub">Per le startup italiane esistono <strong>tre bandi Invitalia</strong> con fondo perduto reale. Pochi, selettivi, con criteri precisi. Starton analizza la tua impresa e <strong>costruisce l'intero dossier</strong> per ottenerlo.</p>
+    <div class="hero-actions">
+      <a href="/analisi" class="btn-primary">Analizza la tua startup →</a>
+      <a href="#come-funziona" class="btn-ghost">Come funziona</a>
     </div>
-    <div class="h-stat">
-      <div class="h-stat-val">94,8%</div>
-      <div class="h-stat-label">Imprese italiane<br>senza finanziamento</div>
-    </div>
-    <div class="h-stat">
-      <div class="h-stat-val">5%</div>
-      <div class="h-stat-label">Success fee<br>solo se vinci</div>
-    </div>
-    <div class="h-stat">
-      <div class="h-stat-val">3</div>
-      <div class="h-stat-label">Bandi Invitalia<br>integrati</div>
+    <div class="stats-strip">
+      <div class="h-stat">
+        <div class="h-stat-val" data-target="300" data-suffix="k€">0</div>
+        <div class="h-stat-label">FP max<br>per progetto</div>
+      </div>
+      <div class="h-stat">
+        <div class="h-stat-val" data-target="94" data-suffix="%">0</div>
+        <div class="h-stat-label">Imprese italiane<br>senza finanziamento</div>
+      </div>
+      <div class="h-stat">
+        <div class="h-stat-val">5%</div>
+        <div class="h-stat-label">Success fee<br>solo se vinci</div>
+      </div>
+      <div class="h-stat">
+        <div class="h-stat-val">3</div>
+        <div class="h-stat-label">Bandi Invitalia<br>integrati</div>
+      </div>
     </div>
   </div>
 </div>
@@ -212,14 +293,14 @@
 <!-- MANIFESTO -->
 <div class="section">
   <div class="section-tag">Il nostro manifesto</div>
-  <h2 class="section-title">Starton è <em>democratico.</em></h2>
+  <h2 class="section-title reveal">Starton è <em>democratico.</em></h2>
   <div class="two-col">
-    <div class="prose reveal">
+    <div class="prose reveal-left">
       <p>Accedere ai bandi Invitalia ha sempre richiesto <strong>5.000–15.000€ di consulenza anticipata</strong>. Un costo che la maggior parte delle startup non può permettersi prima ancora di iniziare.</p>
       <p>Starton incorpora competenze specialistiche di alto livello in finanza agevolata e istruttoria Invitalia in una piattaforma <strong>accessibile a qualsiasi impresa.</strong></p>
       <p><em style="font-style:italic; color:var(--gold);">From know-how to know-AI.</em> Alta competenza resa accessibile dalla tecnologia. <strong>Le imprese finalmente libere di realizzarsi.</strong></p>
     </div>
-    <div class="flow reveal">
+    <div class="flow reveal-right">
       <div class="flow-row accent">
         <span class="flow-text">Hai una startup costituita o costituenda</span>
         <span class="flow-arrow">→</span>
@@ -247,30 +328,30 @@
 <!-- COME FUNZIONA -->
 <div class="section" id="come-funziona">
   <div class="section-tag">Come funziona</div>
-  <h2 class="section-title">Dalla startup al <em>finanziamento.</em></h2>
-  <div class="steps reveal">
-    <div class="step">
+  <h2 class="section-title reveal">Dalla startup al <em>finanziamento.</em></h2>
+  <div class="steps">
+    <div class="step reveal">
       <div class="step-num">01</div>
       <div class="step-body">
         <div class="step-title">Descrivi la tua impresa</div>
         <div class="step-desc">Inserisci i dati della startup — settore, compagine, anzianità, piano di investimento. Starton raccoglie tutto quello che serve per una valutazione reale, non teorica.</div>
       </div>
     </div>
-    <div class="step">
+    <div class="step reveal">
       <div class="step-num">02</div>
       <div class="step-body">
         <div class="step-title">Score di finanziabilità sui criteri Invitalia</div>
         <div class="step-desc">Analisi della tua startup sui parametri reali dei bandi — requisiti formali, compagine, piano di spesa, coerenza finanziaria. Sai subito quale bando è più vantaggioso e perché.</div>
       </div>
     </div>
-    <div class="step">
+    <div class="step reveal">
       <div class="step-num">03</div>
       <div class="step-body">
         <div class="step-title">Dossier completo generato dall'AI</div>
         <div class="step-desc">Business plan, piano finanziario, relazione tecnica e allegati — strutturati secondo il format richiesto da Invitalia e ottimizzati sui criteri di valutazione reali.</div>
       </div>
     </div>
-    <div class="step">
+    <div class="step reveal">
       <div class="step-num">04</div>
       <div class="step-body">
         <div class="step-title">Candidatura e delibera Invitalia</div>
@@ -283,8 +364,8 @@
 <!-- COSA OTTIENI -->
 <div class="section" id="output">
   <div class="section-tag">Output del servizio</div>
-  <h2 class="section-title">Cosa <em>ottieni.</em></h2>
-  <div class="output-grid reveal">
+  <h2 class="section-title reveal">Cosa <em>ottieni.</em></h2>
+  <div class="output-grid reveal-scale">
     <div class="output-card">
       <div class="output-tag">Valutazione</div>
       <div class="output-title">Score di finanziabilità</div>
@@ -311,8 +392,8 @@
 <!-- BANDI -->
 <div class="section" id="bandi">
   <div class="section-tag">Bandi integrati · Fondo perduto reale</div>
-  <h2 class="section-title">I bandi che <em>vinciamo.</em></h2>
-  <div class="bandi-grid reveal">
+  <h2 class="section-title reveal">I bandi che <em>vinciamo.</em></h2>
+  <div class="bandi-grid reveal-scale">
     <div class="bando-card">
       <div class="bando-tag">Invitalia · Nazionale · ● Attivo</div>
       <div class="bando-name">Smart&Start Italia</div>
@@ -340,13 +421,13 @@
 <!-- PRICING -->
 <div class="section">
   <div class="section-tag">Pricing</div>
-  <h2 class="section-title">Nessun costo anticipato.<br><em>Solo se vinci, paghi davvero.</em></h2>
+  <h2 class="section-title reveal">Nessun costo anticipato.<br><em>Solo se vinci, paghi davvero.</em></h2>
   <div class="pricing-grid reveal">
     <div class="pricing-row">
       <div class="p-num">01</div>
       <div class="p-body">
         <div class="p-title">Score di finanziabilità</div>
-        <div class="p-desc">Analisi immediata del profilo startup sui criteri Invitalia. Verdetto operativo e red flags bloccanti. Sai subito se vale la pena procedere.</div>
+        <div class="p-desc">Analisi immediata del profilo startup sui criteri Invitalia. Verdetto operativo e red flags bloccanti.</div>
       </div>
       <div class="p-price">€99</div>
     </div>
@@ -354,7 +435,7 @@
       <div class="p-num">02</div>
       <div class="p-body">
         <div class="p-title">Dossier completo</div>
-        <div class="p-desc">Business plan, piano finanziario, relazione tecnica, allegati. Strutturati sui format e criteri reali Invitalia. Pronti per la submission.</div>
+        <div class="p-desc">Business plan, piano finanziario, relazione tecnica, allegati. Strutturati sui format e criteri reali Invitalia.</div>
       </div>
       <div class="p-price">€399</div>
     </div>
@@ -370,7 +451,7 @@
       <div class="p-num">04</div>
       <div class="p-body">
         <div class="p-title">Consulente integrato</div>
-        <div class="p-desc">Per strutture complesse, doppia candidatura ON + Smart&Start, strategie multi-bando. Rete di specialisti integrata nella piattaforma.</div>
+        <div class="p-desc">Per strutture complesse, doppia candidatura ON + Smart&Start, strategie multi-bando.</div>
       </div>
       <div class="p-price">Su richiesta</div>
     </div>
@@ -380,28 +461,32 @@
 <!-- 4 AGENTI -->
 <div class="section">
   <div class="section-tag">La tecnologia</div>
-  <h2 class="section-title">Non un'AI.<br><em>Un panel di esperti.</em></h2>
+  <h2 class="section-title reveal">Non un'AI.<br><em>Un panel di esperti.</em></h2>
   <div class="two-col">
-    <div class="prose reveal">
+    <div class="prose reveal-left">
       <p>Starton analizza la tua startup attraverso <strong>4 agenti AI specializzati</strong> che lavorano in parallelo — come farebbe un team di valutatori senior Invitalia. Ognuno guarda una dimensione diversa, con criteri e priorità proprie.</p>
       <p>Il risultato non è un punteggio generico: è una <strong>mappa precisa di forza e criticità</strong> su 6 assi — requisiti formali, innovazione, mercato, team, numeri, impatti. Ogni asse viene pesato secondo i criteri reali di istruttoria.</p>
     </div>
-    <div class="flow reveal">
-      <div class="flow-row accent">
-        <span class="flow-text">Agente 01 — Valutatore Formale</span>
-        <span style="font-family:var(--fv); font-size:10px; color:var(--text-muted);">Compliance · requisiti hard · esclusioni</span>
+    <div class="agent-grid reveal-right">
+      <div class="agent-card">
+        <div class="agent-num">Agente 01</div>
+        <div class="agent-title">Valutatore Formale</div>
+        <div class="agent-desc">Compliance, requisiti hard, esclusioni automatiche. Il primo filtro — quello che blocca o passa.</div>
       </div>
-      <div class="flow-row">
-        <span class="flow-text">Agente 02 — Analista Strategico</span>
-        <span style="font-family:var(--fv); font-size:10px; color:var(--text-muted);">Business case · scalabilità · trazione</span>
+      <div class="agent-card">
+        <div class="agent-num">Agente 02</div>
+        <div class="agent-title">Analista Strategico</div>
+        <div class="agent-desc">Business case, narrazione, scalabilità, trazione di mercato. La sostanza del progetto.</div>
       </div>
-      <div class="flow-row">
-        <span class="flow-text">Agente 03 — Esperto Territoriale</span>
-        <span style="font-family:var(--fv); font-size:10px; color:var(--text-muted);">Impatti · premialità geografiche · Sud</span>
+      <div class="agent-card">
+        <div class="agent-num">Agente 03</div>
+        <div class="agent-title">Esperto Territoriale</div>
+        <div class="agent-desc">Impatti, premialità geografiche, driver politici. Il vantaggio del Sud e del Mezzogiorno.</div>
       </div>
-      <div class="flow-row">
-        <span class="flow-text">Agente 04 — Devil's Advocate</span>
-        <span style="font-family:var(--fv); font-size:10px; color:var(--text-muted);">Cerca tutto ciò che può bloccare</span>
+      <div class="agent-card">
+        <div class="agent-num">Agente 04</div>
+        <div class="agent-title">Devil's Advocate</div>
+        <div class="agent-desc">Cerca tutto quello che può bloccare la candidatura. Il più importante — quello che nessun consulente ti dice.</div>
       </div>
     </div>
   </div>
@@ -410,37 +495,35 @@
 <!-- MINORITY REPORT -->
 <div class="section">
   <div class="section-tag">Il controllo incrociato</div>
-  <h2 class="section-title">Il Minority Report.<br><em>Tre AI. Un verdetto.</em></h2>
+  <h2 class="section-title reveal">Il Minority Report.<br><em>Tre AI. Un verdetto.</em></h2>
   <div class="two-col">
-    <div class="prose reveal">
+    <div class="prose reveal-left">
       <p>Dopo i 4 agenti interni, Starton attiva il <strong>Minority Report</strong>: tre intelligenze artificiali indipendenti — Claude di Anthropic, GPT-4o di OpenAI e Grok 3 di xAI — valutano in autonomia la tua startup e danno ciascuna il proprio score.</p>
       <p>Se le tre AI concordano, il verdetto è solido. <strong>Se divergono, il dissenso emerge chiaramente</strong> — e quella divergenza è informazione preziosa: indica esattamente dove il tuo progetto ha punti deboli non ovvi.</p>
       <p>Nessuna bolla di conferma. Nessun punto cieco. È il livello di rigore che un'istruttoria Invitalia applica — applicato prima, da te.</p>
     </div>
-    <div class="reveal">
-      <div style="display:flex; flex-direction:column; gap:1px; background:var(--border); border:1px solid var(--gold-border);">
-        <div style="padding:20px 24px; background:var(--gold-dim); border-bottom:1px solid var(--gold-border);">
-          <div style="font-family:var(--fv); font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--gold); margin-bottom:6px;">Minority Report</div>
-          <div style="font-family:var(--fv); font-size:13px; color:var(--text);">Tre AI indipendenti · Score separato per ognuna · Verdetto per consenso</div>
+    <div class="minority-box reveal-right">
+      <div class="minority-header">
+        <div class="minority-tag">Minority Report</div>
+        <div class="minority-subtitle">Tre AI indipendenti · Score separato · Verdetto per consenso</div>
+      </div>
+      <div class="minority-ai-row">
+        <div class="ai-card">
+          <div class="ai-provider">Anthropic</div>
+          <div class="ai-name">Claude</div>
         </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1px; background:var(--border);">
-          <div style="padding:20px 16px; background:var(--cream); text-align:center;">
-            <div style="font-family:var(--fv); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">Anthropic</div>
-            <div style="font-family:var(--fv); font-size:16px; color:var(--text);">Claude</div>
-          </div>
-          <div style="padding:20px 16px; background:var(--cream); text-align:center; border-left:1px solid var(--border); border-right:1px solid var(--border);">
-            <div style="font-family:var(--fv); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">OpenAI</div>
-            <div style="font-family:var(--fv); font-size:16px; color:var(--text);">GPT-4o</div>
-          </div>
-          <div style="padding:20px 16px; background:var(--cream); text-align:center;">
-            <div style="font-family:var(--fv); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">xAI</div>
-            <div style="font-family:var(--fv); font-size:16px; color:var(--text);">Grok 3</div>
-          </div>
+        <div class="ai-card" style="border-left:1px solid var(--border); border-right:1px solid var(--border);">
+          <div class="ai-provider">OpenAI</div>
+          <div class="ai-name">GPT-4o</div>
         </div>
-        <div style="padding:16px 24px; background:var(--cream2); display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-family:var(--fv); font-size:12px; color:var(--text-dim);">Score medio ponderato</span>
-          <span style="font-family:var(--fv); font-size:12px; color:var(--gold);">Verdetto per consenso →</span>
+        <div class="ai-card">
+          <div class="ai-provider">xAI</div>
+          <div class="ai-name">Grok 3</div>
         </div>
+      </div>
+      <div class="minority-footer">
+        <span class="minority-footer-l">Score medio ponderato</span>
+        <span class="minority-footer-r">Verdetto per consenso →</span>
       </div>
     </div>
   </div>
@@ -448,7 +531,7 @@
 
 <!-- CTA -->
 <div class="section" style="border-bottom:none; padding:80px;">
-  <div class="cta-box reveal">
+  <div class="cta-box reveal-scale">
     <div class="cta-title">La tua startup.<br>Il finanziamento <em>giusto.</em></div>
     <p class="cta-sub">Tre bandi Invitalia. Fondo perduto reale. Un dossier costruito per passare l'istruttoria. Inizia con €99.</p>
     <a href="/analisi" class="btn-primary">Analizza la tua startup →</a>
@@ -466,16 +549,57 @@
 </footer>
 
 <script>
-  const reveals = document.querySelectorAll('.reveal');
-  const observer = new IntersectionObserver((entries) => {
+  // CURSOR
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx=0, my=0, rx=0, ry=0;
+  document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; cursor.style.left=mx+'px'; cursor.style.top=my+'px'; });
+  function animRing() { rx+=(mx-rx)*0.12; ry+=(my-ry)*0.12; ring.style.left=rx+'px'; ring.style.top=ry+'px'; requestAnimationFrame(animRing); }
+  animRing();
+  document.querySelectorAll('a,button,.bando-card,.output-card,.agent-card,.ai-card').forEach(el => {
+    el.addEventListener('mouseenter', () => { cursor.style.transform='translate(-50%,-50%) scale(2.5)'; cursor.style.background='transparent'; cursor.style.border='1px solid var(--gold)'; ring.style.opacity='0'; });
+    el.addEventListener('mouseleave', () => { cursor.style.transform='translate(-50%,-50%) scale(1)'; cursor.style.background='var(--gold)'; cursor.style.border='none'; ring.style.opacity='1'; });
+  });
+
+  // NAV SCROLL
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => { nav.classList.toggle('scrolled', window.scrollY > 60); });
+
+  // REVEAL
+  const revealEls = document.querySelectorAll('.reveal,.reveal-left,.reveal-right,.reveal-scale');
+  const obs = new IntersectionObserver((entries) => {
     entries.forEach((entry, i) => {
       if (entry.isIntersecting) {
-        setTimeout(() => entry.target.classList.add('visible'), i * 70);
-        observer.unobserve(entry.target);
+        setTimeout(() => entry.target.classList.add('visible'), i * 80);
+        obs.unobserve(entry.target);
       }
     });
-  }, { threshold: 0.05 });
-  reveals.forEach(el => observer.observe(el));
+  }, { threshold: 0.08 });
+  revealEls.forEach(el => obs.observe(el));
+
+  // COUNTER
+  function countUp(el, target, suffix) {
+    let start = 0;
+    const duration = 1800;
+    const step = (timestamp) => {
+      if (!start) start = timestamp;
+      const progress = Math.min((timestamp - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 4);
+      el.textContent = Math.floor(ease * target) + suffix;
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+  const counterObs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const el = entry.target;
+        countUp(el, parseInt(el.dataset.target), el.dataset.suffix || '');
+        counterObs.unobserve(el);
+      }
+    });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('[data-target]').forEach(el => counterObs.observe(el));
 </script>
 </body>
 </html>
