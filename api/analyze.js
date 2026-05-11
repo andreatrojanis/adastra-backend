@@ -138,25 +138,57 @@ module.exports = async function handler(req, res) {
     const requestedAI = ai || 'claude';
 
     if (requestedAI === 'claude') {
-      const results = await Promise.all(prompts.map(async (p, i) => {
-        await delay(i * 1500); // stagger 1.5s per evitare rate limit Haiku
+      // ── MIGLIORAMENTO 2: A04 Devil's Advocate è SEQUENZIALE ──
+      // A01, A02, A03 in parallelo con stagger → poi A04 riceve i loro output
+
+      const firstThree = prompts.slice(0, 3);
+      const devilPrompt = prompts[3]; // A04
+
+      // Step 1: chiama A01, A02, A03 in parallelo con stagger
+      const firstResults = await Promise.all(firstThree.map(async (p, i) => {
+        await delay(i * 1500);
         let r = await callClaude(p, i);
-        if (!r) {
-          await delay(2000); // retry con pausa più lunga (era 500ms)
-          r = await callClaude(p, i);
-        }
+        if (!r) { await delay(2000); r = await callClaude(p, i); }
         return r || fallback();
       }));
+
+      // Step 2: costruisci contesto con output A01-A03 per Devil's Advocate
+      const agentSummary = firstResults.map((r, i) => {
+        const names = ['Valutatore Formale', 'Analista Strategico', 'Esperto Territoriale'];
+        return `AGENTE ${i+1} (${names[i]}): scoreON=${r.scoreON} scoreSS=${r.scoreSS}. ${r.sintesi || ''}. RedFlags: ${(r.redFlags||[]).join('; ')}. Debolezze: ${(r.puntiDeboli||[]).join('; ')}.`;
+      }).join('\n');
+
+      const devilPromptEnhanced = devilPrompt +
+        '\n\nOUTPUT PANEL PRECEDENTE (usa per identificare disaccordi e criticità trascurate):\n' + agentSummary;
+
+      // Step 3: chiama A04 con il contesto degli altri 3
+      let devil = await callClaude(devilPromptEnhanced, 3);
+      if (!devil) { await delay(2000); devil = await callClaude(devilPromptEnhanced, 3); }
+      devil = devil || fallback();
+
+      const results = [...firstResults, devil];
       return res.status(200).json({ results, multiAI: [{ ai: 'claude', name: 'Claude Haiku (Anthropic)', results }] });
     }
 
     if (requestedAI === 'gpt') {
-      const results = await Promise.all(prompts.map(p => callGPT(p).then(r => r || fallback())));
+      // ── MIGLIORAMENTO 1: GPT riceve anche il raw output degli agenti Claude se disponibile ──
+      const claudeContext = req.body.claudeResults
+        ? '\n\nPANEL CLAUDE (per confronto e validazione incrociata):\n' +
+          req.body.claudeResults.map((r, i) => `A${i+1}: scoreON=${r.scoreON} scoreSS=${r.scoreSS}. ${r.sintesi||''}`).join('\n')
+        : '';
+
+      const results = await Promise.all(prompts.map(p => callGPT(p + claudeContext).then(r => r || fallback())));
       return res.status(200).json({ results, multiAI: [{ ai: 'gpt', name: 'GPT-4o (OpenAI)', results }] });
     }
 
     if (requestedAI === 'grok') {
-      const results = await Promise.all(prompts.map(p => callGrok(p).then(r => r || fallback())));
+      // ── MIGLIORAMENTO 1: Grok riceve anche il raw output degli agenti Claude se disponibile ──
+      const claudeContext = req.body.claudeResults
+        ? '\n\nPANEL CLAUDE (per confronto e validazione incrociata):\n' +
+          req.body.claudeResults.map((r, i) => `A${i+1}: scoreON=${r.scoreON} scoreSS=${r.scoreSS}. ${r.sintesi||''}`).join('\n')
+        : '';
+
+      const results = await Promise.all(prompts.map(p => callGrok(p + claudeContext).then(r => r || fallback())));
       return res.status(200).json({ results, multiAI: [{ ai: 'grok', name: 'Grok 3 (xAI)', results }] });
     }
 
@@ -177,4 +209,3 @@ function fallback() {
     puntiChiave: [], azioniImmediate: []
   };
 }
-
