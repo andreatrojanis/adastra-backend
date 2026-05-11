@@ -16,5 +16,11 @@
         { "key": "Access-Control-Allow-Headers", "value": "Content-Type" }
       ]
     }
+  ],
+  "routes": [
+    { "src": "/", "dest": "/landing.html" },
+    { "src": "/analisi", "dest": "/index.html" },
+    { "src": "/investitori", "dest": "/investitori.html" },
+    { "src": "/accesso-investitori", "dest": "/accesso-investitori.html" }
   ]
 }
