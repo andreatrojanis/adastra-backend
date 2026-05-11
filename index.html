@@ -666,8 +666,10 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
     return 'Sei il sintetizzatore finale di un panel di 4 esperti AI su bandi Invitalia ON e Smart&Start.\n\nPROGETTO:\n'+projectSummary()+'\n\nANALISI PANEL:\n'+summaries+'\n\nPesi: Valutatore 25%, Analista 35%, Territoriale 20%, Advocate 20%.\nRispondi SOLO con JSON valido:\n{"scoreON":72,"scoreONLabel":"Coerenza media","scoreSS":78,"scoreSSLabel":"Alta coerenza","verdict":"PREVALENZA SMART&START","decisione":"GO CON CORREZIONI","sintesi":"sintesi autorevole e specifica in 4-6 righe","puntiChiave":["punto 1","punto 2","punto 3"],"azioniImmediate":["azione 1","azione 2","azione 3"]}';
   }
 
-  async function callVercel(prompts, aiProvider){
-    const res=await fetch(VERCEL_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompts, ai: aiProvider||'claude'})});
+  async function callVercel(prompts, aiProvider, claudeResults){
+    const body = {prompts, ai: aiProvider||'claude'};
+    if(claudeResults && (aiProvider==='gpt'||aiProvider==='grok')) body.claudeResults = claudeResults;
+    const res=await fetch(VERCEL_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const text=await res.text();
     let data;try{data=JSON.parse(text);}catch(e){throw new Error('Risposta non JSON ('+res.status+'): '+text.substring(0,200));}
     if(!data.results)throw new Error('Nessun results: '+JSON.stringify(data).substring(0,200));
@@ -716,8 +718,8 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       function sttX(i,t){const s=document.getElementById('asX'+i);if(s)s.textContent=t;}
 
       const [gptData,gemData]=await Promise.allSettled([
-        callVercel(buildPrompts().concat([buildSynthPrompt(claudeResults)]),'gpt'),
-        callVercel(buildPrompts().concat([buildSynthPrompt(claudeResults)]),'grok')
+        callVercel(buildPrompts().concat([buildSynthPrompt(claudeResults)]),'gpt', claudeResults),
+        callVercel(buildPrompts().concat([buildSynthPrompt(claudeResults)]),'grok', claudeResults)
       ]);
 
       let gptResults=null,gptSynth=null;
