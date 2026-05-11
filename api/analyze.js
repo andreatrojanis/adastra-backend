@@ -68,7 +68,9 @@ module.exports = async function handler(req, res) {
         return null;
       }
       const text = (d.content || []).map(i => i.text || '').join('').trim();
+      if (!text) { console.error(`[A${idx}] empty response`); return null; }
       const parsed = parseJSON(text);
+      if (!parsed) console.error(`[A${idx}] parseJSON failed. Raw: ${text.substring(0,300)}`);
       if (debug && idx !== undefined) debug[idx] = { raw: text.substring(0, 300), parsed: !!parsed };
       return parsed;
     }
