@@ -1,14 +1,20 @@
 {
   "version": 2,
   "functions": {
-    "api/analyze.js": { "maxDuration": 30 },
-    "api/generate.js": { "maxDuration": 60 },
-    "api/docx.js": { "maxDuration": 60 }
+    "api/analyze.js":    { "maxDuration": 90 },
+    "api/docx.js":       { "maxDuration": 60 },
+    "api/generate.js":   { "maxDuration": 300 },
+    "api/generate-on.js":{ "maxDuration": 300 },
+    "api/docx-on.js":    { "maxDuration": 60 }
   },
-  "routes": [
-    { "src": "/", "dest": "/landing.html" },
-    { "src": "/analisi", "dest": "/index.html" },
-    { "src": "/investitori", "dest": "/investitori.html" },
-    { "src": "/accesso-investitori", "dest": "/accesso-investitori.html" }
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET,POST,OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type" }
+      ]
+    }
   ]
 }
