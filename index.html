@@ -662,8 +662,20 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
   }
 
   function buildSynthPrompt(results){
-    const summaries=results.map((r,i)=>'AGENTE '+(i+1)+' '+AGENT_NAMES[i]+': ON='+(r.scoreON||0)+' SS='+(r.scoreSS||0)+'. '+(r.sintesi||'')).join('\n');
-    return 'Sei il sintetizzatore finale di un panel di 4 esperti AI su bandi Invitalia ON e Smart&Start.\n\nPROGETTO:\n'+projectSummary()+'\n\nANALISI PANEL:\n'+summaries+'\n\nPesi: Valutatore 25%, Analista 35%, Territoriale 20%, Advocate 20%.\nRispondi SOLO con JSON valido:\n{"scoreON":72,"scoreONLabel":"Coerenza media","scoreSS":78,"scoreSSLabel":"Alta coerenza","verdict":"PREVALENZA SMART&START","decisione":"GO CON CORREZIONI","sintesi":"sintesi autorevole e specifica in 4-6 righe","puntiChiave":["punto 1","punto 2","punto 3"],"azioniImmediate":["azione 1","azione 2","azione 3"]}';
+    const AGENT_NAMES_FULL = ['Valutatore Formale','Analista Strategico','Esperto Territoriale',"Devil's Advocate"];
+    const summaries = results.map((r,i) => {
+      const name = AGENT_NAMES_FULL[i] || ('Agente '+(i+1));
+      const flags = [...(r.redFlags||[]), ...(r.critiche||[])].slice(0,3).join(' | ');
+      const forze = (r.puntiForza||[]).slice(0,2).join(' | ');
+      return 'AGENTE '+(i+1)+' '+name+': ON='+(r.scoreON||0)+' SS='+(r.scoreSS||0)+'.\nSintesi: '+(r.sintesi||'')+'\nCritiche/Flag: '+flags+'\nPunti forza: '+forze;
+    }).join('\n\n');
+
+    // Calcola disaccordi tra agenti
+    const scores = results.map(r => ((r.scoreON||0)+(r.scoreSS||0))/2);
+    const maxScore = Math.max(...scores), minScore = Math.min(...scores);
+    const disaccordo = maxScore - minScore > 15 ? 'ALTO (delta '+Math.round(maxScore-minScore)+'pt) — analizza le cause' : 'contenuto';
+
+    return 'Sei il sintetizzatore finale di un panel di 4 esperti AI su bandi Invitalia ON e Smart&Start.\n\nPROGETTO:\n'+projectSummary()+'\n\nANALISI PANEL:\n'+summaries+'\n\nDISACCORDO TRA AGENTI: '+disaccordo+'\n\nPesi: Valutatore 25%, Analista 35%, Territoriale 20%, Advocate 20%.\nSe c\'è disaccordo alto, identificalo nella sintesi e spiega quale agente ha ragione e perché.\nRispondi SOLO con JSON valido:\n{"scoreON":72,"scoreONLabel":"Coerenza media","scoreSS":78,"scoreSSLabel":"Alta coerenza","verdict":"PREVALENZA SMART&START","decisione":"GO CON CORREZIONI","sintesi":"sintesi autorevole e specifica in 4-6 righe — includi eventuale disaccordo tra agenti","puntiChiave":["punto 1","punto 2","punto 3"],"azioniImmediate":["azione 1","azione 2","azione 3"]}';
   }
 
   async function callVercel(prompts, aiProvider, claudeResults){
