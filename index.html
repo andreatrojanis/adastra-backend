@@ -612,37 +612,44 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       '\nSETTORE: '+(answers['s2']||'—')+
       '\nREGIONE: '+reg+(prov?' ('+prov+')':'')+' — '+(isSud?'SUD ITALIA (premialita Smart&Start attiva)':'Centro/Nord')+
       '\nCOMUNE: '+($('f-comune')?.value||'—')+
-      '\nCRATERE SISMICO: '+($('f-cratere')?.value||'no')+
-      '\nINVESTIMENTO: €'+parseInt($('f-investimento')?.value||0).toLocaleString('it-IT')+
-      '\nMODELLO REVENUE: '+($('f-revenue')?.value||'—')+
-      '\nBREAK-EVEN: '+($('f-breakeven')?.value||'—')+
-      '\nEXPORT: '+($('f-export')?.value||'—')+
+      '\n--- DATI ECONOMICI CRITICI ---'+
+      '\nINVESTIMENTO TOTALE: €'+parseInt($('f-investimento')?.value||0).toLocaleString('it-IT')+
+      '\nCAPITALE PROPRIO INIZIALE: €'+parseInt($('f-capitale')?.value||0).toLocaleString('it-IT')+
+      '\nRICAVI MENSILI CORRENTI: €'+parseInt($('f-ricavi')?.value||0).toLocaleString('it-IT')+
+      '\nFATTURATOCORRENTE: '+($('f-fatturato')?.value||'—')+
+      '\nCO-INVESTITORI: '+($('f-coinvestitori')?.value||'—')+
+      '\nFIDEIUSSIONE: '+($('f-fideiussione')?.value||'—')+
+      '\n--- IMPRESA ---'+
       '\nANZIANITA IMPRESA: '+(answers['s6']||'—')+
       '\nCOMPAGINE: '+(answers['s7']||'—')+
       '\nSTARTUP INNOVATIVA: '+($('f-startup')?.value||'—')+
       '\nDE MINIMIS: '+($('f-deminimis')?.value||'—')+
-      '\nFIDEIUSSIONE: '+($('f-fideiussione')?.value||'—')+
-      '\nFATTURATOCORRENTE: '+($('f-fatturato')?.value||'—')+
-      '\nCAPITALE INIZIALE: €'+parseInt($('f-capitale')?.value||0).toLocaleString('it-IT')+
-      '\nCO-INVESTITORI: '+($('f-coinvestitori')?.value||'—')+
+      '\nCRATERE SISMICO: '+($('f-cratere')?.value||'no')+
+      '\n--- TEAM ---'+
+      '\nESPERIENZA CUMULATA TEAM: '+($('f-esperienza')?.value||'0')+' anni'+
+      '\nTEAM: '+($('f-team')?.value||'—')+
+      '\nTEAM TECNICO: '+($('f-teamtech')?.value||'—')+
+      '\nADVISOR / INCUBATORE: '+($('f-advisor')?.value||'—')+
+      '\nPERSONALE 36 MESI: '+($('f-personale')?.value||'—')+
+      '\n--- INNOVAZIONE ---'+
       '\nTRL: '+(answers['s9']||'—')+
       '\nTIPO INNOVAZIONE: '+(answers['s10']||'—')+
       '\nIP / BREVETTI: '+($('f-ip')?.value||'—')+
       '\nTECNOLOGIA PROPRIETARIA: '+($('f-techprop')?.value||'—')+
       '\nR&D: '+($('f-rd')?.value||'—')+
       '\nPARTNERSHIP UNIVERSITARIE: '+($('f-universita')?.value||'—')+
+      '\n--- MERCATO ---'+
       '\nSCALABILITA: '+(answers['s12']||'—')+
-      '\nMERCATO TARGET: '+($('f-mercato')?.value||'—')+
-      '\nCOMPETITOR E DIFFERENZIAZIONE: '+($('f-competitor')?.value||'—')+
       '\nTRAZIONE: '+(answers['s14']||'—')+
       '\nLOI / PILOT / CONTRATTI: '+($('f-loi')?.value||'0')+
-      '\nRICAVI MENSILI: €'+parseInt($('f-ricavi')?.value||0).toLocaleString('it-IT')+
-      '\nTEAM: '+($('f-team')?.value||'—')+
-      '\nESPERIENZA CUMULATA: '+($('f-esperienza')?.value||'0')+' anni'+
-      '\nTEAM TECNICO: '+($('f-teamtech')?.value||'—')+
-      '\nADVISOR / INCUBATORE: '+($('f-advisor')?.value||'—')+
-      '\nPERSONALE 36 MESI: '+($('f-personale')?.value||'—')+
+      '\nMERCATO TARGET: '+($('f-mercato')?.value||'—')+
+      '\nCOMPETITOR E DIFFERENZIAZIONE: '+($('f-competitor')?.value||'—')+
+      '\n--- PIANO FINANZIARIO ---'+
+      '\nMODELLO REVENUE: '+($('f-revenue')?.value||'—')+
+      '\nBREAK-EVEN: '+($('f-breakeven')?.value||'—')+
+      '\nEXPORT: '+($('f-export')?.value||'—')+
       '\nSPESE: Macchinari '+($('f-mac')?.value||'0')+'% Software '+($('f-soft')?.value||'0')+'% Opere '+($('f-opere')?.value||'0')+'% Consulenze '+($('f-cons')?.value||'0')+'% Altro '+($('f-altro')?.value||'0')+'%'+
+      '\n--- RISCHI E IMPATTI ---'+
       '\nRISCHIO PRINCIPALE: '+($('f-rischio')?.value||'—')+
       '\nDIPENDENZE CRITICHE: '+($('f-dipendenze')?.value||'—')+
       '\nIMPATTI: '+(answers['s19']||'Nessuno selezionato')+
@@ -651,7 +658,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
 
   function buildPrompts(){
     let s=projectSummary();
-    if(s.length>1400) s=s.substring(0,1400)+'\n[...troncato]';
+    if(s.length>3000) s=s.substring(0,3000)+'\n[...troncato]';
     const j='Rispondi SOLO con JSON valido. Nessun testo prima o dopo. Nessun markdown.';
     return [
       // AGENTE 01 — Valutatore Formale: compliance e requisiti hard
