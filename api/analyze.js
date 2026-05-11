@@ -152,10 +152,12 @@ module.exports = async function handler(req, res) {
         return r || fallback();
       }));
 
-      // Step 2: costruisci contesto con output A01-A03 per Devil's Advocate
+      // Step 2: costruisci contesto sintetico per Devil's Advocate (max 120 chars per agente)
       const agentSummary = firstResults.map((r, i) => {
         const names = ['Valutatore Formale', 'Analista Strategico', 'Esperto Territoriale'];
-        return `AGENTE ${i+1} (${names[i]}): scoreON=${r.scoreON} scoreSS=${r.scoreSS}. ${r.sintesi || ''}. RedFlags: ${(r.redFlags||[]).join('; ')}. Debolezze: ${(r.puntiDeboli||[]).join('; ')}.`;
+        const sintesi = (r.sintesi || '').substring(0, 120);
+        const flags = (r.redFlags || r.puntiDeboli || []).slice(0, 2).join('; ');
+        return `A${i+1} ${names[i]}: ON=${r.scoreON} SS=${r.scoreSS}. ${sintesi}. Flag: ${flags}`;
       }).join('\n');
 
       const devilPromptEnhanced = devilPrompt +
