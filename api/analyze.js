@@ -152,15 +152,16 @@ module.exports = async function handler(req, res) {
         return r || fallback();
       }));
 
-      // Step 2: costruisci contesto sintetico per Devil's Advocate (max 120 chars per agente)
+      // Step 2: contesto agenti COMPLETO per A04 — tronca solo il prompt progetto
       const agentSummary = firstResults.map((r, i) => {
         const names = ['Valutatore Formale', 'Analista Strategico', 'Esperto Territoriale'];
-        const sintesi = (r.sintesi || '').substring(0, 120);
-        const flags = (r.redFlags || r.puntiDeboli || []).slice(0, 2).join('; ');
-        return `A${i+1} ${names[i]}: ON=${r.scoreON} SS=${r.scoreSS}. ${sintesi}. Flag: ${flags}`;
-      }).join('\n');
+        return `AGENTE ${i+1} (${names[i]}): scoreON=${r.scoreON} scoreSS=${r.scoreSS}.\nSintesi: ${r.sintesi||''}\nRedFlags: ${(r.redFlags||[]).join(' | ')}\nDebolezze: ${(r.puntiDeboli||[]).join(' | ')}\nCritiche: ${(r.critiche||[]).join(' | ')}`;
+      }).join('\n\n');
 
-      const devilPromptEnhanced = devilPrompt +
+      // Tronca il prompt originale di A04 a 600 chars (il progetto è già noto dagli agenti)
+      const devilBase = devilPrompt.length > 600 ? devilPrompt.substring(0, 600) + '\n[...troncato — vedi analisi panel]' : devilPrompt;
+
+      const devilPromptEnhanced = devilBase +
         '\n\nOUTPUT PANEL PRECEDENTE (usa per identificare disaccordi e criticità trascurate):\n' + agentSummary;
 
       // Step 3: chiama A04 con il contesto degli altri 3
