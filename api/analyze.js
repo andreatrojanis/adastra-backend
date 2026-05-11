@@ -185,6 +185,7 @@ module.exports = async function handler(req, res) {
         return parseJSON(text);
       }
 
+      console.log(`[A04] devilPromptEnhanced length: ${devilPromptEnhanced.length} chars`);
       let devil = await callClaudeSonnet(devilPromptEnhanced, 3);
       if (!devil) { await delay(1000); devil = await callClaudeSonnet(devilPromptEnhanced, 3); }
       devil = devil || fallback();
