@@ -2,10 +2,8 @@ const docx = require('docx');
 const {
   Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
   HeadingLevel, AlignmentType, BorderStyle, WidthType, ShadingType,
-  LevelFormat, PageBreak, ImageRun
+  LevelFormat, PageBreak
 } = docx;
-const { Resvg } = require('@resvg/resvg-js');
-const charts = require('./charts.js');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -122,41 +120,6 @@ module.exports = async function handler(req, res) {
             new Paragraph({ children: [new TextRun({ text: String(body || ''), size: 19, color: dark, font: 'Arial' })] })
           ]
         })]})],
-      });
-    };
-
-    // ── SVG → PNG → ImageRun ──
-    const svgToPng = (svg, width) => {
-      try {
-        const resvg = new Resvg(svg, { fitTo: { mode: 'width', value: width } });
-        return resvg.render().asPng();
-      } catch (e) { return null; }
-    };
-
-    const imgParagraph = (pngBuffer, widthEmu, heightEmu) => {
-      if (!pngBuffer) return sp();
-      return new Paragraph({
-        children: [new ImageRun({ data: pngBuffer, transformation: { width: Math.round(widthEmu / 9144), height: Math.round(heightEmu / 9144) } })],
-        spacing: { before: 80, after: 80 }
-      });
-    };
-
-    // EMU constants (1 cm = 360000 EMU, 1 inch = 914400 EMU)
-    // Page content width = ~16cm = 5760000 EMU → in points ~453pt
-    const PAGE_W_PX = 680; // px at 96dpi for full page width
-    const PAGE_W_EMU = 5486400;
-
-    const chartImg = (svg, svgW, svgH, targetWidthEmu) => {
-      const pngW = Math.round(svgW * (targetWidthEmu / (svgW * 9144)));
-      const png = svgToPng(svg, Math.max(svgW, 400));
-      if (!png) return sp();
-      const ratio = svgH / svgW;
-      return new Paragraph({
-        children: [new ImageRun({
-          data: png,
-          transformation: { width: Math.round(targetWidthEmu / 9144), height: Math.round(targetWidthEmu / 9144 * ratio) }
-        })],
-        spacing: { before: 100, after: 100 }
       });
     };
 
@@ -318,14 +281,6 @@ module.exports = async function handler(req, res) {
     }
     if (e.fabbisogno_kpi && e.fabbisogno_kpi.length) { children.push(h2('Fabbisogno finanziario'), kpiRow(e.fabbisogno_kpi), sp()); }
     if (e.perche_on) children.push(colorBox2('Perché ON — Oltre Nuove Imprese', e.perche_on, 'green'), sp());
-
-    // Scoring card ON
-    const scoreON = e.score_on || 38;
-    const radarVals = e.radar_values || { compagine: 75, progetto: 70, mercato: 65, piano_economico: 60, occupazione: 72, impatto: 68 };
-    const scoringPng = svgToPng(charts.scoringCard(scoreON, Math.round(scoreON * 1.05), e.verdict || 'AMMISSIBILE', e.decisione || 'GO CON OTTIMIZZAZIONI'), 800);
-    if (scoringPng) children.push(h2('Scoring panel AI'), imgParagraph(scoringPng, Math.round(800 * 9144 * 0.85), Math.round(320 * 9144 * 0.85)), sp());
-    const radarPng = svgToPng(charts.radarChart(radarVals), 600);
-    if (radarPng) children.push(imgParagraph(radarPng, Math.round(600 * 9144 * 0.7), Math.round(560 * 9144 * 0.7)), sp());
     children.push(pb());
 
     // ── S2: COMPAGINE SOCIETARIA ──
@@ -375,9 +330,6 @@ module.exports = async function handler(req, res) {
     }
     if (prog.localizzazione) { children.push(h2('Localizzazione'), p(prog.localizzazione), sp()); }
     if (prog.tempistiche) children.push(colorBox2('Tempistiche realizzazione', prog.tempistiche, 'gold'), sp());
-    // Diagramma processo
-    const processPng = svgToPng(charts.processDiagram(), 800);
-    if (processPng) children.push(h2('Flusso operativo'), imgParagraph(processPng, Math.round(800 * 9144 * 0.85), Math.round(180 * 9144 * 0.85)), sp());
     children.push(pb());
 
     // ── S4: MERCATO ──
@@ -406,14 +358,6 @@ module.exports = async function handler(req, res) {
     // ── S5: PIANO OPERATIVO ──
     const op = getData('operativo') || {};
     children.push(eyebrow('Sezione 05'), h1('Piano operativo e milestones'), sp());
-    if (op.fasi && op.fasi.length) {
-      const tlFasi = op.fasi.map(f => ({
-        nome: f.nome, periodo: f.periodo,
-        kpi_sintetico: (f.kpi || '').split('·')[0].replace('KPI:', '').trim().substring(0, 35)
-      }));
-      const tlPng = svgToPng(charts.timelineVisual(tlFasi), 900);
-      if (tlPng) children.push(imgParagraph(tlPng, Math.round(900 * 9144 * 0.85), Math.round(200 * 9144 * 0.85)), sp());
-    }
     (op.fasi || []).forEach((fase, i) => {
       children.push(timelineItem(fase));
       if (i < (op.fasi.length - 1)) children.push(sp());
