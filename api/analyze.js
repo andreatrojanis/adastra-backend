@@ -164,9 +164,27 @@ module.exports = async function handler(req, res) {
       const devilPromptEnhanced = devilBase +
         '\n\nOUTPUT PANEL PRECEDENTE (usa per identificare disaccordi e criticità trascurate):\n' + agentSummary;
 
-      // Step 3: chiama A04 con il contesto degli altri 3
-      let devil = await callClaude(devilPromptEnhanced, 3);
-      if (!devil) { await delay(2000); devil = await callClaude(devilPromptEnhanced, 3); }
+      // Step 3: A04 usa Sonnet (più veloce su prompt lunghi, output migliore)
+      async function callClaudeSonnet(prompt, idx) {
+        if (!ANTHROPIC_KEY) return null;
+        const r = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01' },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-5',
+            max_tokens: 1000,
+            messages: [{ role: 'user', content: CLAUDE_PREFIX + prompt }]
+          })
+        });
+        if (!r.ok) { const e = await r.text(); console.error(`[A${idx}] Sonnet HTTP ${r.status}: ${e.substring(0,200)}`); return null; }
+        const d = await r.json();
+        if (d.error) { console.error(`[A${idx}] Sonnet error: ${JSON.stringify(d.error)}`); return null; }
+        const text = (d.content || []).map(i => i.text || '').join('').trim();
+        return parseJSON(text);
+      }
+
+      let devil = await callClaudeSonnet(devilPromptEnhanced, 3);
+      if (!devil) { await delay(1000); devil = await callClaudeSonnet(devilPromptEnhanced, 3); }
       devil = devil || fallback();
 
       const results = [...firstResults, devil];
