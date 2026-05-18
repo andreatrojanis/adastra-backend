@@ -978,9 +978,9 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
         '<div style="'+fb+';font-size:12px;font-weight:300;color:#555;line-height:1.6;margin-bottom:12px;">Il dossier generato da Starton è pronto per essere caricato sul portale Invitalia. Generalo quando le azioni obbligatorie sono completate, poi presentalo tu stesso in autonomia.</div>'+
         '<div style="'+fb+';font-size:11px;color:#888;line-height:1.6;margin-bottom:12px;padding:10px 14px;background:#fff;border-radius:8px;border:1px solid rgba(0,0,0,0.06);">'+
         'Il dossier è gratuito. Generandolo accetti che Starton riceva una fee dell\'8% esclusivamente sul fondo perduto che Invitalia eroga — e solo se lo eroga. Se non vinci, non devi nulla oltre ai €29 già versati. '+
-        '<a href="/termini-success-fee" target="_blank" style="color:#c9a84c;text-decoration:underline;">Leggi i termini completi →</a>'+
+        '<a href="/termini-success-fee" target="_blank" style="color:#c9a84c;text-decoration:none;text-decoration:underline;">Leggi i termini completi →</a>'+
         '</div>'+
-        '<a href="#" onclick="openDossier();return false;" style="display:inline-block;padding:12px 24px;background:'+gold+';color:#fff;'+fd+';font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;border-radius:999px;">Genera il dossier →</a>'+
+        '<a href="#" onclick="acceptAndOpenDossier(event)" style="display:inline-block;padding:12px 24px;background:'+gold+';color:#fff;'+fd+';font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;border-radius:999px;">Genera il dossier →</a>'+
         '</div>'+
         '</div>'+
         semaforoHTML;
@@ -1514,7 +1514,28 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
   }
 
 
-  function openDossier(){
+  function acceptAndOpenDossier(e){
+    e.preventDefault();
+    // Log accettazione clickwrap lato client con timestamp
+    const acceptanceData = {
+      timestamp: new Date().toISOString(),
+      projectName: $('f-nome')?.value || '—',
+      projectSummaryHash: btoa(unescape(encodeURIComponent(projectSummary()))).substring(0,32),
+      acceptedTerms: 'success-fee-8pct-FP-invitalia',
+      termsVersion: '1.0',
+      userAgent: navigator.userAgent
+    };
+    // Salva in localStorage come prova lato client
+    localStorage.setItem('starton_acceptance_'+Date.now(), JSON.stringify(acceptanceData));
+    // Invia log al server in background (fire and forget)
+    fetch('/api/log-acceptance', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(acceptanceData)
+    }).catch(()=>{});
+    // Procedi con il dossier
+    openDossier();
+  }
     const reg = document.getElementById('f-regione')?.value||'';
     const SUD_SET = new Set(['Abruzzo','Basilicata','Calabria','Campania','Molise','Puglia','Sardegna','Sicilia']);
     const data = {
