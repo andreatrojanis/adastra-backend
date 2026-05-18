@@ -1,11 +1,12 @@
 {
   "version": 2,
   "functions": {
-    "api/analyze.js":    { "maxDuration": 120 },
-    "api/docx.js":       { "maxDuration": 60 },
-    "api/generate.js":   { "maxDuration": 300 },
-    "api/generate-on.js":{ "maxDuration": 300 },
-    "api/docx-on.js":    { "maxDuration": 60 }
+    "api/analyze.js":        { "maxDuration": 120 },
+    "api/docx.js":           { "maxDuration": 60 },
+    "api/generate.js":       { "maxDuration": 300 },
+    "api/generate-on.js":    { "maxDuration": 300 },
+    "api/docx-on.js":        { "maxDuration": 60 },
+    "api/log-acceptance.js": { "maxDuration": 10 }
   },
   "headers": [
     {
