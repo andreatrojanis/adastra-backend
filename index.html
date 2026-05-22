@@ -1516,27 +1516,23 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
 
   function acceptAndOpenDossier(e){
     e.preventDefault();
-    // Log accettazione clickwrap lato client con timestamp
     const acceptanceData = {
       timestamp: new Date().toISOString(),
-      projectName: $('f-nome')?.value || '—',
-      projectSummaryHash: btoa(unescape(encodeURIComponent(projectSummary()))).substring(0,32),
+      projectName: document.getElementById('f-nome')?.value || '—',
       acceptedTerms: 'success-fee-8pct-FP-invitalia',
       termsVersion: '1.0',
       userAgent: navigator.userAgent
     };
-    // Salva in localStorage come prova lato client
     localStorage.setItem('starton_acceptance_'+Date.now(), JSON.stringify(acceptanceData));
-    // Invia log al server in background (fire and forget)
     fetch('/api/log-acceptance', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify(acceptanceData)
     }).catch(()=>{});
-    // Procedi con il dossier
     openDossier();
   }
-    const reg = document.getElementById('f-regione')?.value||'';
+
+  function openDossier(){
     const SUD_SET = new Set(['Abruzzo','Basilicata','Calabria','Campania','Molise','Puglia','Sardegna','Sicilia']);
     const data = {
       nome: document.getElementById('f-nome')?.value||'',
@@ -1591,6 +1587,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
 
   window.generateCode = generateCode;
   window.openDossier = openDossier;
+  window.acceptAndOpenDossier = acceptAndOpenDossier;
   window.restoreFromCode = restoreFromCode;
   window.restoreFromStorage = restoreFromStorage;
   window.copyCode = copyCode;
