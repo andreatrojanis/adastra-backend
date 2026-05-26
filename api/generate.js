@@ -7,12 +7,18 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   try {
-    const { sectionId, prompt } = req.body;
-    const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
+    const { sectionId, prompt, ai } = req.body;
+    const provider = ai || 'claude'; // claude | gpt | grok
 
-    if (!ANTHROPIC_KEY) return res.status(500).json({ error: 'API key mancante' });
+    const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
+    const OPENAI_KEY    = process.env.OPENAI_API_KEY;
+    const GROK_KEY      = process.env.GROK_API_KEY;
+
     if (!prompt) return res.status(400).json({ error: 'Prompt mancante' });
     if (!sectionId) return res.status(400).json({ error: 'sectionId mancante' });
+    if (provider === 'claude' && !ANTHROPIC_KEY) return res.status(500).json({ error: 'ANTHROPIC_API_KEY mancante' });
+    if (provider === 'gpt'    && !OPENAI_KEY)    return res.status(500).json({ error: 'OPENAI_API_KEY mancante' });
+    if (provider === 'grok'   && !GROK_KEY)      return res.status(500).json({ error: 'GROK_API_KEY mancante' });
 
     const SYSTEM = `Sei un consulente senior specializzato in finanza agevolata italiana, con 15 anni di esperienza nella redazione di dossier per Invitalia Smart&Start.
 Rispondi SEMPRE e SOLO con JSON valido. Nessun testo prima o dopo. Nessun markdown. Nessun backtick.
@@ -327,31 +333,87 @@ Struttura JSON richiesta (importi interi senza simbolo €, totale fonti = total
 
     const fullPrompt = promptFn(prompt);
 
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_KEY,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
-        max_tokens: 8000,
-        system: SYSTEM,
-        messages: [{ role: 'user', content: fullPrompt }]
-      })
-    });
+    let text = '';
 
-    if (!r.ok) {
-      const errBody = await r.text();
-      return res.status(500).json({ error: `Claude API error ${r.status}: ${errBody.substring(0, 200)}` });
+    if (provider === 'claude') {
+      // ── CLAUDE (Anthropic) ──────────────────────────────────
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': ANTHROPIC_KEY,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-5',
+          max_tokens: 8000,
+          system: SYSTEM,
+          messages: [{ role: 'user', content: fullPrompt }]
+        })
+      });
+      if (!r.ok) {
+        const errBody = await r.text();
+        return res.status(500).json({ error: `Claude API error ${r.status}: ${errBody.substring(0, 200)}` });
+      }
+      const d = await r.json();
+      if (d.error) return res.status(500).json({ error: d.error.message || 'Errore Claude API' });
+      text = (d.content || []).map(i => i.text || '').join('').trim();
+
+    } else if (provider === 'gpt') {
+      // ── GPT-4o (OpenAI) ─────────────────────────────────────
+      const r = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENAI_KEY}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          max_tokens: 8000,
+          messages: [
+            { role: 'system', content: SYSTEM },
+            { role: 'user',   content: fullPrompt }
+          ]
+        })
+      });
+      if (!r.ok) {
+        const errBody = await r.text();
+        return res.status(500).json({ error: `OpenAI API error ${r.status}: ${errBody.substring(0, 200)}` });
+      }
+      const d = await r.json();
+      if (d.error) return res.status(500).json({ error: d.error.message || 'Errore OpenAI API' });
+      text = d.choices?.[0]?.message?.content?.trim() || '';
+
+    } else if (provider === 'grok') {
+      // ── GROK 3 (xAI) ────────────────────────────────────────
+      const r = await fetch('https://api.x.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${GROK_KEY}`
+        },
+        body: JSON.stringify({
+          model: 'grok-3',
+          max_tokens: 8000,
+          messages: [
+            { role: 'system', content: SYSTEM },
+            { role: 'user',   content: fullPrompt }
+          ]
+        })
+      });
+      if (!r.ok) {
+        const errBody = await r.text();
+        return res.status(500).json({ error: `Grok API error ${r.status}: ${errBody.substring(0, 200)}` });
+      }
+      const d = await r.json();
+      if (d.error) return res.status(500).json({ error: d.error.message || 'Errore Grok API' });
+      text = d.choices?.[0]?.message?.content?.trim() || '';
+
+    } else {
+      return res.status(400).json({ error: `Provider non supportato: ${provider}` });
     }
 
-    const d = await r.json();
-    if (d.error) return res.status(500).json({ error: d.error.message || 'Errore Claude API' });
-
-    let text = (d.content || []).map(i => i.text || '').join('').trim();
-    if (!text) return res.status(500).json({ error: 'Risposta vuota da Claude' });
+    if (!text) return res.status(500).json({ error: `Risposta vuota da ${provider}` });
 
     // Rimuovi backtick e prefissi JSON
     const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
