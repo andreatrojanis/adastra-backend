@@ -30,6 +30,13 @@ module.exports = async function handler(req, res) {
 
     if (!prompts || !prompts.length) return res.status(400).json({ error: 'Nessun prompt' });
 
+    // ── MODELLI CLAUDE ──
+    // Gli agenti di scoring (AVF, AAS, AVT) girano su Haiku: compito strutturato, veloce, economico.
+    // Il Devil's Advocate (AAA, indice 3) gira su Sonnet 4.6: serve giudizio più acuto sui rischi non ovvi.
+    const MODEL_HAIKU = 'claude-haiku-4-5-20251001';
+    const MODEL_AAA   = 'claude-sonnet-4-5';
+    const AAA_INDEX   = 3; // ordine prompts: [AVF, AAS, AVT, AAA]
+
     // ── CALIBRATION PREFIXES ──
     const CLAUDE_PREFIX = 'REGOLE ASSOLUTE DI VALUTAZIONE: investimento €0 = scoreON e scoreSS massimo 25. Descrizione vuota o generica = -20 punti. Zero trazione (0 LOI, 0 ricavi, 0 pilot) = -25 punti. Team con 0 anni esperienza = -20 punti. TRL 3 senza IP = -15 punti. Dati mancanti sono red flag gravi. Un progetto incompleto non supera mai 35.\n\n';
 
@@ -39,9 +46,10 @@ module.exports = async function handler(req, res) {
 
     const delay = ms => new Promise(r => setTimeout(r, ms));
 
-    // ── CLAUDE HAIKU ──
+    // ── CLAUDE (Haiku per scoring, Sonnet per AAA) ──
     async function callClaude(prompt, idx, debug) {
       if (!ANTHROPIC_KEY) return null;
+      const model = (idx === AAA_INDEX) ? MODEL_AAA : MODEL_HAIKU;
       const r = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -50,7 +58,7 @@ module.exports = async function handler(req, res) {
           'anthropic-version': '2023-06-01'
         },
         body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
+          model: model,
           max_tokens: 2000,
           messages: [{ role: 'user', content: CLAUDE_PREFIX + prompt }]
         })
@@ -98,7 +106,7 @@ module.exports = async function handler(req, res) {
       return parseJSON(text);
     }
 
-    // ── GROK 3 ──
+    // ── GROK ──
     async function callGrok(prompt) {
       if (!GROK_KEY) return null;
       const r = await fetch('https://api.x.ai/v1/chat/completions', {
@@ -149,7 +157,7 @@ module.exports = async function handler(req, res) {
         }
         return r || fallback();
       }));
-      return res.status(200).json({ results, multiAI: [{ ai: 'claude', name: 'Claude Haiku (Anthropic)', results }] });
+      return res.status(200).json({ results, multiAI: [{ ai: 'claude', name: 'Claude (Anthropic)', results }] });
     }
 
     if (requestedAI === 'gpt') {
