@@ -328,7 +328,7 @@ Struttura JSON richiesta (importi interi senza simbolo euro, totale fonti = tota
     let text = '';
 
     if (provider === 'claude') {
-      // ── CLAUDE (Anthropic) ──────────────────────────────────
+      // ── CLAUDE (Anthropic) — Opus 4.8 per dossier premium ───
       const r = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -337,7 +337,7 @@ Struttura JSON richiesta (importi interi senza simbolo euro, totale fonti = tota
           'anthropic-version': '2023-06-01'
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-5',
+          model: 'claude-opus-4-8',
           max_tokens: 8000,
           system: SYSTEM,
           messages: [{ role: 'user', content: fullPrompt }]
