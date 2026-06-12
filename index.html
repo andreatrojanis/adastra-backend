@@ -456,7 +456,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
         <div><div class="price-main">€99</div><div class="price-note">una tantum · nessun abbonamento</div></div>
         <div class="price-detail">Panel 4 agenti AI<br>Score ON + Smart&Start<br>Decisione operativa</div>
       </div>
-      <div class="platform-note">Powered by Claude Sonnet · GPT-4o · Grok 3 · Prossimamente: ChatGPT, Gemini, Grok</div>
+      <div class="platform-note">Powered by Claude · GPT-4o · Grok 3 · Prossimamente: Gemini</div>
     </div>
 
   </div><!-- end screens -->
@@ -960,7 +960,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
         gateRow(gate7_loi, gate7_loi ? 'LOI firmate disponibili' : 'LOI da formalizzare')+
         '<div style="margin-top:16px;padding:12px 14px;background:rgba(255,255,255,0.6);border-radius:8px;'+fb+';font-size:11px;font-weight:300;color:#666;line-height:1.6;">'+
         'AdAstra entra in mandato quando tutti i prerequisiti tecnici e i documenti bloccanti sono disponibili. '+
-        'Il dossier bozza generato dalla piattaforma costituisce la base di lavoro — AdAstra lo rivede, integra i documenti reali, firma e presenta a Invitalia.'+
+        'Il dossier bozza generato dalla piattaforma costituisce la base di lavoro. Per i casi che richiedono studio integrativo, correzioni progettuali o alta consulenza, AdAstra lo rivede e integra i documenti reali, assistendo il proponente fino alla presentazione — che resta sottoscritta dal legale rappresentante con la propria identità digitale.'+
         '</div>'+
         (gateReady ?
           '<div style="margin-top:12px;"><a href="mailto:inquiry@adastrafinancials.it?subject=Supporto candidatura Smart%26Start" style="display:inline-block;padding:12px 24px;background:#0a7f2e;color:#fff;'+fd+';font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;border-radius:999px;">Procedi con la candidatura →</a></div>' :
@@ -1065,6 +1065,21 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
             <div style="flex:1;height:7px;background:rgba(201,168,76,0.1);border-radius:999px;overflow:hidden;"><div style="height:100%;width:${s}%;background:${sc};border-radius:999px;"></div></div>
             <span style="${fd};font-size:11px;font-weight:600;color:${sc};width:28px">${s}</span>
           </div>
+        </div>`;
+      }).join('');
+    }
+
+    // ── BAR CHART SINGOLO (un solo bando) ──
+    function barChartSingle(items, banda){
+      return items.map(({label,on:o,ss:s})=>{
+        const val = banda==='ON' ? o : s;
+        const c = val>=75?'#0a7f2e':val>=55?'#a07820':'#b00020';
+        return `<div style="margin-bottom:10px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+            <span style="${fd};font-size:9px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:#666;">${label}</span>
+            <span style="${fd};font-size:11px;font-weight:600;color:${c};">${val}</span>
+          </div>
+          <div style="height:7px;background:rgba(201,168,76,0.1);border-radius:999px;overflow:hidden;"><div style="height:100%;width:${val}%;background:${c};border-radius:999px;"></div></div>
         </div>`;
       }).join('');
     }
@@ -1301,29 +1316,50 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
           <span style="${fd};font-size:10px;font-weight:500;border:1px solid ${border};border-radius:6px;padding:3px 10px;color:${gold};background:#fff;">${safe(synth.verdict)}</span>
           <span style="${fd};font-size:10px;font-weight:500;border:1px solid ${border};border-radius:6px;padding:3px 10px;color:${gold};background:#fff;">${safe(synth.decisione)}</span>
         </div>
-        <div style="${fb};font-size:11px;color:#999;">${new Date().toLocaleDateString('it-IT')} \u00b7 ${safe($('f-nome')?.value||'Progetto')} \u00b7 Powered by Claude Sonnet · GPT-4o · Grok 3</div>
+        <div style="${fb};font-size:11px;color:#999;">${new Date().toLocaleDateString('it-IT')} \u00b7 ${safe($('f-nome')?.value||'Progetto')} \u00b7 Powered by Claude · GPT-4o · Grok 3</div>
       </div>`+
 
-      // GAUGE ROW
-      `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
-        <div style="border:1px solid ${border};${br};padding:16px;background:#fff;text-align:center;">
-          <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:6px;">Score Complessivo</div>
-          ${gaugeArc(overall,overallColor)}
-          <div style="${fb};font-size:11px;color:#888;margin-top:4px;">${overall>=70?'Alta coerenza':overall>=50?'Coerenza media':'Coerenza debole'}</div>
-        </div>
-        <div style="border:1px solid ${border};${br};padding:16px;background:${goldBg};text-align:center;">
-          <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:6px;">Score ON</div>
-          ${gaugeArc(on,scoreColor(on))}
-          <div style="${fb};font-size:11px;color:#888;margin-top:4px;">${scoreLabel(on)}</div>
-        </div>
-        <div style="border:1px solid ${border};${br};padding:16px;background:${goldBg};text-align:center;">
-          <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:6px;">Score Smart&amp;Start</div>
-          ${gaugeArc(ss,scoreColor(ss))}
-          <div style="${fb};font-size:11px;color:#888;margin-top:4px;">${scoreLabel(ss)}</div>
+      // SCORE COMPLESSIVO (sintesi dei due bandi)
+      `<div style="border:1px solid ${border};${br};padding:16px;background:#fff;text-align:center;margin-bottom:12px;">
+        <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:6px;">Score Complessivo \u2014 sintesi dei due bandi</div>
+        ${gaugeArc(overall,overallColor)}
+        <div style="${fb};font-size:11px;color:#888;margin-top:4px;">${overall>=70?'Alta coerenza':overall>=50?'Coerenza media':'Coerenza debole'}</div>
+      </div>`+
+
+      // ══════════ BLOCCO ON ══════════
+      `<div style="border:1.5px solid rgba(201,168,76,0.45);${br};padding:20px;background:${goldBg};margin-bottom:12px;">
+        <div style="${fd};font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:${gold};margin-bottom:4px;">Valutazione ON</div>
+        <div style="${fb};font-size:11px;font-weight:300;color:#888;line-height:1.5;margin-bottom:16px;">Oltre Nuove Imprese a Tasso Zero \u2014 imprese giovanili/femminili, soglia ammissibilit\u00e0 26/50</div>
+        <div style="display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center;">
+          <div style="text-align:center;border:1px solid ${border};${br};padding:14px;background:#fff;min-width:180px;">
+            ${gaugeArc(on,scoreColor(on))}
+            <div style="${fb};font-size:11px;color:#888;margin-top:4px;">${scoreLabel(on)}</div>
+          </div>
+          <div>
+            <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:#888;margin-bottom:10px;">Per dimensione</div>
+            ${barChartSingle(barItems,'ON')}
+          </div>
         </div>
       </div>`+
 
-      // 6 CATEGORY SCORES
+      // ══════════ BLOCCO SMART&START ══════════
+      `<div style="border:1.5px solid rgba(201,168,76,0.45);${br};padding:20px;background:${goldBg};margin-bottom:12px;">
+        <div style="${fd};font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:${gold};margin-bottom:4px;">Valutazione Smart&amp;Start</div>
+        <div style="${fb};font-size:11px;font-weight:300;color:#888;line-height:1.5;margin-bottom:16px;">Startup innovative \u2014 premialit\u00e0 Sud 30% fondo perduto, requisito startup innovativa obbligatorio</div>
+        <div style="display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center;">
+          <div style="text-align:center;border:1px solid ${border};${br};padding:14px;background:#fff;min-width:180px;">
+            ${gaugeArc(ss,scoreColor(ss))}
+            <div style="${fb};font-size:11px;color:#888;margin-top:4px;">${scoreLabel(ss)}</div>
+          </div>
+          <div>
+            <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:#888;margin-bottom:10px;">Per dimensione</div>
+            ${barChartSingle(barItems,'SS')}
+          </div>
+        </div>
+      </div>`+
+
+      // 6 CATEGORY SCORES (profilo trasversale)
+      D+'Profilo del progetto per dimensione</div>'+
       `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;">`+
       catScores.map(c=>{
         const col=c.val>=70?'#0a7f2e':c.val>=50?'#a07820':'#b00020';
@@ -1336,21 +1372,14 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
         </div>`;
       }).join('')+`</div>`+
 
+      // RADAR (trasversale)
+      `<div style="border:1px solid ${border};${br};padding:20px;background:#fff;margin-bottom:12px;">
+        <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:12px;">Radar maturit\u00e0 \u2014 profilo complessivo</div>
+        <div style="display:flex;justify-content:center;">${radarSVG(radarVals)}</div>
+      </div>`+
+
       // INTENSITY
       intensityBar(on,ss)+
-
-      // RADAR + BARS
-      D+'Analisi per dimensione</div>'+
-      `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-        <div style="border:1px solid ${border};${br};padding:20px;background:#fff;">
-          <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:12px;">Radar maturit\u00e0</div>
-          <div style="display:flex;justify-content:center;">${radarSVG(radarVals)}</div>
-        </div>
-        <div style="border:1px solid ${border};${br};padding:20px;background:#fff;">
-          <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:16px;">ON vs Smart&amp;Start per dimensione</div>
-          ${barChart(barItems)}
-        </div>
-      </div>`+
 
       // TIMELINE
       timelineHTML(on,ss)+
@@ -1371,7 +1400,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       (multiAIPanel(multiAI||{claude:{results,synth,name:'Claude (Anthropic)'}})) +
 
       // FOOTER — nessun riferimento AdAstra
-      `<div style="margin-top:16px;${fb};font-size:11px;font-weight:300;color:#bbb;line-height:1.6;border-left:2px solid ${border};padding-left:12px;">Valutazione generata da panel multi-agente AI (Claude \u2014 Anthropic). Non costituisce garanzia di ammissibilit\u00e0 n\u00e9 impegno da parte degli enti erogatori. Panel: Claude Sonnet (Anthropic) · GPT-4o (OpenAI) · Grok 3 (xAI)</div>`;
+      `<div style="margin-top:16px;${fb};font-size:11px;font-weight:300;color:#bbb;line-height:1.6;border-left:2px solid ${border};padding-left:12px;">Valutazione generata da panel multi-agente AI (Claude \u2014 Anthropic). Non costituisce garanzia di ammissibilit\u00e0 n\u00e9 impegno da parte degli enti erogatori. Panel: Claude (Anthropic) · GPT-4o (OpenAI) · Grok 3 (xAI)</div>`;
 
     // PIANO PRE-CANDIDATURA
     rep.innerHTML += pianoCandidatura(safeN(synth.scoreON), safeN(synth.scoreSS));
