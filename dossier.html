@@ -87,7 +87,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
   <div id="state-ready" style="display:none">
     <div class="eyebrow">Dossier Smart&amp;Start</div>
     <div class="page-title">Il tuo dossier<br><em>è pronto per essere generato.</em></div>
-    <div class="page-sub">Claude Sonnet genererà automaticamente tutte le sezioni richieste da Invitalia, personalizzate sui dati del tuo progetto. Testo abbondante, specifico e professionale.</div>
+    <div class="page-sub">Starton genera automaticamente tutte le sezioni richieste da Invitalia, personalizzate sui dati del tuo progetto. Testo abbondante, specifico e professionale, pronto per essere presentato in autonomia.</div>
 
     <span class="price-badge">€ 399 — una tantum</span>
 
@@ -97,7 +97,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
     </div>
 
     <div class="info-box">
-      <div class="info-box-title">Sezioni che verranno generate — Claude Sonnet</div>
+      <div class="info-box-title">Sezioni che verranno generate</div>
       <div class="section-list">
         <div class="section-item"><span class="section-num">01</span><span class="section-name">Executive Summary — sintesi strategica 500-800 parole</span><span class="section-status">—</span></div>
         <div class="section-item"><span class="section-num">02</span><span class="section-name">Value Proposition Canvas — 6 campi obbligatori Invitalia</span><span class="section-status">—</span></div>
@@ -118,14 +118,14 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
     </div>
 
     <div class="disclaimer">
-      Il dossier è generato da Claude Sonnet (Anthropic) — 4.000 token per sezione. Costituisce una bozza professionale da revisionare con il team AdAstra prima della presentazione formale a Invitalia.
+      Il dossier è generato da Starton come bozza professionale pronta per la presentazione in autonomia sul portale Invitalia. Per i casi che richiedono studio integrativo, correzioni progettuali o consulenza avanzata, il team AdAstra può assistere il proponente su richiesta.
     </div>
   </div>
 
   <!-- STATO: generazione in corso -->
   <div id="state-loading">
     <div class="eyebrow">Generazione in corso</div>
-    <div class="page-title">Claude Sonnet sta<br><em>costruendo il dossier.</em></div>
+    <div class="page-title">Starton sta<br><em>costruendo il dossier.</em></div>
     <div class="page-sub">Il processo richiede 3-5 minuti — ogni sezione è generata con testo abbondante e specifico. Non chiudere questa pagina.</div>
 
     <div class="progress-label" id="progress-label">Sezione 0 / 10</div>
@@ -139,7 +139,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
     <div class="done-card">
       <div class="done-icon">✓</div>
       <div class="done-title">Dossier generato con successo</div>
-      <div class="done-sub">Il documento Word è stato scaricato automaticamente sul tuo computer.<br>Aprilo, revisionalo con il team AdAstra e presentalo su Invitalia.</div>
+      <div class="done-sub">Il documento Word è stato scaricato automaticamente sul tuo computer.<br>Aprilo, verifica i contenuti e presentalo tu stesso sul portale Invitalia con la tua identità digitale.</div>
     </div>
 
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px">
@@ -150,15 +150,15 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
     <div class="info-box">
       <div class="info-box-title">Prossimi passi</div>
       <div class="section-list">
-        <div class="section-item"><span class="section-num">→</span><span class="section-name">Revisione con team AdAstra — verifica coerenza dossier e piano finanziario</span></div>
-        <div class="section-item"><span class="section-num">→</span><span class="section-name">Verifica De Minimis e strutturazione fideiussione bancaria</span></div>
-        <div class="section-item"><span class="section-num">→</span><span class="section-name">Registrazione su piattaforma Invitalia e presentazione formale</span></div>
-        <div class="section-item"><span class="section-num">→</span><span class="section-name">Presidio istruttoria — gestione quesiti Invitalia con AdAstra</span></div>
+        <div class="section-item"><span class="section-num">→</span><span class="section-name">Verifica i contenuti del dossier e completa i dati finanziari di dettaglio</span></div>
+        <div class="section-item"><span class="section-num">→</span><span class="section-name">Verifica De Minimis e, se richiesta, strutturazione fideiussione bancaria</span></div>
+        <div class="section-item"><span class="section-num">→</span><span class="section-name">Registrazione su piattaforma Invitalia e presentazione formale a cura del legale rappresentante con la propria identità digitale (SPID/CIE/CNS)</span></div>
+        <div class="section-item"><span class="section-num">→</span><span class="section-name">Opzionale — per studio integrativo, correzioni progettuali o alta consulenza: assistenza AdAstra su richiesta, fino alla presentazione sottoscritta dal proponente</span></div>
       </div>
     </div>
 
     <div class="disclaimer">
-      Dossier generato da Claude Sonnet (Anthropic). Non costituisce garanzia di ammissibilità né impegno da parte degli enti erogatori. Revisionare con un professionista prima della presentazione formale.
+      Dossier generato da Starton. Non costituisce garanzia di ammissibilità né impegno da parte degli enti erogatori. La domanda è presentata dal proponente tramite la propria identità digitale. Si raccomanda una verifica professionale prima della presentazione formale.
     </div>
   </div>
 
@@ -481,7 +481,7 @@ Rispondi in formato JSON con struttura:
   return prompts[sectionId] || '';
 }
 
-// ── CHIAMATA A /api/generate (Claude Sonnet, 4000 token) ──
+// ── CHIAMATA A /api/generate (Claude Opus 4.8) ──
 async function callGenerate(sectionId, prompt){
   const res = await fetch(GENERATE_URL, {
     method: 'POST',
