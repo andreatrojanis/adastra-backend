@@ -13,7 +13,12 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
 .logo span{color:var(--gold)}
 .back-link{font-family:var(--fd);font-size:11px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:#999;text-decoration:none}
 .back-link:hover{color:var(--gold)}
-.page-main{max-width:680px;margin:0 auto;padding:48px 24px 100px}
+.page-main{max-width:680px;margin:0 auto;padding:48px 24px 100px;transition:max-width .4s ease}
+.page-main.report-wide{max-width:1180px}
+@media(min-width:900px){
+  .report-wide .report-2col{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+  .report-wide .report-2col>*{margin-bottom:0 !important}
+}
 @media(max-width:600px){.page-header{padding:14px 20px}.page-main{padding:32px 16px 80px}}
 #wiz-prog-label{font-family:var(--fd);font-size:10px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);text-align:right;margin-bottom:6px}
 #wiz-prog-bar{height:3px;background:rgba(201,168,76,0.12);border-radius:2px;margin-bottom:2rem;overflow:hidden}
@@ -988,6 +993,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
 
   function renderReport(results,synth,multiAI){
     $('wiz-loading').style.display='none';
+    document.querySelector('.page-main')?.classList.add('report-wide');
     const rep=$('wiz-report');
     const gold='#c9a84c';const goldBg='#f0ece6';const border='rgba(201,168,76,0.25)';
     const fd="font-family:'Avenir Next','Century Gothic',sans-serif";
@@ -997,6 +1003,8 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
     const on=safeN(synth.scoreON);
     const ss=safeN(synth.scoreSS);
     const overall=Math.round(on*0.5+ss*0.5);
+    // Salva gli score per lo smistamento del dossier (ON vs Smart&Start)
+    window.__startonScores = { on: on, ss: ss };
 
     // ── RADAR VALUES — pesi calibrati su criteri ufficiali Invitalia ──
     // Smart&Start: Team 30%, Innovazione 20%, Mercato+Finanza 30%, Fattibilita 20%
@@ -1372,14 +1380,14 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
         </div>`;
       }).join('')+`</div>`+
 
-      // RADAR (trasversale)
-      `<div style="border:1px solid ${border};${br};padding:20px;background:#fff;margin-bottom:12px;">
-        <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:12px;">Radar maturit\u00e0 \u2014 profilo complessivo</div>
-        <div style="display:flex;justify-content:center;">${radarSVG(radarVals)}</div>
+      // RADAR + INTENSITY affiancati (su desktop largo)
+      `<div class="report-2col">
+        <div style="border:1px solid ${border};${br};padding:20px;background:#fff;margin-bottom:12px;">
+          <div style="${fd};font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:${gold};margin-bottom:12px;">Radar maturit\u00e0 \u2014 profilo complessivo</div>
+          <div style="display:flex;justify-content:center;">${radarSVG(radarVals)}</div>
+        </div>
+        ${intensityBar(on,ss)}
       </div>`+
-
-      // INTENSITY
-      intensityBar(on,ss)+
 
       // TIMELINE
       timelineHTML(on,ss)+
@@ -1611,7 +1619,11 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       documenti: answers['s20']||''
     };
     try { sessionStorage.setItem('starton_wizard_data', JSON.stringify(data)); } catch(e){}
-    window.open('dossier.html', '_blank');
+    // Smistamento bando: apre il dossier del bando con score piu alto.
+    // Parita o ON superiore -> ON; altrimenti Smart&Start.
+    const sc = window.__startonScores || { on: 0, ss: 0 };
+    const target = (sc.on >= sc.ss && sc.on > 0) ? 'dossier-on.html' : 'dossier.html';
+    window.open(target, '_blank');
   }
 
   window.generateCode = generateCode;
