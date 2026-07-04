@@ -1536,7 +1536,25 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
     const btnRestart = document.createElement('button');
     btnRestart.textContent = 'Ricomincia';
     btnRestart.style.cssText = 'flex:1;padding:11px;background:transparent;color:#666;border:1px solid #ddd;border-radius:999px;font-family:Avenir Next,sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;';
-    btnRestart.onclick = function(){ localStorage.removeItem('starton_wizard_draft'); overlay.remove(); };
+    btnRestart.onclick = function(){
+      // Cancella il salvataggio automatico e tutti i codici di ripristino
+      try {
+        localStorage.removeItem('starton_wizard_draft');
+        Object.keys(localStorage).forEach(function(k){
+          if(k.indexOf('starton_code_')===0) localStorage.removeItem(k);
+        });
+      } catch(e){}
+      // Svuota tutti i campi del wizard
+      document.querySelectorAll('[id^="f-"]').forEach(function(el){
+        if(el.tagName==='SELECT'){ el.selectedIndex = 0; } else { el.value = ''; }
+      });
+      // Deseleziona opzioni e scale, azzera le risposte
+      document.querySelectorAll('.opt.sel, .scl.sel').forEach(function(o){ o.classList.remove('sel'); });
+      Object.keys(answers).forEach(function(k){ delete answers[k]; });
+      overlay.remove();
+      // Riporta il wizard allo step 1 pulito
+      if(window.goToStep) window.goToStep(1);
+    };
 
     overlay.appendChild(box);
     document.body.appendChild(overlay);
