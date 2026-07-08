@@ -1589,6 +1589,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
 
   function openDossier(){
     const SUD_SET = new Set(['Abruzzo','Basilicata','Calabria','Campania','Molise','Puglia','Sardegna','Sicilia']);
+    const reg = document.getElementById('f-regione')?.value||'';
     const data = {
       nome: document.getElementById('f-nome')?.value||'',
       descrizione: document.getElementById('f-desc')?.value||'',
