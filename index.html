@@ -1636,7 +1636,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       impatti: answers['s19']||'',
       documenti: answers['s20']||''
     };
-    try { sessionStorage.setItem('starton_wizard_data', JSON.stringify(data)); } catch(e){}
+    try { sessionStorage.setItem('starton_wizard_data', JSON.stringify(data)); localStorage.setItem('starton_wizard_data', JSON.stringify(data)); } catch(e){}
     // Smistamento bando: apre il dossier del bando con score piu alto.
     // Parita o ON superiore -> ON; altrimenti Smart&Start.
     const sc = window.__startonScores || { on: 0, ss: 0 };

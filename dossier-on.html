@@ -178,7 +178,7 @@ let docxBlob = null;
 
 function loadData(){
   try {
-    const raw = sessionStorage.getItem('starton_wizard_data');
+    const raw = sessionStorage.getItem('starton_wizard_data') || localStorage.getItem('starton_wizard_data');
     if(raw) wizardData = JSON.parse(raw);
   } catch(e) {}
   return wizardData;
