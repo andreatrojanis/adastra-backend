@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MIRAGE — Test Fase 1 (IDP / vettori)</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0c0c0e;color:#ece9e2;font-family:'Helvetica Neue',Arial,sans-serif;font-weight:300;padding:32px 20px;line-height:1.55}
+.wrap{max-width:960px;margin:0 auto}
+h1{font-family:'Avenir Next',sans-serif;font-size:20px;font-weight:600;letter-spacing:-.01em;margin-bottom:4px}
+.sub{color:rgba(236,233,226,.5);font-size:13px;margin-bottom:22px}
+.endpoint{font-family:monospace;font-size:11px;color:#5b8fc1;background:#141416;border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:8px 12px;margin-bottom:20px;word-break:break-all}
+.scn{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.scn button{text-align:left;background:#141416;border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:11px 13px;color:#ece9e2;cursor:pointer;font-size:12px}
+.scn button.sel{border-color:#c9a84c;background:rgba(201,168,76,.12)}
+.scn .t{font-family:'Avenir Next',sans-serif;font-weight:600;font-size:12px;margin-bottom:3px}
+.scn .d{color:rgba(236,233,226,.5);font-size:10.5px;line-height:1.4}
+.run{width:100%;padding:14px;background:#c9a84c;color:#0c0c0e;border:none;border-radius:9px;font-family:'Avenir Next',sans-serif;font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;margin-bottom:22px}
+.run:disabled{opacity:.4}
+.card{background:#141416;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:18px 20px;margin-bottom:14px}
+.card h2{font-family:'Avenir Next',sans-serif;font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#c9a84c;margin-bottom:14px}
+table{width:100%;border-collapse:collapse;font-family:monospace;font-size:12px}
+th,td{padding:6px 8px;text-align:center;border-bottom:1px solid rgba(255,255,255,.06)}
+th{color:rgba(236,233,226,.4);font-weight:400;font-size:9px;letter-spacing:.06em;text-transform:uppercase}
+td.ag{text-align:left;font-family:'Avenir Next',sans-serif;color:#ece9e2;font-size:11px}
+.idp{color:#c9a84c;font-weight:600}
+.hot{color:#c15b5b;font-weight:600}
+.tot{display:flex;align-items:baseline;gap:10px;margin-top:6px}
+.tot .n{font-family:'Avenir Next',sans-serif;font-size:34px;font-weight:600;color:#c9a84c}
+.tot .l{font-size:12px;color:rgba(236,233,226,.5)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.chip{font-family:'Avenir Next',sans-serif;font-size:10px;padding:4px 10px;border-radius:5px;border:1px solid rgba(255,255,255,.08);color:rgba(236,233,226,.5)}
+.chip.on{border-color:#c15b5b;color:#c15b5b;background:rgba(193,91,91,.08)}
+.status{font-size:12px;padding:10px 14px;border-radius:8px;margin-bottom:14px}
+.status.ok{background:rgba(78,163,106,.08);border:1px solid rgba(78,163,106,.3);color:#a3d3b3}
+.status.err{background:rgba(193,91,91,.08);border:1px solid rgba(193,91,91,.4);color:#e3a5a5}
+pre{background:#0c0c0e;border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:12px;font-size:10.5px;color:rgba(236,233,226,.55);overflow-x:auto;max-height:260px;overflow-y:auto}
+.spin{display:inline-block;width:11px;height:11px;border:1.5px solid rgba(201,168,76,.3);border-top-color:#c9a84c;border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;margin-left:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>MIRAGE · Test Fase 1</h1>
+  <div class="sub">Verifica IDP intra-panel e vettori dimensionali reali dagli agenti — endpoint parallelo, non tocca la produzione.</div>
+  <div class="endpoint" id="ep">POST → https://adastra-backend-sigma.vercel.app/api/analyze-mirage</div>
+
+  <div class="scn" id="scn">
+    <button class="sel" data-s="solido"><div class="t">Progetto solido</div><div class="d">Startup innovativa, team forte, trazione reale. Ci si attende basso IDP.</div></button>
+    <button data-s="debole"><div class="t">Progetto debole</div><div class="d">Dati hard mancanti, zero trazione. Alta divergenza attesa.</div></button>
+    <button data-s="ambiguo"><div class="t">Profilo ambiguo</div><div class="d">Forte su innovazione, debole su mercato/numeri. Conflitto localizzato.</div></button>
+  </div>
+  <button class="run" id="run">Esegui panel + calcola IDP →</button>
+
+  <div id="out"></div>
+</div>
+
+<script>
+const URL='https://adastra-backend-sigma.vercel.app/api/analyze-mirage';
+const DIMS=['requisiti','innovazione','mercato','team','numeri','impatti'];
+const AG=['AVF','AAS','AVT','AAA'];
+let scn='solido';
+
+document.querySelectorAll('#scn button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#scn button').forEach(x=>x.classList.remove('sel'));
+  b.classList.add('sel');scn=b.dataset.s;
+});
+
+const SUMMARIES={
+  solido:`PROGETTO: NovaGrid — ottimizzazione energetica AI\nDESCRIZIONE: piattaforma SaaS per PMI manifatturiere, riduce consumi 18%\nSETTORE: Tecnologia / Innovazione digitale\nREGIONE: Puglia — SUD ITALIA (premialita Smart&Start attiva)\nINVESTIMENTO TOTALE: €480.000\nCAPITALE PROPRIO: €120.000\nANZIANITA IMPRESA: 0-12 mesi\nCOMPAGINE: ≥51% under 36 e/o donne\nSTARTUP INNOVATIVA: Si / molto probabile\nTEAM: 3 soci, 40 anni esperienza cumulata, CTO ex-Enel\nTEAM TECNICO: Si — team tecnico strutturato\nTRL: TRL 6 — prototipo avanzato\nIP: Depositato — in esame\nTRAZIONE: 4 — Pilot attivi o primi contratti\nLOI: 6\nRICAVI MENSILI: €12.000`,
+  debole:`PROGETTO: idea app generica\nDESCRIZIONE: piattaforma per mettere in contatto persone\nSETTORE: Altro\nREGIONE: Lombardia — Centro/Nord\nINVESTIMENTO TOTALE: €0\nCAPITALE PROPRIO: €0\nANZIANITA IMPRESA: Costituenda — non ancora fondata\nCOMPAGINE: Socio unico\nSTARTUP INNOVATIVA: No / improbabile\nTEAM: 1 persona, 0 anni esperienza\nTEAM TECNICO: No — solo commerciale\nTRL: TRL 3 — idea iniziale\nIP: Assente — nessuna protezione\nTRAZIONE: 1 — Nessuna validazione\nLOI: 0\nRICAVI MENSILI: €0`,
+  ambiguo:`PROGETTO: DeepMat — nuovi materiali compositi\nDESCRIZIONE: R&D materiali avanzati per aerospazio, tecnologia brevettata\nSETTORE: Deep tech\nREGIONE: Campania — SUD ITALIA\nINVESTIMENTO TOTALE: €1.100.000\nCAPITALE PROPRIO: €100.000\nANZIANITA IMPRESA: 12-36 mesi\nCOMPAGINE: Mista\nSTARTUP INNOVATIVA: Si / molto probabile\nTEAM: 2 ricercatori PhD, fortissimi su tech, nessuna esperienza commerciale\nTEAM TECNICO: Si — team tecnico strutturato\nTRL: TRL 5 — prototipo testato\nIP: Concesso — attivo\nTRAZIONE: 2 — Interesse informale\nLOI: 1\nMERCATO: nicchia ristretta, dimensionamento incerto, nessun cliente pagante\nRICAVI MENSILI: €0`
+};
+
+function buildPrompts(s){
+  const j='Rispondi SOLO con JSON valido. Nessun testo prima o dopo. Nessun markdown. Il campo "dimensioni" contiene sei punteggi interi 0-100 (requisiti, innovazione, mercato, team, numeri, impatti) coerenti con la tua analisi.';
+  return [
+    'Sei un istruttore formale Invitalia. Valuta compliance e requisiti di ammissibilita ON e Smart&Start.\n\n'+s+'\n\n'+j+'\n{"scoreON":75,"scoreSS":80,"dimensioni":{"requisiti":70,"innovazione":70,"mercato":70,"team":70,"numeri":70,"impatti":70},"sintesi":"...","puntiForza":["f1"],"puntiDeboli":["d1"],"redFlags":["r1"]}',
+    'Sei un analista strategico senior su bandi Invitalia. Valuta team, mercato, sostenibilita.\n\n'+s+'\n\n'+j+'\n{"scoreON":70,"scoreSS":75,"dimensioni":{"requisiti":70,"innovazione":70,"mercato":70,"team":70,"numeri":70,"impatti":70},"sintesi":"...","puntiForza":["f1"],"puntiDeboli":["d1"]}',
+    'Sei un esperto di sviluppo territoriale e premialita geografiche Invitalia.\n\n'+s+'\n\n'+j+'\n{"scoreON":65,"scoreSS":70,"dimensioni":{"requisiti":70,"innovazione":70,"mercato":70,"team":70,"numeri":70,"impatti":70},"sintesi":"...","opportunita":["o1"],"puntiForza":["f1"],"puntiDeboli":["d1"]}',
+    'Sei il devil advocate del panel. Trova tutto cio che farebbe rigettare la domanda. Severo e specifico.\n\n'+s+'\n\n'+j+'\n{"scoreON":55,"scoreSS":60,"dimensioni":{"requisiti":70,"innovazione":70,"mercato":70,"team":70,"numeri":70,"impatti":70},"sintesi":"...","critiche":["c1","c2"],"puntiForza":["f1"],"puntiDeboli":["d1"]}'
+  ];
+}
+
+document.getElementById('run').onclick=async()=>{
+  const btn=document.getElementById('run');btn.disabled=true;btn.innerHTML='Esecuzione<span class="spin"></span>';
+  const out=document.getElementById('out');out.innerHTML='';
+  try{
+    const res=await fetch(URL,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({prompts:buildPrompts(SUMMARIES[scn]),ai:'claude'})});
+    const txt=await res.text();
+    let data;try{data=JSON.parse(txt);}catch(e){throw new Error('Risposta non JSON ('+res.status+'): '+txt.slice(0,300));}
+    if(!data.results)throw new Error('Nessun results: '+JSON.stringify(data).slice(0,300));
+    render(data,out);
+  }catch(e){
+    out.innerHTML='<div class="status err">✗ '+e.message+'</div>';
+  }
+  btn.disabled=false;btn.innerHTML='Esegui di nuovo →';
+};
+
+function render(data,out){
+  const m=data.mirage;
+  let html='<div class="status ok">✓ Risposta ricevuta — '+data.results.length+' agenti. '+(m?'Blocco MIRAGE presente.':'⚠ Blocco MIRAGE ASSENTE (endpoint vecchio?)')+'</div>';
+
+  // vettori agenti
+  if(m&&m.agent_vectors){
+    html+='<div class="card"><h2>Vettori di score per agente (0–1)</h2><table><tr><th>Agente</th>'+DIMS.map(d=>'<th>'+d.slice(0,5)+'</th>').join('')+'</tr>';
+    m.agent_vectors.forEach((v,i)=>{html+='<tr><td class="ag">'+(AG[i]||'A'+(i+1))+'</td>'+v.map(x=>'<td>'+x.toFixed(2)+'</td>').join('')+'</tr>';});
+    // riga IDP
+    if(m.idp_per_dim){html+='<tr><td class="ag" style="color:#c9a84c">IDP_i</td>'+DIMS.map(d=>{const v=m.idp_per_dim[d];const cls=v>=0.10?'hot':'idp';return '<td class="'+cls+'">'+v.toFixed(3)+'</td>';}).join('')+'</tr>';}
+    html+='</table></div>';
+  }
+
+  // IDP_tot + conflitti
+  if(m){
+    html+='<div class="card"><h2>Divergenza intra-panel (IDP)</h2>';
+    html+='<div class="tot"><span class="n">'+(m.idp_tot!=null?m.idp_tot.toFixed(3):'—')+'</span><span class="l">IDP_tot · '+(m.idp_tot>=0.10?'divergenza rilevante':'panel coerente')+'</span></div>';
+    html+='<div class="chips">'+DIMS.map(d=>{const on=(m.conflict_dimensions||[]).includes(d);return '<span class="chip '+(on?'on':'')+'">'+d+(on?' · conflitto':'')+'</span>';}).join('')+'</div>';
+    html+='</div>';
+  }
+
+  // raw
+  html+='<div class="card"><h2>Risposta grezza</h2><pre>'+JSON.stringify({mirage:data.mirage,results_sample:data.results.map(r=>({scoreON:r.scoreON,scoreSS:r.scoreSS,dimensioni:r.dimensioni}))},null,2)+'</pre></div>';
+  out.innerHTML=html;
+}
+</script>
+</body>
+</html>
