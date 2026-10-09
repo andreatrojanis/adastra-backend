@@ -28,7 +28,7 @@ td.l{text-align:left;color:#ccc}
 </style>
 </head>
 <body>
-<h1>M I R A G E — TEST FASE 1</h1>
+<h1>M I R A G E — TEST FASE 1.1</h1>
 <p class="sub">Stessi 3 scenari di test.html · endpoint /api/analyze-mirage · non tocca la produzione</p>
 
 <div class="btns">
@@ -84,7 +84,10 @@ function mirageTable(m,results){
     h+='<tr><td class="l">'+NAMES[i]+'</td><td>'+r.scoreON+'</td><td>'+r.scoreSS+'</td>'+v.map(x=>'<td>'+Math.round(x*100)+'</td>').join('')+'</tr>';
   });
   if(m.idp_per_dim){
-    h+='<tr><td class="l gold">IDP_i</td><td></td><td></td>'+DIMS.map(d=>{const v=m.idp_per_dim[d];return '<td class="'+(v>=0.10?'hot':'gold')+'">'+v.toFixed(3)+'</td>';}).join('')+'</tr>';
+    h+='<tr><td class="l gold">IDP_i merito</td><td></td><td></td>'+DIMS.map(d=>{const v=m.idp_per_dim[d];return '<td class="'+(v>=0.10?'hot':'gold')+'">'+v.toFixed(3)+'</td>';}).join('')+'</tr>';
+  }
+  if(m.aaa){
+    h+='<tr><td class="l">Scarto Devil</td><td></td><td></td>'+DIMS.map(d=>{const g=m.aaa.gap_per_dim[d];const t=m.aaa.targeted_objections.includes(d);return '<td class="'+(t?'hot':'dim')+'">'+Math.round(g*100)+'</td>';}).join('')+'</tr>';
   }
   return h+'</table>';
 }
@@ -106,6 +109,10 @@ async function runScenario(sc){
       ' · dimensioni restituite '+withDims+'/4'+
       '<br>IDP_tot <span class="gold">'+m.idp_tot.toFixed(3)+'</span> · conflitti: '+
       (m.conflict_dimensions.length?'<span class="hot">'+m.conflict_dimensions.join(', ')+'</span>':'<span class="dim">nessuno</span>')+
+      ' <span class="dim">(tra agenti di merito · con Devil '+(m.idp_tot_with_aaa!=null?m.idp_tot_with_aaa.toFixed(3):'—')+')</span>'+
+      (m.aaa?'<br>Devil\'s Advocate · scarto medio <span class="gold">'+Math.round(m.aaa.gap_mean*100)+'</span> pt · obiezione mirata: '+
+        (m.aaa.targeted_objections.length?'<span class="hot">'+m.aaa.targeted_objections.join(', ')+'</span>':'<span class="dim">nessuna</span>')+
+        ' · C_AAA <span class="gold">'+m.aaa.c_aaa.toFixed(3)+'</span>':'')+
       mirageTable(m,data.results);
   }catch(e){b.className='box fail';b.innerHTML='✗ '+sc.name+' — '+e.message;}
 }

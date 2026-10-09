@@ -198,16 +198,45 @@ module.exports = async function handler(req, res) {
     }
 
     // Costruisce il blocco mirage a partire dai risultati di un panel (stesso provider)
+    // Fase 1.1 — l'agente avversariale (AAA) e trattato a parte, come da rivendicazione 2:
+    // la divergenza intra-panel si misura sugli agenti di merito; lo scarto dell'AAA
+    // si misura dimensione per dimensione e pesa tramite il coefficiente adattivo C_AAA.
+    const OBJ_DELTA = 0.08; // scarto AAA oltre la sua media che qualifica un'obiezione mirata
+    function computeAAA(panelVectors, aaaVector) {
+      const gap = {};
+      MIRAGE_DIMS.forEach((dim, j) => {
+        gap[dim] = +(_mean(_col(panelVectors, j)) - aaaVector[j]).toFixed(4);
+      });
+      const gapMean = +_mean(Object.values(gap)).toFixed(4);
+      const targeted = MIRAGE_DIMS.filter(dim => gap[dim] - gapMean >= OBJ_DELTA);
+      // C_AAA = C_base + alpha * (1 - CV_norm), limite 0.40; CV sugli score sintetici degli agenti di merito
+      const synth = panelVectors.map(v => _mean(v));
+      const mu = _mean(synth);
+      const cv = mu > 0 ? _std(synth) / mu : 1;
+      const cvNorm = Math.min(1, Math.max(0, cv));
+      const cAAA = +Math.min(0.40, 0.20 + 0.15 * (1 - cvNorm)).toFixed(4);
+      return { gap_per_dim: gap, gap_mean: gapMean, targeted_objections: targeted, cv_norm: +cvNorm.toFixed(4), c_aaa: cAAA };
+    }
+
     function mirageBlock(results) {
-      const vectors = results.map(scoreVector);
-      const idp = computeIDP(vectors);
+      // Solo i 4 agenti del panel: un eventuale 5° prompt (sintetizzatore) non ha vettore dimensionale
+      const agents = results.slice(0, AAA_INDEX + 1);
+      const vectors = agents.map(scoreVector);
+      const hasAAA = vectors.length > AAA_INDEX;
+      const panel = hasAAA ? vectors.slice(0, AAA_INDEX) : vectors;
+      const idpPanel = computeIDP(panel);
+      const idpAll = computeIDP(vectors);
       return {
-        version: 'mirage-phase1',
+        version: 'mirage-phase1.1',
         dims: MIRAGE_DIMS,
         agent_vectors: vectors.map(v => v.map(x => +x.toFixed(3))),
-        idp_per_dim: idp ? idp.idp_per_dim : null,
-        idp_tot: idp ? idp.idp_tot : null,
-        conflict_dimensions: idp ? idp.conflict_dimensions : []
+        // divergenza tra agenti di merito (AAA escluso)
+        idp_per_dim: idpPanel ? idpPanel.idp_per_dim : null,
+        idp_tot: idpPanel ? idpPanel.idp_tot : null,
+        conflict_dimensions: idpPanel ? idpPanel.conflict_dimensions : [],
+        // riferimento: divergenza calcolata includendo l'AAA
+        idp_tot_with_aaa: idpAll ? idpAll.idp_tot : null,
+        aaa: hasAAA ? computeAAA(panel, vectors[AAA_INDEX]) : null
       };
     }
 
