@@ -221,22 +221,26 @@ module.exports = async function handler(req, res) {
     function mirageBlock(results) {
       // Solo i 4 agenti del panel: un eventuale 5° prompt (sintetizzatore) non ha vettore dimensionale
       const agents = results.slice(0, AAA_INDEX + 1);
-      const vectors = agents.map(scoreVector);
-      const hasAAA = vectors.length > AAA_INDEX;
-      const panel = hasAAA ? vectors.slice(0, AAA_INDEX) : vectors;
-      const idpPanel = computeIDP(panel);
-      const idpAll = computeIDP(vectors);
+      // Gli agenti che non hanno risposto (fallback) non entrano nei calcoli: un segnaposto non e un voto
+      const missing = agents.map((r, i) => (!r || r._fallback) ? i : -1).filter(i => i >= 0);
+      const vectors = agents.map(r => (!r || r._fallback) ? null : scoreVector(r));
+      const panel = vectors.slice(0, AAA_INDEX).filter(Boolean);
+      const aaaVec = vectors.length > AAA_INDEX ? vectors[AAA_INDEX] : null;
+      const idpPanel = panel.length >= 2 ? computeIDP(panel) : null;
+      const idpAll = computeIDP(vectors.filter(Boolean));
       return {
-        version: 'mirage-phase1.1',
+        version: 'mirage-phase1.2',
         dims: MIRAGE_DIMS,
-        agent_vectors: vectors.map(v => v.map(x => +x.toFixed(3))),
+        agents_missing: missing,
+        panel_complete: missing.length === 0,
+        agent_vectors: vectors.map(v => v ? v.map(x => +x.toFixed(3)) : null),
         // divergenza tra agenti di merito (AAA escluso)
         idp_per_dim: idpPanel ? idpPanel.idp_per_dim : null,
         idp_tot: idpPanel ? idpPanel.idp_tot : null,
         conflict_dimensions: idpPanel ? idpPanel.conflict_dimensions : [],
         // riferimento: divergenza calcolata includendo l'AAA
         idp_tot_with_aaa: idpAll ? idpAll.idp_tot : null,
-        aaa: hasAAA ? computeAAA(panel, vectors[AAA_INDEX]) : null
+        aaa: (aaaVec && panel.length >= 1) ? computeAAA(panel, aaaVec) : null
       };
     }
 
@@ -292,6 +296,7 @@ function fallback() {
   return {
     scoreON: 50, scoreSS: 55,
     dimensioni: { requisiti:50, innovazione:50, mercato:50, team:50, numeri:50, impatti:50 },
+    _fallback: true, // segnaposto: escluso dai calcoli MIRAGE
     sintesi: 'Analisi non disponibile per questo provider.',
     redFlags: [], puntiForza: [], puntiDeboli: [],
     opportunita: [], critiche: [],

@@ -28,7 +28,7 @@ td.l{text-align:left;color:#ccc}
 </style>
 </head>
 <body>
-<h1>M I R A G E — TEST FASE 1.1</h1>
+<h1>M I R A G E — TEST FASE 1.2</h1>
 <p class="sub">Stessi 3 scenari di test.html · endpoint /api/analyze-mirage · non tocca la produzione</p>
 
 <div class="btns">
@@ -80,7 +80,9 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 function mirageTable(m,results){
   let h='<table><tr><th>Agente</th><th>ON</th><th>SS</th>'+DIMS.map(d=>'<th>'+d.slice(0,5)+'</th>').join('')+'</tr>';
   results.forEach((r,i)=>{
-    const v=(m.agent_vectors||[])[i]||[];
+    if(i>3)return;
+    const v=(m.agent_vectors||[])[i];
+    if(!v){h+='<tr><td class="l hot">'+NAMES[i]+'</td><td colspan="8" class="hot">non ha risposto — escluso</td></tr>';return;}
     h+='<tr><td class="l">'+NAMES[i]+'</td><td>'+r.scoreON+'</td><td>'+r.scoreSS+'</td>'+v.map(x=>'<td>'+Math.round(x*100)+'</td>').join('')+'</tr>';
   });
   if(m.idp_per_dim){
@@ -100,13 +102,15 @@ async function runScenario(sc){
     const ms=((Date.now()-t0)/1000).toFixed(1)+'s';
     const m=data.mirage;
     if(!m){b.className='box fail';b.innerHTML='✗ '+sc.name+' — blocco MIRAGE assente';return;}
-    const withDims=data.results.filter(r=>r.dimensioni).length;
+    const withDims=data.results.slice(0,4).filter(r=>r.dimensioni&&!r._fallback).length;
+    const miss=(m.agents_missing||[]).map(i=>NAMES[i]);
     const avgON=Math.round(data.results.reduce((s,r)=>s+(r.scoreON||0),0)/data.results.length);
     const avgSS=Math.round(data.results.reduce((s,r)=>s+(r.scoreSS||0),0)/data.results.length);
     b.className='box ok';
     b.innerHTML='<b>✓ '+sc.name+'</b> — '+ms+
       ' · media ON <span class="gold">'+avgON+'</span> · SS <span class="gold">'+avgSS+'</span>'+
-      ' · dimensioni restituite '+withDims+'/4'+
+      ' · agenti che hanno risposto '+withDims+'/4'+
+      (miss.length?'<br><span class="hot">⚠ Non ha risposto: '+miss.join(', ')+' — escluso dai calcoli, il panel è incompleto</span>':'')+
       '<br>IDP_tot <span class="gold">'+m.idp_tot.toFixed(3)+'</span> · conflitti: '+
       (m.conflict_dimensions.length?'<span class="hot">'+m.conflict_dimensions.join(', ')+'</span>':'<span class="dim">nessuno</span>')+
       ' <span class="dim">(tra agenti di merito · con Devil '+(m.idp_tot_with_aaa!=null?m.idp_tot_with_aaa.toFixed(3):'—')+')</span>'+
