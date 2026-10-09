@@ -28,7 +28,7 @@ td.l{text-align:left;color:#ccc}
 </style>
 </head>
 <body>
-<h1>M I R A G E — TEST FASE 2</h1>
+<h1>M I R A G E — TEST FASE 2.1</h1>
 <p class="sub">Stessi 3 scenari di test.html · endpoint /api/analyze-mirage · non tocca la produzione</p>
 
 <div class="btns">
@@ -177,7 +177,8 @@ async function runPhase2(){
         ' · modelli validi '+(x.models_used||0)+'/3 · soglie '+x.threshold_profile.warn+' / '+x.threshold_profile.critical+
         '<br>Conflitti tra modelli: '+((x.conflict_dimensions||[]).length?'<span class="hot">'+x.conflict_dimensions.join(', ')+'</span>':'<span class="dim">nessuno</span>')+
         (x.most_divergent_model?' · modello più distante: <span class="gold">'+MODEL_LABEL[x.most_divergent_model]+'</span>':'')+
-        (x.independence&&!x.independence.ok?'<br><span class="hot">⚠ Indipendenza: '+x.independence.issues.join('; ')+'</span>':'');
+        (x.independence&&!x.independence.ok?'<br><span class="hot">⚠ Indipendenza: '+x.independence.issues.join('; ')+'</span>':'')+
+        (x.prompt_template_hash?'<br><span class="dim">Istruzioni identiche per i 3 modelli · hash '+x.prompt_template_hash.slice(0,16)+'…</span>':'');
       // errori per fornitore
       Object.entries(data.errors||{}).forEach(([prov,byAgent])=>{
         Object.entries(byAgent||{}).forEach(([ai,errs])=>{

@@ -109,7 +109,7 @@ module.exports = async function handler(req, res) {
       grok: { url: 'https://api.x.ai/v1/chat/completions', key: () => GROK_KEY, model: 'grok-4-1-fast-non-reasoning', system: GROK_PREFIX, family: 'grok-4' }
     };
     const providerErrors = { gpt: {}, grok: {} };
-    async function callChat(provider, prompt, idx) {
+    async function callChat(provider, prompt, idx, opts = {}) {
       const cfg = CHAT_PROVIDERS[provider];
       const note = (msg) => { (providerErrors[provider][idx] = providerErrors[provider][idx] || []).push(msg); console.error(`[${provider} A${idx}] ${msg}`); };
       if (!cfg.key()) { note('API key mancante'); return null; }
@@ -120,7 +120,7 @@ module.exports = async function handler(req, res) {
         r = await fetch(cfg.url, {
           method: 'POST', signal: ctrl.signal,
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg.key() },
-          body: JSON.stringify({ model: cfg.model, max_tokens: 2000, messages: [ { role: 'system', content: cfg.system }, { role: 'user', content: prompt } ] })
+          body: JSON.stringify({ model: cfg.model, max_tokens: 2000, messages: opts.raw ? [ { role: 'user', content: prompt } ] : [ { role: 'system', content: cfg.system }, { role: 'user', content: prompt } ] })
         });
       } catch (e) {
         clearTimeout(timer);
@@ -140,11 +140,11 @@ module.exports = async function handler(req, res) {
       if (!isFinite(Number(parsed.scoreON)) || !isFinite(Number(parsed.scoreSS))) { note('JSON senza scoreON/scoreSS numerici'); return null; }
       return parsed;
     }
-    async function callChatRetry(provider, prompt, idx) {
+    async function callChatRetry(provider, prompt, idx, opts = {}) {
       const WAITS = [0, 3000 + idx * 500, 8000 + idx * 500];
       for (let a = 0; a < WAITS.length; a++) {
         if (WAITS[a]) await delay(WAITS[a]);
-        const r = await callChat(provider, prompt, idx);
+        const r = await callChat(provider, prompt, idx, opts);
         if (r) return r;
       }
       return null;
@@ -278,14 +278,14 @@ module.exports = async function handler(req, res) {
       gpt:    { provider: 'openai',    family: 'gpt-4o', model: 'gpt-4o' },
       grok:   { provider: 'xai',       family: 'grok-4', model: 'grok-4-1-fast-non-reasoning' }
     };
-    function computeCrossModel(panels) {
+    function computeCrossModel(panels, promptHashes = {}) {
       const N = MIRAGE_DIMS.length;
       const models = [];
       Object.keys(panels).forEach(name => {
         const m = panels[name].mirage;
         const merit = (m.agent_vectors || []).slice(0, AAA_INDEX).filter(Boolean);
         const meta = MODEL_META[name] || { provider: name, family: name, model: name };
-        const entry = { name, provider: meta.provider, family: meta.family, model: meta.model, merit_agents: merit.length, available: merit.length >= 2, vector: null };
+        const entry = { name, provider: meta.provider, family: meta.family, model: meta.model, prompt_template_hash: promptHashes[name] || null, merit_agents: merit.length, available: merit.length >= 2, vector: null };
         if (entry.available) entry.vector = MIRAGE_DIMS.map((_, j) => +_mean(_col(merit, j)).toFixed(4));
         models.push(entry);
       });
@@ -295,8 +295,11 @@ module.exports = async function handler(req, res) {
         if (models[a].provider === models[b].provider && models[a].family === models[b].family)
           issues.push(`${models[a].name} e ${models[b].name}: stesso provider e famiglia`);
       }
+      // Istruzioni identiche: requisito perche l'IDCM misuri i modelli e non i prompt
+      const hashes = [...new Set(models.map(m => m.prompt_template_hash).filter(Boolean))];
+      if (hashes.length > 1) issues.push('istruzioni diverse tra i modelli (prompt_template_hash non coincidente)');
       const usable = models.filter(m => m.available);
-      const base = { threshold_profile: THRESHOLD_PROFILE, models, independence: { ok: issues.length === 0, issues } };
+      const base = { threshold_profile: THRESHOLD_PROFILE, models, prompt_template_hash: hashes.length === 1 ? hashes[0] : null, independence: { ok: issues.length === 0, issues } };
       if (usable.length < 2) return Object.assign(base, { version: 'mirage-phase2', idcm: null, state: 'insufficiente', reason: 'meno di 2 modelli con risposte valide' });
       const V = usable.map(m => m.vector);
       const vmean = MIRAGE_DIMS.map((_, j) => _mean(_col(V, j)));
@@ -344,10 +347,10 @@ module.exports = async function handler(req, res) {
         return r || fallback();
       }));
     }
-    async function runChatPanel(provider, promptList) {
+    async function runChatPanel(provider, promptList, opts = {}) {
       return Promise.all(promptList.map(async (p, i) => {
         await delay(i * 500);
-        return (await callChatRetry(provider, p, i)) || fallback();
+        return (await callChatRetry(provider, p, i, opts)) || fallback();
       }));
     }
 
@@ -361,17 +364,26 @@ module.exports = async function handler(req, res) {
     // Nessun modello vede le risposte degli altri: l'indipendenza e condizione del calcolo IDCM.
     if (requestedAI === 'mirage') {
       const panelPrompts = prompts.slice(0, AAA_INDEX + 1);
+      // Stesse identiche istruzioni per i tre modelli: l'IDCM deve misurare i modelli, non le differenze di prompt.
+      // Claude riceve CLAUDE_PREFIX + prompt (callClaude); GPT e Grok ricevono lo stesso testo, senza istruzioni di sistema proprie.
+      const sharedPrompts = panelPrompts.map(p => CLAUDE_PREFIX + p);
       const [claudeRes, gptRes, grokRes] = await Promise.all([
         runClaudePanel(panelPrompts),
-        runChatPanel('gpt', panelPrompts),
-        runChatPanel('grok', panelPrompts)
+        runChatPanel('gpt', sharedPrompts, { raw: true }),
+        runChatPanel('grok', sharedPrompts, { raw: true })
       ]);
+      const sha = (t) => require('crypto').createHash('sha256').update(t, 'utf8').digest('hex');
+      const promptHashes = {
+        claude: sha(panelPrompts.map(p => CLAUDE_PREFIX + p).join('\u241E')),
+        gpt:    sha(sharedPrompts.join('\u241E')),
+        grok:   sha(sharedPrompts.join('\u241E'))
+      };
       const panels = {
         claude: { results: claudeRes, mirage: mirageBlock(claudeRes) },
         gpt:    { results: gptRes,    mirage: mirageBlock(gptRes) },
         grok:   { results: grokRes,   mirage: mirageBlock(grokRes) }
       };
-      const idcm = computeCrossModel(panels);
+      const idcm = computeCrossModel(panels, promptHashes);
       return res.status(200).json({
         mode: 'mirage',
         panels,
