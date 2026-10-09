@@ -28,12 +28,13 @@ td.l{text-align:left;color:#ccc}
 </style>
 </head>
 <body>
-<h1>M I R A G E — TEST FASE 2.1</h1>
+<h1>M I R A G E — TEST FASE 2.2</h1>
 <p class="sub">Stessi 3 scenari di test.html · endpoint /api/analyze-mirage · non tocca la produzione</p>
 
 <div class="btns">
   <button onclick="runAll()">MIRAGE · 3 SCENARI</button>
-  <button onclick="runPhase2()">FASE 2 · TRE MODELLI (IDCM)</button>
+  <button onclick="runPhase2(true)">FASE 2 · ESEMPI NEUTRI</button>
+  <button class="sec" onclick="runPhase2(false)">FASE 2 · ESEMPI NUMERICI (come produzione)</button>
   <button class="sec" onclick="runCompare()">CONFRONTO PRODUZIONE vs MIRAGE</button>
   <button class="sec" onclick="document.getElementById('out').innerHTML=''">CLEAR</button>
 </div>
@@ -54,15 +55,18 @@ const SCENARIOS=[
 ];
 
 /* Prompt identici a test.html; withDims aggiunge SOLO il campo dimensioni */
-function buildP(d,withDims){
+function buildP(d,withDims,neutral){
+  // neutral=true: negli esempi di formato i numeri sono segnaposto, per non ancorare i voti
+  const N=v=>neutral?'<intero 0-100>':v;
   const J='Rispondi SOLO con JSON valido. Nessun testo prima o dopo. Nessun markdown.'+
-    (withDims?' Il campo "dimensioni" contiene sei punteggi interi 0-100 (requisiti, innovazione, mercato, team, numeri, impatti) coerenti con la tua analisi.':'');
-  const D=withDims?'"dimensioni":{"requisiti":70,"innovazione":70,"mercato":70,"team":70,"numeri":70,"impatti":70},':'';
+    (withDims?' Il campo "dimensioni" contiene sei punteggi interi 0-100 (requisiti, innovazione, mercato, team, numeri, impatti) coerenti con la tua analisi.':'')+
+    (neutral?' Lo schema sotto indica solo il formato: ogni <intero 0-100> va sostituito con il tuo punteggio, diverso dimensione per dimensione se la tua analisi lo giustifica.':'');
+  const D=withDims?'"dimensioni":{"requisiti":'+N(70)+',"innovazione":'+N(70)+',"mercato":'+N(70)+',"team":'+N(70)+',"numeri":'+N(70)+',"impatti":'+N(70)+'},':'';
   return [
-    'Sei un istruttore formale Invitalia specializzato in compliance.\n'+d+'\n\n'+J+'\n{"scoreON":75,"scoreSS":80,'+D+'"sintesi":"analisi","puntiForza":["f1","f2"],"puntiDeboli":["d1"],"redFlags":["r1"]}',
-    'Sei un analista strategico di startup. Valuta business case.\n'+d+'\n\n'+J+'\n{"scoreON":72,"scoreSS":78,'+D+'"sintesi":"analisi","puntiForza":["f1","f2"],"puntiDeboli":["d1","d2"]}',
-    'Sei un esperto di sviluppo territoriale italiano.\n'+d+'\n\n'+J+'\n{"scoreON":65,"scoreSS":70,'+D+'"sintesi":"analisi","puntiForza":["f1"],"puntiDeboli":["d1"],"opportunita":["o1","o2"]}',
-    'Sei un devil advocate severo. Trova criticita bloccanti.\n'+d+'\n\n'+J+'\n{"scoreON":55,"scoreSS":60,'+D+'"sintesi":"critiche","critiche":["c1","c2","c3"],"puntiForza":["f1"],"puntiDeboli":["d1"]}'
+    'Sei un istruttore formale Invitalia specializzato in compliance.\n'+d+'\n\n'+J+'\n{"scoreON":'+N(75)+',"scoreSS":'+N(80)+','+D+'"sintesi":"analisi","puntiForza":["f1","f2"],"puntiDeboli":["d1"],"redFlags":["r1"]}',
+    'Sei un analista strategico di startup. Valuta business case.\n'+d+'\n\n'+J+'\n{"scoreON":'+N(72)+',"scoreSS":'+N(78)+','+D+'"sintesi":"analisi","puntiForza":["f1","f2"],"puntiDeboli":["d1","d2"]}',
+    'Sei un esperto di sviluppo territoriale italiano.\n'+d+'\n\n'+J+'\n{"scoreON":'+N(65)+',"scoreSS":'+N(70)+','+D+'"sintesi":"analisi","puntiForza":["f1"],"puntiDeboli":["d1"],"opportunita":["o1","o2"]}',
+    'Sei un devil advocate severo. Trova criticita bloccanti.\n'+d+'\n\n'+J+'\n{"scoreON":'+N(55)+',"scoreSS":'+N(60)+','+D+'"sintesi":"critiche","critiche":["c1","c2","c3"],"puntiForza":["f1"],"puntiDeboli":["d1"]}'
   ];
 }
 
@@ -159,14 +163,14 @@ async function runCompare(){
 
 /* ── FASE 2: Claude, GPT e Grok indipendenti sullo stesso panel + IDCM ── */
 const MODEL_LABEL={claude:'Claude',gpt:'GPT-4o',grok:'Grok'};
-async function runPhase2(){
-  section('FASE 2 — TRE MODELLI INDIPENDENTI · IDCM');
+async function runPhase2(neutral){
+  section('FASE 2 — TRE MODELLI INDIPENDENTI · IDCM · esempi '+(neutral?'NEUTRI':'NUMERICI'));
   for(let i=0;i<SCENARIOS.length;i++){
     const sc=SCENARIOS[i];
     const b=box('pending','… '+sc.name+' (Claude, GPT e Grok in parallelo, circa un minuto)');
     try{
       const t0=Date.now();
-      const res=await fetch(EP_MIRAGE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ai:'mirage',prompts:buildP(sc.d,true)})});
+      const res=await fetch(EP_MIRAGE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ai:'mirage',prompts:buildP(sc.d,true,neutral)})});
       const txt=await res.text(); let data; try{data=JSON.parse(txt);}catch(e){throw new Error('HTTP '+res.status+' — '+txt.substring(0,150));}
       if(!data.idcm)throw new Error('risposta senza blocco IDCM — '+txt.substring(0,150));
       const ms=((Date.now()-t0)/1000).toFixed(1)+'s';
@@ -186,6 +190,11 @@ async function runPhase2(){
           h+='<br><span class="'+(failed?'hot':'gold')+'">'+(failed?'✗ ':'↻ ')+MODEL_LABEL[prov]+' '+NAMES[ai]+(failed?' ha fallito ':' ha risposto dopo ')+errs.length+' errore/i:</span> <span class="dim">'+errs.map(e=>e.replace(/</g,'&lt;')).join(' · ')+'</span>';
         });
       });
+      // anomalie: vettori non differenziati
+      ['claude','gpt','grok'].forEach(k=>{(data.panels[k].mirage.anomaly_flags||[]).forEach(a=>{
+        h+='<br><span class="hot">⚠ '+MODEL_LABEL[k]+' '+NAMES[a.agent]+': '+a.detail+'</span>';});});
+      // voti ON/SS dichiarati da ciascun agente (per vedere l'aggancio agli esempi)
+      h+='<br><span class="dim">ON/SS per agente → '+['claude','gpt','grok'].map(k=>MODEL_LABEL[k]+': '+data.panels[k].results.slice(0,4).map(r=>r._fallback?'—':(r.scoreON+'/'+r.scoreSS)).join(' ')).join(' · ')+'</span>';
       // tabella vettori per modello (media degli agenti di merito)
       h+='<table><tr><th>Modello</th><th>agenti</th>'+DIMS.map(d=>'<th>'+d.slice(0,5)+'</th>').join('')+'<th>distanza</th></tr>';
       x.models.forEach(m=>{

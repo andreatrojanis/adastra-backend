@@ -251,7 +251,14 @@ module.exports = async function handler(req, res) {
       const aaaVec = vectors.length > AAA_INDEX ? vectors[AAA_INDEX] : null;
       const idpPanel = panel.length >= 2 ? computeIDP(panel) : null;
       const idpAll = computeIDP(vectors.filter(Boolean));
+      // Anomalia: stesso voto su tutte le dimensioni = l'agente non ha differenziato (o ha ricopiato l'esempio)
+      const anomalyFlags = [];
+      vectors.forEach((v, i) => {
+        if (v && _std(v) < 0.005 && _mean(v) > 0.02)
+          anomalyFlags.push({ agent: i, type: 'VETTORE_NON_DIFFERENZIATO', detail: `stesso voto (${Math.round(v[0] * 100)}) su tutte le dimensioni` });
+      });
       return {
+        anomaly_flags: anomalyFlags,
         version: 'mirage-phase1.2',
         dims: MIRAGE_DIMS,
         agents_missing: missing,
@@ -285,7 +292,7 @@ module.exports = async function handler(req, res) {
         const m = panels[name].mirage;
         const merit = (m.agent_vectors || []).slice(0, AAA_INDEX).filter(Boolean);
         const meta = MODEL_META[name] || { provider: name, family: name, model: name };
-        const entry = { name, provider: meta.provider, family: meta.family, model: meta.model, prompt_template_hash: promptHashes[name] || null, merit_agents: merit.length, available: merit.length >= 2, vector: null };
+        const entry = { name, provider: meta.provider, family: meta.family, model: meta.model, prompt_template_hash: promptHashes[name] || null, merit_agents: merit.length, available: merit.length >= 2, vector: null, anomalies: (m.anomaly_flags || []).length };
         if (entry.available) entry.vector = MIRAGE_DIMS.map((_, j) => +_mean(_col(merit, j)).toFixed(4));
         models.push(entry);
       });
