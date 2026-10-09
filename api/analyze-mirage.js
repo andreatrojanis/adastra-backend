@@ -103,52 +103,55 @@ module.exports = async function handler(req, res) {
       return parsed;
     }
 
-    // ── GPT-4o ──
-    async function callGPT(prompt) {
-      if (!OPENAI_KEY) return null;
-      const r = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + OPENAI_KEY
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o',
-          max_tokens: 1000,
-          messages: [
-            { role: 'system', content: GPT_PREFIX },
-            { role: 'user', content: prompt }
-          ]
-        })
-      });
-      const d = await r.json();
-      const text = (d.choices?.[0]?.message?.content || '').trim();
-      return parseJSON(text);
+    // ── GPT-4o e GROK — stessa robustezza degli agenti Claude ──
+    const CHAT_PROVIDERS = {
+      gpt:  { url: 'https://api.openai.com/v1/chat/completions', key: () => OPENAI_KEY, model: 'gpt-4o', system: GPT_PREFIX, family: 'gpt-4o' },
+      grok: { url: 'https://api.x.ai/v1/chat/completions', key: () => GROK_KEY, model: 'grok-4-1-fast-non-reasoning', system: GROK_PREFIX, family: 'grok-4' }
+    };
+    const providerErrors = { gpt: {}, grok: {} };
+    async function callChat(provider, prompt, idx) {
+      const cfg = CHAT_PROVIDERS[provider];
+      const note = (msg) => { (providerErrors[provider][idx] = providerErrors[provider][idx] || []).push(msg); console.error(`[${provider} A${idx}] ${msg}`); };
+      if (!cfg.key()) { note('API key mancante'); return null; }
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), CALL_TIMEOUT_MS);
+      let r;
+      try {
+        r = await fetch(cfg.url, {
+          method: 'POST', signal: ctrl.signal,
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg.key() },
+          body: JSON.stringify({ model: cfg.model, max_tokens: 2000, messages: [ { role: 'system', content: cfg.system }, { role: 'user', content: prompt } ] })
+        });
+      } catch (e) {
+        clearTimeout(timer);
+        note(e.name === 'AbortError' ? `timeout oltre ${CALL_TIMEOUT_MS / 1000}s` : `errore di rete: ${e.message}`);
+        return null;
+      }
+      clearTimeout(timer);
+      if (!r.ok) { const t = await r.text().catch(() => ''); note(`HTTP ${r.status}: ${t.substring(0, 120)}`); return null; }
+      const d = await r.json().catch(() => null);
+      if (!d) { note('corpo della risposta non leggibile'); return null; }
+      if (d.error) { note(`errore API: ${JSON.stringify(d.error).substring(0, 120)}`); return null; }
+      const choice = d.choices && d.choices[0];
+      const text = ((choice && choice.message && choice.message.content) || '').trim();
+      if (!text) { note('risposta vuota'); return null; }
+      const parsed = parseJSON(text);
+      if (!parsed) { note((choice.finish_reason === 'length' ? 'risposta troncata. ' : 'JSON non leggibile. ') + 'Inizio: ' + text.substring(0, 80)); return null; }
+      if (!isFinite(Number(parsed.scoreON)) || !isFinite(Number(parsed.scoreSS))) { note('JSON senza scoreON/scoreSS numerici'); return null; }
+      return parsed;
     }
-
-    // ── GROK ──
-    async function callGrok(prompt) {
-      if (!GROK_KEY) return null;
-      const r = await fetch('https://api.x.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + GROK_KEY
-        },
-        body: JSON.stringify({
-          model: 'grok-4-1-fast-non-reasoning',
-          max_tokens: 1000,
-          messages: [
-            { role: 'system', content: GROK_PREFIX },
-            { role: 'user', content: prompt }
-          ]
-        })
-      });
-      const d = await r.json();
-      if (d.error) return { scoreON: 0, scoreSS: 0, sintesi: 'Grok error: ' + d.error.message, redFlags: [], puntiForza: [], puntiDeboli: [], opportunita: [], critiche: [], verdict: 'ERRORE', decisione: 'ERRORE', puntiChiave: [], azioniImmediate: [] };
-      const text = (d.choices?.[0]?.message?.content || '').trim();
-      return parseJSON(text);
+    async function callChatRetry(provider, prompt, idx) {
+      const WAITS = [0, 3000 + idx * 500, 8000 + idx * 500];
+      for (let a = 0; a < WAITS.length; a++) {
+        if (WAITS[a]) await delay(WAITS[a]);
+        const r = await callChat(provider, prompt, idx);
+        if (r) return r;
+      }
+      return null;
     }
+    // compatibilita con i rami gpt/grok esistenti
+    const callGPT  = (prompt, idx = 0) => callChatRetry('gpt', prompt, idx);
+    const callGrok = (prompt, idx = 0) => callChatRetry('grok', prompt, idx);
 
     // ── JSON PARSER ──
     function parseJSON(text) {
@@ -264,11 +267,72 @@ module.exports = async function handler(req, res) {
       };
     }
 
+    // ══════════════════════════════════════════════════════════
+    //  MIRAGE — Fase 2: divergenza cross-modello (IDCM)
+    //  IDCM = (1/M) * Σ_j ||v_j - v_mean|| / sqrt(N)   (descrizione v7.7-bis, sez. 10)
+    //  v_j = vettore del modello j = media dei vettori dei suoi agenti di merito (AAA escluso)
+    // ══════════════════════════════════════════════════════════
+    const THRESHOLD_PROFILE = { id: 'TP-default-v1', warn: 0.10, critical: 0.20 }; // configurabile
+    const MODEL_META = {
+      claude: { provider: 'anthropic', family: 'claude', model: MODEL_HAIKU + ' + ' + MODEL_AAA + ' (AAA)' },
+      gpt:    { provider: 'openai',    family: 'gpt-4o', model: 'gpt-4o' },
+      grok:   { provider: 'xai',       family: 'grok-4', model: 'grok-4-1-fast-non-reasoning' }
+    };
+    function computeCrossModel(panels) {
+      const N = MIRAGE_DIMS.length;
+      const models = [];
+      Object.keys(panels).forEach(name => {
+        const m = panels[name].mirage;
+        const merit = (m.agent_vectors || []).slice(0, AAA_INDEX).filter(Boolean);
+        const meta = MODEL_META[name] || { provider: name, family: name, model: name };
+        const entry = { name, provider: meta.provider, family: meta.family, model: meta.model, merit_agents: merit.length, available: merit.length >= 2, vector: null };
+        if (entry.available) entry.vector = MIRAGE_DIMS.map((_, j) => +_mean(_col(merit, j)).toFixed(4));
+        models.push(entry);
+      });
+      // Model Independence (forma base): stesso provider e stessa famiglia = non indipendenti
+      const issues = [];
+      for (let a = 0; a < models.length; a++) for (let b = a + 1; b < models.length; b++) {
+        if (models[a].provider === models[b].provider && models[a].family === models[b].family)
+          issues.push(`${models[a].name} e ${models[b].name}: stesso provider e famiglia`);
+      }
+      const usable = models.filter(m => m.available);
+      const base = { threshold_profile: THRESHOLD_PROFILE, models, independence: { ok: issues.length === 0, issues } };
+      if (usable.length < 2) return Object.assign(base, { version: 'mirage-phase2', idcm: null, state: 'insufficiente', reason: 'meno di 2 modelli con risposte valide' });
+      const V = usable.map(m => m.vector);
+      const vmean = MIRAGE_DIMS.map((_, j) => _mean(_col(V, j)));
+      const dist = {};
+      usable.forEach((m, k) => {
+        let s2 = 0; for (let j = 0; j < N; j++) { const d = V[k][j] - vmean[j]; s2 += d * d; }
+        dist[m.name] = +(Math.sqrt(s2) / Math.sqrt(N)).toFixed(4);
+      });
+      const idcmVal = +_mean(Object.values(dist)).toFixed(4);
+      const dimDiv = {};
+      MIRAGE_DIMS.forEach((dim, j) => { dimDiv[dim] = +_std(_col(V, j)).toFixed(4); });
+      const conflictDims = MIRAGE_DIMS.filter(d => dimDiv[d] >= THRESHOLD_PROFILE.warn);
+      const topDim = MIRAGE_DIMS.reduce((a, b) => dimDiv[b] > dimDiv[a] ? b : a);
+      const topModel = Object.keys(dist).reduce((a, b) => dist[b] > dist[a] ? b : a);
+      const state = !base.independence.ok ? 'indipendenza non soddisfatta'
+        : idcmVal >= THRESHOLD_PROFILE.critical ? 'critica'
+        : (idcmVal >= THRESHOLD_PROFILE.warn || conflictDims.length) ? 'moderata' : 'stabile';
+      return Object.assign(base, {
+        version: 'mirage-phase2',
+        models_used: usable.length,
+        idcm: idcmVal,
+        state,
+        model_distances: dist,
+        v_mean: vmean.map(x => +x.toFixed(4)),
+        dim_divergence: dimDiv,
+        conflict_dimensions: conflictDims,
+        most_divergent_dimension: topDim,
+        most_divergent_model: usable.length >= 3 ? topModel : null // con 2 modelli le distanze dal centro sono uguali
+      });
+    }
+
     // ── DISPATCH ──
     const requestedAI = ai || 'claude';
 
-    if (requestedAI === 'claude') {
-      const results = await Promise.all(prompts.map(async (p, i) => {
+    async function runClaudePanel(promptList) {
+      return Promise.all(promptList.map(async (p, i) => {
         await delay(i * 2000 + 500); // stagger 2s tra agenti
         // Fino a 3 tentativi con attese crescenti: l'agente deve rispondere
         const WAITS = [0, 4000 + i * 800, 10000 + i * 800];
@@ -279,8 +343,41 @@ module.exports = async function handler(req, res) {
         }
         return r || fallback();
       }));
+    }
+    async function runChatPanel(provider, promptList) {
+      return Promise.all(promptList.map(async (p, i) => {
+        await delay(i * 500);
+        return (await callChatRetry(provider, p, i)) || fallback();
+      }));
+    }
+
+    if (requestedAI === 'claude') {
+      const results = await runClaudePanel(prompts);
       const mirage = mirageBlock(results);
       return res.status(200).json({ results, mirage, agent_errors: agentErrors, multiAI: [{ ai: 'claude', name: 'Claude (Anthropic)', results }] });
+    }
+
+    // ── MIRAGE FASE 2: tre modelli indipendenti sullo stesso panel + IDCM ──
+    // Nessun modello vede le risposte degli altri: l'indipendenza e condizione del calcolo IDCM.
+    if (requestedAI === 'mirage') {
+      const panelPrompts = prompts.slice(0, AAA_INDEX + 1);
+      const [claudeRes, gptRes, grokRes] = await Promise.all([
+        runClaudePanel(panelPrompts),
+        runChatPanel('gpt', panelPrompts),
+        runChatPanel('grok', panelPrompts)
+      ]);
+      const panels = {
+        claude: { results: claudeRes, mirage: mirageBlock(claudeRes) },
+        gpt:    { results: gptRes,    mirage: mirageBlock(gptRes) },
+        grok:   { results: grokRes,   mirage: mirageBlock(grokRes) }
+      };
+      const idcm = computeCrossModel(panels);
+      return res.status(200).json({
+        mode: 'mirage',
+        panels,
+        idcm,
+        errors: { claude: agentErrors, gpt: providerErrors.gpt, grok: providerErrors.grok }
+      });
     }
 
     if (requestedAI === 'gpt') {
@@ -290,7 +387,7 @@ module.exports = async function handler(req, res) {
           req.body.claudeResults.map((r, i) => `A${i+1}: scoreON=${r.scoreON} scoreSS=${r.scoreSS}. ${r.sintesi||''}`).join('\n')
         : '';
 
-      const results = await Promise.all(prompts.map(p => callGPT(p + claudeContext).then(r => r || fallback())));
+      const results = await Promise.all(prompts.map((p, i) => callGPT(p + claudeContext, i).then(r => r || fallback())));
       const mirage = mirageBlock(results);
       return res.status(200).json({ results, mirage, multiAI: [{ ai: 'gpt', name: 'GPT-4o (OpenAI)', results }] });
     }
@@ -302,7 +399,7 @@ module.exports = async function handler(req, res) {
           req.body.claudeResults.map((r, i) => `A${i+1}: scoreON=${r.scoreON} scoreSS=${r.scoreSS}. ${r.sintesi||''}`).join('\n')
         : '';
 
-      const results = await Promise.all(prompts.map(p => callGrok(p + claudeContext).then(r => r || fallback())));
+      const results = await Promise.all(prompts.map((p, i) => callGrok(p + claudeContext, i).then(r => r || fallback())));
       const mirage = mirageBlock(results);
       return res.status(200).json({ results, mirage, multiAI: [{ ai: 'grok', name: 'Grok 3 (xAI)', results }] });
     }

@@ -28,11 +28,12 @@ td.l{text-align:left;color:#ccc}
 </style>
 </head>
 <body>
-<h1>M I R A G E — TEST FASE 1.3</h1>
+<h1>M I R A G E — TEST FASE 2</h1>
 <p class="sub">Stessi 3 scenari di test.html · endpoint /api/analyze-mirage · non tocca la produzione</p>
 
 <div class="btns">
   <button onclick="runAll()">MIRAGE · 3 SCENARI</button>
+  <button onclick="runPhase2()">FASE 2 · TRE MODELLI (IDCM)</button>
   <button class="sec" onclick="runCompare()">CONFRONTO PRODUZIONE vs MIRAGE</button>
   <button class="sec" onclick="document.getElementById('out').innerHTML=''">CLEAR</button>
 </div>
@@ -154,6 +155,52 @@ async function runCompare(){
     if(i<SCENARIOS.length-1)await sleep(2000);
   }
   box('','<span class="dim">Δ medio = differenza tra MIRAGE e produzione. Valori piccoli (sotto 15) = il campo dimensioni non altera i voti. Valori grandi in rosso = la modifica MIRAGE sta cambiando il giudizio degli agenti.</span>');
+}
+
+/* ── FASE 2: Claude, GPT e Grok indipendenti sullo stesso panel + IDCM ── */
+const MODEL_LABEL={claude:'Claude',gpt:'GPT-4o',grok:'Grok'};
+async function runPhase2(){
+  section('FASE 2 — TRE MODELLI INDIPENDENTI · IDCM');
+  for(let i=0;i<SCENARIOS.length;i++){
+    const sc=SCENARIOS[i];
+    const b=box('pending','… '+sc.name+' (Claude, GPT e Grok in parallelo, circa un minuto)');
+    try{
+      const t0=Date.now();
+      const res=await fetch(EP_MIRAGE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ai:'mirage',prompts:buildP(sc.d,true)})});
+      const txt=await res.text(); let data; try{data=JSON.parse(txt);}catch(e){throw new Error('HTTP '+res.status+' — '+txt.substring(0,150));}
+      if(!data.idcm)throw new Error('risposta senza blocco IDCM — '+txt.substring(0,150));
+      const ms=((Date.now()-t0)/1000).toFixed(1)+'s';
+      const x=data.idcm;
+      const stCls=x.state==='stabile'?'gold':'hot';
+      let h='<b>✓ '+sc.name+'</b> — '+ms+
+        '<br>IDCM <span class="gold">'+(x.idcm!=null?x.idcm.toFixed(3):'—')+'</span> · stato <span class="'+stCls+'">'+x.state+'</span>'+
+        ' · modelli validi '+(x.models_used||0)+'/3 · soglie '+x.threshold_profile.warn+' / '+x.threshold_profile.critical+
+        '<br>Conflitti tra modelli: '+((x.conflict_dimensions||[]).length?'<span class="hot">'+x.conflict_dimensions.join(', ')+'</span>':'<span class="dim">nessuno</span>')+
+        (x.most_divergent_model?' · modello più distante: <span class="gold">'+MODEL_LABEL[x.most_divergent_model]+'</span>':'')+
+        (x.independence&&!x.independence.ok?'<br><span class="hot">⚠ Indipendenza: '+x.independence.issues.join('; ')+'</span>':'');
+      // errori per fornitore
+      Object.entries(data.errors||{}).forEach(([prov,byAgent])=>{
+        Object.entries(byAgent||{}).forEach(([ai,errs])=>{
+          const failed=(data.panels[prov].mirage.agents_missing||[]).includes(+ai);
+          h+='<br><span class="'+(failed?'hot':'gold')+'">'+(failed?'✗ ':'↻ ')+MODEL_LABEL[prov]+' '+NAMES[ai]+(failed?' ha fallito ':' ha risposto dopo ')+errs.length+' errore/i:</span> <span class="dim">'+errs.map(e=>e.replace(/</g,'&lt;')).join(' · ')+'</span>';
+        });
+      });
+      // tabella vettori per modello (media degli agenti di merito)
+      h+='<table><tr><th>Modello</th><th>agenti</th>'+DIMS.map(d=>'<th>'+d.slice(0,5)+'</th>').join('')+'<th>distanza</th></tr>';
+      x.models.forEach(m=>{
+        if(!m.vector){h+='<tr><td class="l hot">'+MODEL_LABEL[m.name]+'</td><td colspan="8" class="hot">risposte insufficienti — escluso</td></tr>';return;}
+        const d=(x.model_distances||{})[m.name];
+        h+='<tr><td class="l">'+MODEL_LABEL[m.name]+'</td><td>'+m.merit_agents+'/3</td>'+m.vector.map(v=>'<td>'+Math.round(v*100)+'</td>').join('')+'<td class="gold">'+(d!=null?d.toFixed(3):'—')+'</td></tr>';
+      });
+      if(x.dim_divergence) h+='<tr><td class="l gold">Divergenza</td><td></td>'+DIMS.map(d=>{const v=x.dim_divergence[d];return '<td class="'+(v>=x.threshold_profile.warn?'hot':'gold')+'">'+v.toFixed(3)+'</td>';}).join('')+'<td></td></tr>';
+      h+='</table>';
+      // obiezione mirata del Devil per ciascun modello
+      h+='<span class="dim">Devil\'s Advocate per modello: '+['claude','gpt','grok'].map(k=>{const a=data.panels[k].mirage.aaa;return MODEL_LABEL[k]+' → '+(a?(a.targeted_objections.join(', ')||'nessuna obiezione mirata'):'n/d');}).join(' · ')+'</span>';
+      b.className='box ok'; b.innerHTML=h;
+    }catch(e){b.className='box fail';b.innerHTML='✗ '+sc.name+' — '+e.message;}
+    if(i<SCENARIOS.length-1)await sleep(3000);
+  }
+  box('','<span class="dim">Ogni riga è la media dei 3 agenti di merito di quel modello (Devil escluso). IDCM = distanza media dei modelli dal loro centro, divisa per √6. Sotto 0,10 i modelli concordano; tra 0,10 e 0,20 divergenza moderata; da 0,20 incertezza critica. Una dimensione in rosso è un disaccordo localizzato anche quando l\'IDCM complessivo è basso.</span>');
 }
 </script>
 </body>
