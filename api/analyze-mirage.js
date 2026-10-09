@@ -338,6 +338,131 @@ module.exports = async function handler(req, res) {
       });
     }
 
+    // ══════════════════════════════════════════════════════════
+    //  MIRAGE — Fase 3: consenso apparente critico e Release Gate tecnico
+    //  (descrizione v7.7-bis, sez. 4, 11, 12, 14)
+    // ══════════════════════════════════════════════════════════
+    // Set di criteri versionato. hard_constraint_flag = la dimensione non puo essere mediata dall'aggregato:
+    // per Invitalia ogni criterio ha un minimo (Smart&Start 6/10 per criterio), quindi una media alta non compensa.
+    const CRITERIA_SET = {
+      version: 'starton-invitalia-1.0.0',
+      dims: {
+        requisiti:   { weight: 0.20, min_score: 0.60, hard_constraint_flag: true },
+        innovazione: { weight: 0.15, min_score: 0.60, hard_constraint_flag: true },
+        mercato:     { weight: 0.15, min_score: 0.60, hard_constraint_flag: true },
+        team:        { weight: 0.20, min_score: 0.60, hard_constraint_flag: true },
+        numeri:      { weight: 0.15, min_score: 0.60, hard_constraint_flag: true },
+        impatti:     { weight: 0.15, min_score: 0.50, hard_constraint_flag: false }
+      }
+    };
+    const GATE_PROFILE = {
+      id: 'GP-default-v1',
+      acceptance_threshold: 0.60,   // score sintetico che renderebbe "accettabile" l'esito aggregato
+      weight_min: 0.15,             // peso minimo di una dimensione per il consenso apparente
+      dim_divergence_threshold: 0.15 // divergence_i oltre la quale la dimensione non e consensuale
+    };
+    const CONNECTORS = ['report_cliente', 'generazione_dossier', 'export_docx', 'passaggio_adastra'];
+
+    function weightedScore(vec) {
+      let s = 0, sw = 0;
+      MIRAGE_DIMS.forEach((d, j) => { const w = CRITERIA_SET.dims[d].weight; s += w * vec[j]; sw += w; });
+      return s / sw;
+    }
+
+    function computeGate(panels, cross) {
+      const reasons = [];
+      // Score sintetico per modello: agenti di merito pesati (1 - C_AAA), agente avversariale pesato C_AAA
+      const perModel = {};
+      Object.keys(panels).forEach(name => {
+        const m = panels[name].mirage;
+        const entry = (cross.models || []).find(x => x.name === name);
+        if (!entry || !entry.vector) return;
+        const aaaVec = (m.agent_vectors || [])[AAA_INDEX];
+        const c = m.aaa ? m.aaa.c_aaa : 0;
+        const merit = weightedScore(entry.vector);
+        perModel[name] = +(aaaVec ? (1 - c) * merit + c * weightedScore(aaaVec) : merit).toFixed(4);
+      });
+      const synthVals = Object.values(perModel);
+      const synthetic = synthVals.length ? +_mean(synthVals).toFixed(4) : null;
+
+      // divergence_i = massimo tra divergenza cross-modello e divergenza intra-panel dei singoli modelli
+      const divergence = {};
+      MIRAGE_DIMS.forEach(d => {
+        const vals = [cross.dim_divergence ? cross.dim_divergence[d] : 0];
+        Object.keys(panels).forEach(n => { const ip = panels[n].mirage.idp_per_dim; if (ip && ip[d] != null) vals.push(ip[d]); });
+        divergence[d] = +Math.max(...vals).toFixed(4);
+      });
+      const maskedDims = MIRAGE_DIMS.filter(d =>
+        CRITERIA_SET.dims[d].weight >= GATE_PROFILE.weight_min && divergence[d] >= GATE_PROFILE.dim_divergence_threshold);
+      const masked = synthetic != null && synthetic >= GATE_PROFILE.acceptance_threshold && maskedDims.length > 0;
+
+      // Vincoli rigidi: dimensione sotto la soglia minima sul vettore medio dei modelli
+      const vmean = cross.v_mean || null;
+      const hardViolations = vmean ? MIRAGE_DIMS.filter((d, j) => CRITERIA_SET.dims[d].hard_constraint_flag && vmean[j] < CRITERIA_SET.dims[d].min_score) : [];
+      const averageHidesHard = synthetic != null && synthetic >= GATE_PROFILE.acceptance_threshold && hardViolations.length > 0;
+
+      const anomalies = Object.keys(panels).reduce((n, k) => n + ((panels[k].mirage.anomaly_flags || []).length), 0);
+      const meritConflicts = Object.keys(panels).reduce((acc, k) => acc.concat(panels[k].mirage.conflict_dimensions || []), []);
+
+      // ── Macchina a stati ──
+      let state;
+      if (!cross.models_used || cross.models_used < 2) {
+        state = 'QUARANTINED_OUTPUT';
+        reasons.push('meno di 2 modelli con risposte valide: evidenza insufficiente per il rilascio');
+      } else {
+        if (cross.independence && !cross.independence.ok) reasons.push('indipendenza dei modelli non soddisfatta: ' + cross.independence.issues.join('; '));
+        if (cross.idcm >= cross.threshold_profile.critical) reasons.push(`IDCM ${cross.idcm} oltre la soglia critica ${cross.threshold_profile.critical}`);
+        if (masked) reasons.push('consenso apparente critico: score sintetico ' + synthetic + ' accettabile ma divergenza oltre soglia su ' + maskedDims.join(', '));
+        if (reasons.length) state = 'UNCERTAIN_STATE';
+        else {
+          if (cross.idcm >= cross.threshold_profile.warn) reasons.push(`IDCM ${cross.idcm} oltre la soglia di avviso`);
+          if ((cross.conflict_dimensions || []).length) reasons.push('divergenza localizzata tra modelli su ' + cross.conflict_dimensions.join(', '));
+          if (meritConflicts.length) reasons.push('disaccordo tra agenti di merito su ' + [...new Set(meritConflicts)].join(', '));
+          if (hardViolations.length) reasons.push('criteri sotto la soglia minima (non compensabili dalla media): ' + hardViolations.join(', '));
+          if (anomalies) reasons.push(anomalies + ' anomalie nei vettori degli agenti');
+          state = reasons.length ? 'ANNOTATED_OUTPUT' : 'STABLE_OUTPUT';
+          if (state === 'STABLE_OUTPUT') reasons.push('modelli concordi, nessun consenso apparente, nessun vincolo rigido violato');
+        }
+      }
+      const enabledBy = {
+        STABLE_OUTPUT:      CONNECTORS,
+        ANNOTATED_OUTPUT:   CONNECTORS,           // rilasciabile, con avvertenze allegate
+        UNCERTAIN_STATE:    ['report_cliente'],   // solo report tecnico con le cause; niente dossier, export, mandato
+        QUARANTINED_OUTPUT: []                    // conservato, non rilasciabile
+      }[state];
+      const authorized = enabledBy.slice();
+      const blocked = CONNECTORS.filter(c => !authorized.includes(c));
+      return {
+        version: 'mirage-phase3',
+        criteria_version: CRITERIA_SET.version,
+        gate_profile: GATE_PROFILE,
+        state,
+        reasons,
+        synthetic_score: synthetic,
+        synthetic_per_model: perModel,
+        masked_consensus: masked,
+        masked_dimensions: masked ? maskedDims : [],
+        divergence_per_dim: divergence,
+        hard_constraint_violations: hardViolations,
+        average_hides_hard_constraint: averageHidesHard,
+        authorized_connectors: authorized,
+        blocked_connectors: blocked,
+        gate_transition_record: {
+          previous_gate_state: 'INIT',
+          new_gate_state: state,
+          trigger_conditions: reasons,
+          threshold_profile_id: cross.threshold_profile ? cross.threshold_profile.id : null,
+          gate_profile_id: GATE_PROFILE.id,
+          idcm: cross.idcm,
+          masked_consensus: masked,
+          authorized_connectors: authorized,
+          blocked_connectors: blocked,
+          payload_hash: null, // Conflict Execution Payload: Fase 4
+          timestamp: new Date().toISOString()
+        }
+      };
+    }
+
     // ── DISPATCH ──
     const requestedAI = ai || 'claude';
 
@@ -391,10 +516,12 @@ module.exports = async function handler(req, res) {
         grok:   { results: grokRes,   mirage: mirageBlock(grokRes) }
       };
       const idcm = computeCrossModel(panels, promptHashes);
+      const gate = computeGate(panels, idcm);
       return res.status(200).json({
         mode: 'mirage',
         panels,
         idcm,
+        gate,
         errors: { claude: agentErrors, gpt: providerErrors.gpt, grok: providerErrors.grok }
       });
     }

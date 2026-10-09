@@ -28,12 +28,12 @@ td.l{text-align:left;color:#ccc}
 </style>
 </head>
 <body>
-<h1>M I R A G E — TEST FASE 2.2</h1>
+<h1>M I R A G E — TEST FASE 3</h1>
 <p class="sub">Stessi 3 scenari di test.html · endpoint /api/analyze-mirage · non tocca la produzione</p>
 
 <div class="btns">
   <button onclick="runAll()">MIRAGE · 3 SCENARI</button>
-  <button onclick="runPhase2(true)">FASE 2 · ESEMPI NEUTRI</button>
+  <button onclick="runPhase2(true)">FASE 3 · TRE MODELLI + GATE</button>
   <button class="sec" onclick="runPhase2(false)">FASE 2 · ESEMPI NUMERICI (come produzione)</button>
   <button class="sec" onclick="runCompare()">CONFRONTO PRODUZIONE vs MIRAGE</button>
   <button class="sec" onclick="document.getElementById('out').innerHTML=''">CLEAR</button>
@@ -190,6 +190,19 @@ async function runPhase2(neutral){
           h+='<br><span class="'+(failed?'hot':'gold')+'">'+(failed?'✗ ':'↻ ')+MODEL_LABEL[prov]+' '+NAMES[ai]+(failed?' ha fallito ':' ha risposto dopo ')+errs.length+' errore/i:</span> <span class="dim">'+errs.map(e=>e.replace(/</g,'&lt;')).join(' · ')+'</span>';
         });
       });
+      // ── RELEASE GATE (Fase 3) ──
+      if(data.gate){
+        const g=data.gate;
+        const col={STABLE_OUTPUT:'#81c784',ANNOTATED_OUTPUT:'#c9a84c',UNCERTAIN_STATE:'#ef9a9a',QUARANTINED_OUTPUT:'#ef9a9a'}[g.state]||'#ddd';
+        h+='<div style="margin:10px 0;padding:10px 12px;border:1px solid '+col+';border-radius:6px">'+
+          '<b style="color:'+col+';font-size:14px">GATE: '+g.state+'</b>'+
+          ' <span class="dim">· score sintetico (con C_AAA) '+(g.synthetic_score!=null?Math.round(g.synthetic_score*100):'—')+'/100 · soglia accettazione '+Math.round(g.gate_profile.acceptance_threshold*100)+'</span>'+
+          '<br>'+g.reasons.map(r=>'· '+r.replace(/</g,'&lt;')).join('<br>')+
+          (g.average_hides_hard_constraint?'<br><span class="hot">· la media supera la soglia ma nasconde criteri bloccanti: '+g.hard_constraint_violations.join(', ')+'</span>':'')+
+          '<br><span style="color:#81c784">abilitati: '+(g.authorized_connectors.join(', ')||'nessuno')+'</span>'+
+          (g.blocked_connectors.length?' · <span class="hot">bloccati: '+g.blocked_connectors.join(', ')+'</span>':'')+
+          '</div>';
+      }
       // anomalie: vettori non differenziati
       ['claude','gpt','grok'].forEach(k=>{(data.panels[k].mirage.anomaly_flags||[]).forEach(a=>{
         h+='<br><span class="hot">⚠ '+MODEL_LABEL[k]+' '+NAMES[a.agent]+': '+a.detail+'</span>';});});
