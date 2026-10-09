@@ -40,6 +40,15 @@
           "value": "Content-Type"
         }
       ]
+    },
+    {
+      "source": "/(test.*\\.html)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0"
+        }
+      ]
     }
   ],
   "routes": [
