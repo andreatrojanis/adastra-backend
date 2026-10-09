@@ -47,39 +47,59 @@ module.exports = async function handler(req, res) {
     const delay = ms => new Promise(r => setTimeout(r, ms));
 
     // ── CLAUDE (Haiku per scoring, Sonnet per AAA) ──
-    async function callClaude(prompt, idx, debug) {
-      if (!ANTHROPIC_KEY) return null;
+    // Ogni errore viene registrato con la sua causa esatta e restituito nella risposta (agent_errors)
+    const agentErrors = {};
+    function noteErr(idx, msg) {
+      (agentErrors[idx] = agentErrors[idx] || []).push(msg);
+      console.error(`[A${idx}] ${msg}`);
+    }
+    const CALL_TIMEOUT_MS = 55000;
+    async function callClaude(prompt, idx) {
+      if (!ANTHROPIC_KEY) { noteErr(idx, 'ANTHROPIC_API_KEY mancante'); return null; }
       const model = (idx === AAA_INDEX) ? MODEL_AAA : MODEL_HAIKU;
-      const r = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': ANTHROPIC_KEY,
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: model,
-          max_tokens: 2000,
-          messages: [{ role: 'user', content: CLAUDE_PREFIX + prompt }]
-        })
-      });
-      // Log HTTP errors (rate limit, overload, etc.)
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), CALL_TIMEOUT_MS);
+      let r;
+      try {
+        r = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          signal: ctrl.signal,
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': ANTHROPIC_KEY,
+            'anthropic-version': '2023-06-01'
+          },
+          body: JSON.stringify({
+            model: model,
+            max_tokens: 3000,
+            messages: [{ role: 'user', content: CLAUDE_PREFIX + prompt }]
+          })
+        });
+      } catch (e) {
+        clearTimeout(timer);
+        noteErr(idx, e.name === 'AbortError' ? `timeout oltre ${CALL_TIMEOUT_MS / 1000}s` : `errore di rete: ${e.message}`);
+        return null;
+      }
+      clearTimeout(timer);
       if (!r.ok) {
-        const errBody = await r.text();
-        console.error(`[A${idx}] HTTP ${r.status}: ${errBody.substring(0, 200)}`);
+        const errBody = await r.text().catch(() => '');
+        noteErr(idx, `HTTP ${r.status}: ${errBody.substring(0, 120)}`);
         return null;
       }
-      const d = await r.json();
-      // Log API-level errors
-      if (d.error) {
-        console.error(`[A${idx}] API error: ${JSON.stringify(d.error)}`);
-        return null;
-      }
+      const d = await r.json().catch(() => null);
+      if (!d) { noteErr(idx, 'corpo della risposta non leggibile'); return null; }
+      if (d.error) { noteErr(idx, `errore API: ${JSON.stringify(d.error).substring(0, 120)}`); return null; }
       const text = (d.content || []).map(i => i.text || '').join('').trim();
-      if (!text) { console.error(`[A${idx}] empty response`); return null; }
+      if (!text) { noteErr(idx, 'risposta vuota'); return null; }
       const parsed = parseJSON(text);
-      if (!parsed) console.error(`[A${idx}] parseJSON failed. Raw: ${text.substring(0,300)}`);
-      if (debug && idx !== undefined) debug[idx] = { raw: text.substring(0, 300), parsed: !!parsed };
+      if (!parsed) {
+        noteErr(idx, (d.stop_reason === 'max_tokens' ? 'risposta troncata (max_tokens). ' : 'JSON non leggibile. ') + 'Inizio: ' + text.substring(0, 80));
+        return null;
+      }
+      if (!isFinite(Number(parsed.scoreON)) || !isFinite(Number(parsed.scoreSS))) {
+        noteErr(idx, 'JSON senza scoreON/scoreSS numerici');
+        return null;
+      }
       return parsed;
     }
 
@@ -250,15 +270,17 @@ module.exports = async function handler(req, res) {
     if (requestedAI === 'claude') {
       const results = await Promise.all(prompts.map(async (p, i) => {
         await delay(i * 2000 + 500); // stagger 2s tra agenti
-        let r = await callClaude(p, i);
-        if (!r) {
-          await delay(4000 + i * 1000); // retry con backoff per indice
+        // Fino a 3 tentativi con attese crescenti: l'agente deve rispondere
+        const WAITS = [0, 4000 + i * 800, 10000 + i * 800];
+        let r = null;
+        for (let a = 0; a < WAITS.length && !r; a++) {
+          if (WAITS[a]) await delay(WAITS[a]);
           r = await callClaude(p, i);
         }
         return r || fallback();
       }));
       const mirage = mirageBlock(results);
-      return res.status(200).json({ results, mirage, multiAI: [{ ai: 'claude', name: 'Claude (Anthropic)', results }] });
+      return res.status(200).json({ results, mirage, agent_errors: agentErrors, multiAI: [{ ai: 'claude', name: 'Claude (Anthropic)', results }] });
     }
 
     if (requestedAI === 'gpt') {

@@ -28,7 +28,7 @@ td.l{text-align:left;color:#ccc}
 </style>
 </head>
 <body>
-<h1>M I R A G E — TEST FASE 1.2</h1>
+<h1>M I R A G E — TEST FASE 1.3</h1>
 <p class="sub">Stessi 3 scenari di test.html · endpoint /api/analyze-mirage · non tocca la produzione</p>
 
 <div class="btns">
@@ -111,6 +111,10 @@ async function runScenario(sc){
       ' · media ON <span class="gold">'+avgON+'</span> · SS <span class="gold">'+avgSS+'</span>'+
       ' · agenti che hanno risposto '+withDims+'/4'+
       (miss.length?'<br><span class="hot">⚠ Non ha risposto: '+miss.join(', ')+' — escluso dai calcoli, il panel è incompleto</span>':'')+
+      Object.entries(data.agent_errors||{}).map(([i,errs])=>{
+        const ok=!(m.agents_missing||[]).includes(+i);
+        return '<br><span class="'+(ok?'gold':'hot')+'">'+(ok?'↻ ':'✗ ')+NAMES[i]+(ok?' ha risposto dopo ':' ha fallito ')+errs.length+' errore/i:</span> <span class="dim">'+errs.map(e=>e.replace(/</g,'&lt;')).join(' · ')+'</span>';
+      }).join('')+
       '<br>IDP_tot <span class="gold">'+m.idp_tot.toFixed(3)+'</span> · conflitti: '+
       (m.conflict_dimensions.length?'<span class="hot">'+m.conflict_dimensions.join(', ')+'</span>':'<span class="dim">nessuno</span>')+
       ' <span class="dim">(tra agenti di merito · con Devil '+(m.idp_tot_with_aaa!=null?m.idp_tot_with_aaa.toFixed(3):'—')+')</span>'+

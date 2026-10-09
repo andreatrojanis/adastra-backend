@@ -5,7 +5,7 @@
       "maxDuration": 120
     },
     "api/analyze-mirage.js": {
-      "maxDuration": 120
+      "maxDuration": 300
     },
     "api/docx.js": {
       "maxDuration": 60
