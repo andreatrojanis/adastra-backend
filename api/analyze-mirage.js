@@ -500,7 +500,11 @@ module.exports = async function handler(req, res) {
       : JSON.stringify(v);
     const BORDERLINE_BAND = 0.10; // un vincolo rigido e "a rischio" se il punteggio e entro ±0,10 dalla soglia
 
-    const RECHECK_TEMPLATE = CLAUDE_PREFIX +
+    // Il secondo stadio assegna punteggi per dimensione: le penalita a punti di CLAUDE_PREFIX (-20, -25...) sono pensate
+    // per gli score globali e, applicate a una singola dimensione, si sommano in voti eccessivamente bassi. Qui non si usano.
+    const RECHECK_TEMPLATE =
+      'SCALA: 0-100 per dimensione. 60 = soglia minima di ammissibilita del criterio; sopra 75 = punto di forza documentato; sotto 40 = carenza grave documentata. ' +
+      'Il punteggio riflette i dati dichiarati, non quelli che potrebbero mancare.\n\n' +
       'Sei un valutatore indipendente di seconda istanza su bandi Invitalia ON e Smart&Start. ' +
       'Valuta il progetto SOLO sulle dimensioni elencate in AMBITO e su nessun\'altra. ' +
       'Non hai accesso a valutazioni precedenti: esprimi un giudizio autonomo.\n\n' +
