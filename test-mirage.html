@@ -28,12 +28,14 @@ td.l{text-align:left;color:#ccc}
 </style>
 </head>
 <body>
-<h1>M I R A G E — TEST FASE 3</h1>
+<h1>M I R A G E — TEST FASE 4</h1>
 <p class="sub">Stessi 3 scenari di test.html · endpoint /api/analyze-mirage · non tocca la produzione</p>
 
 <div class="btns">
   <button onclick="runAll()">MIRAGE · 3 SCENARI</button>
-  <button onclick="runPhase2(true)">FASE 3 · TRE MODELLI + GATE</button>
+  <button onclick="runPhase4(false)">FASE 4 · PAYLOAD + ROUTING</button>
+  <button class="sec" onclick="runPhase4(true)">FASE 4 · PAYLOAD MANOMESSO</button>
+  <button class="sec" onclick="runPhase2(true)">FASE 3 · TRE MODELLI + GATE</button>
   <button class="sec" onclick="runPhase2(false)">FASE 2 · ESEMPI NUMERICI (come produzione)</button>
   <button class="sec" onclick="runCompare()">CONFRONTO PRODUZIONE vs MIRAGE</button>
   <button class="sec" onclick="document.getElementById('out').innerHTML=''">CLEAR</button>
@@ -224,6 +226,60 @@ async function runPhase2(neutral){
     if(i<SCENARIOS.length-1)await sleep(3000);
   }
   box('','<span class="dim">Ogni riga è la media dei 3 agenti di merito di quel modello (Devil escluso). IDCM = distanza media dei modelli dal loro centro, divisa per √6. Sotto 0,10 i modelli concordano; tra 0,10 e 0,20 divergenza moderata; da 0,20 incertezza critica. Una dimensione in rosso è un disaccordo localizzato anche quando l\'IDCM complessivo è basso.</span>');
+}
+
+/* ── FASE 4: primo stadio → payload → routing selettivo → gate ── */
+function gateBox(g){
+  const col={STABLE_OUTPUT:'#81c784',ANNOTATED_OUTPUT:'#c9a84c',UNCERTAIN_STATE:'#ef9a9a',QUARANTINED_OUTPUT:'#ef9a9a'}[g.state]||'#ddd';
+  return '<div style="margin:10px 0;padding:10px 12px;border:1px solid '+col+';border-radius:6px">'+
+    '<b style="color:'+col+';font-size:14px">GATE: '+g.state+'</b>'+
+    ' <span class="dim">· score sintetico '+(g.synthetic_score!=null?Math.round(g.synthetic_score*100):'—')+'/100 · criteri '+g.criteria_version+'</span><br>'+
+    g.reasons.map(r=>'· '+String(r).replace(/</g,'&lt;')).join('<br>')+
+    '<br><span style="color:#81c784">abilitati: '+(g.authorized_connectors.join(', ')||'nessuno')+'</span>'+
+    (g.blocked_connectors.length?' · <span class="hot">bloccati: '+g.blocked_connectors.join(', ')+'</span>':'')+'</div>';
+}
+async function runPhase4(tamper){
+  section('FASE 4 — PAYLOAD + ROUTING SELETTIVO'+(tamper?' · PAYLOAD MANOMESSO':''));
+  for(let i=0;i<SCENARIOS.length;i++){
+    const sc=SCENARIOS[i];
+    const b=box('pending','… '+sc.name);
+    try{
+      const t0=Date.now();
+      const res=await fetch(EP_MIRAGE,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ai:'mirage-routed',prompts:buildP(sc.d,true,true),project:sc.d,simulate_tamper:tamper})});
+      const txt=await res.text(); let x; try{x=JSON.parse(txt);}catch(e){throw new Error('HTTP '+res.status+' — '+txt.substring(0,150));}
+      if(!x.gate)throw new Error('risposta senza gate — '+txt.substring(0,150));
+      const ms=((Date.now()-t0)/1000).toFixed(1)+'s';
+      const r=x.routing, pl=x.payload, v=x.payload_validation, c=x.calls;
+      let h='<b>✓ '+sc.name+'</b> — '+ms+
+        '<br>Routing: <span class="gold">'+r.mode+'</span>'+(r.models.length?' · modelli 2° stadio: '+r.models.map(m=>MODEL_LABEL[m]).join(', '):'')+
+        ' · ambito: '+(r.scope.length?'<span class="hot">'+r.scope.join(', ')+'</span>':'<span class="dim">nessuna dimensione</span>')+
+        '<br><span class="dim">'+Object.entries(r.reasons_per_dim||{}).map(([d,rs])=>d+': '+rs.join(', ')).join(' · ')+'</span>'+
+        '<br>Chiamate ai modelli: <span class="gold">'+c.total+'</span> invece di '+c.full_mode+' · risparmiate <span class="gold">'+c.saved_vs_full+'</span>';
+      h+='<div style="margin:8px 0;padding:8px 10px;background:#111;border-radius:6px;font-size:11px">'+
+        '<b class="gold">Conflict Execution Payload</b> '+(v.valid?'<span style="color:#81c784">✓ validato</span>':'<span class="hot">✗ NON valido: '+v.errors.join('; ')+'</span>')+
+        '<br>execution_id '+pl.execution_id.slice(0,8)+'… · conflict_mask '+pl.conflict_mask+' · recheck '+pl.required_recheck_mode+
+        '<br>dimensioni autorizzate: '+(pl.conflict_dimension_ids.join(', ')||'—')+' · vietate: '+(pl.forbidden_dimensions.join(', ')||'—')+
+        '<br>input_hash '+pl.input_hash.slice(0,12)+'… · criteria_hash '+pl.criteria_hash.slice(0,12)+'… · prompt_template_hash '+pl.prompt_template_hash.slice(0,12)+'…'+
+        '<br>payload_hash <span class="gold">'+pl.payload_hash.slice(0,24)+'…</span></div>';
+      if(x.stage2){
+        const sc2=x.stage2.scope;
+        h+='<table><tr><th>2° stadio</th>'+sc2.map(d=>'<th>'+d.slice(0,6)+'</th>').join('')+'<th>distanza</th><th>flag</th></tr>';
+        Object.entries(x.stage2.results).forEach(([m,res])=>{
+          h+='<tr><td class="l">'+MODEL_LABEL[m]+'</td>'+(res.vector?res.vector.map(v=>'<td>'+Math.round(v*100)+'</td>').join(''):'<td colspan="'+sc2.length+'" class="hot">nessuna risposta valida</td>')+
+            '<td class="gold">'+((x.cross.model_distances||{})[m]!=null?x.cross.model_distances[m].toFixed(3):'—')+'</td><td class="hot">'+res.flags.map(f=>f.type).join(', ')+'</td></tr>';
+        });
+        h+='</table>IDCM sull\'ambito: <span class="gold">'+(x.cross.idcm!=null?x.cross.idcm.toFixed(3):'—')+'</span>';
+      } else {
+        h+='<br><span class="dim">Secondo stadio non eseguito'+(v.valid?': il primo stadio non ha dimensioni da rivalutare.':': payload non valido.')+'</span>';
+      }
+      Object.entries(x.errors||{}).forEach(([prov,by])=>Object.entries(by||{}).forEach(([k,errs])=>{
+        h+='<br><span class="gold">↻ '+MODEL_LABEL[prov]+' '+(NAMES[k]||'rivalutazione')+': '+errs.length+' errore/i</span> <span class="dim">'+errs.map(e=>String(e).replace(/</g,'&lt;')).join(' · ')+'</span>';}));
+      h+=gateBox(x.gate);
+      b.className='box ok'; b.innerHTML=h;
+    }catch(e){b.className='box fail';b.innerHTML='✗ '+sc.name+' — '+e.message;}
+    if(i<SCENARIOS.length-1)await sleep(2500);
+  }
 }
 </script>
 </body>

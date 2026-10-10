@@ -54,9 +54,9 @@ module.exports = async function handler(req, res) {
       console.error(`[A${idx}] ${msg}`);
     }
     const CALL_TIMEOUT_MS = 55000;
-    async function callClaude(prompt, idx) {
+    async function callClaude(prompt, idx, opts = {}) {
       if (!ANTHROPIC_KEY) { noteErr(idx, 'ANTHROPIC_API_KEY mancante'); return null; }
-      const model = (idx === AAA_INDEX) ? MODEL_AAA : MODEL_HAIKU;
+      const model = opts.model || ((idx === AAA_INDEX) ? MODEL_AAA : MODEL_HAIKU);
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), CALL_TIMEOUT_MS);
       let r;
@@ -72,7 +72,7 @@ module.exports = async function handler(req, res) {
           body: JSON.stringify({
             model: model,
             max_tokens: 3000,
-            messages: [{ role: 'user', content: CLAUDE_PREFIX + prompt }]
+            messages: [{ role: 'user', content: opts.raw ? prompt : CLAUDE_PREFIX + prompt }]
           })
         });
       } catch (e) {
@@ -96,7 +96,9 @@ module.exports = async function handler(req, res) {
         noteErr(idx, (d.stop_reason === 'max_tokens' ? 'risposta troncata (max_tokens). ' : 'JSON non leggibile. ') + 'Inizio: ' + text.substring(0, 80));
         return null;
       }
-      if (!isFinite(Number(parsed.scoreON)) || !isFinite(Number(parsed.scoreSS))) {
+      if (opts.schema === 'recheck') {
+        if (!parsed.dimensioni || typeof parsed.dimensioni !== 'object') { noteErr(idx, 'JSON senza campo dimensioni'); return null; }
+      } else if (!isFinite(Number(parsed.scoreON)) || !isFinite(Number(parsed.scoreSS))) {
         noteErr(idx, 'JSON senza scoreON/scoreSS numerici');
         return null;
       }
@@ -137,11 +139,14 @@ module.exports = async function handler(req, res) {
       if (!text) { note('risposta vuota'); return null; }
       const parsed = parseJSON(text);
       if (!parsed) { note((choice.finish_reason === 'length' ? 'risposta troncata. ' : 'JSON non leggibile. ') + 'Inizio: ' + text.substring(0, 80)); return null; }
-      if (!isFinite(Number(parsed.scoreON)) || !isFinite(Number(parsed.scoreSS))) { note('JSON senza scoreON/scoreSS numerici'); return null; }
+      if (opts.schema === 'recheck') {
+        if (!parsed.dimensioni || typeof parsed.dimensioni !== 'object') { note('JSON senza campo dimensioni'); return null; }
+      } else if (!isFinite(Number(parsed.scoreON)) || !isFinite(Number(parsed.scoreSS))) { note('JSON senza scoreON/scoreSS numerici'); return null; }
       return parsed;
     }
     async function callChatRetry(provider, prompt, idx, opts = {}) {
-      const WAITS = [0, 3000 + idx * 500, 8000 + idx * 500];
+      const n = typeof idx === 'number' ? idx : 0;
+      const WAITS = [0, 3000 + n * 500, 8000 + n * 500];
       for (let a = 0; a < WAITS.length; a++) {
         if (WAITS[a]) await delay(WAITS[a]);
         const r = await callChat(provider, prompt, idx, opts);
@@ -371,7 +376,7 @@ module.exports = async function handler(req, res) {
       return s / sw;
     }
 
-    function computeGate(panels, cross) {
+    function computeGate(panels, cross, extra = {}) {
       const reasons = [];
       // Score sintetico per modello: agenti di merito pesati (1 - C_AAA), agente avversariale pesato C_AAA
       const perModel = {};
@@ -408,13 +413,17 @@ module.exports = async function handler(req, res) {
 
       // ── Macchina a stati ──
       let state;
-      if (!cross.models_used || cross.models_used < 2) {
+      if (extra.payload_valid === false) {
+        state = 'QUARANTINED_OUTPUT';
+        reasons.push('Conflict Execution Payload non valido: ' + (extra.payload_errors || []).join('; ') + ' — secondo stadio non eseguito');
+      } else if (!cross.stage2_skipped && (!cross.models_used || cross.models_used < 2)) {
         state = 'QUARANTINED_OUTPUT';
         reasons.push('meno di 2 modelli con risposte valide: evidenza insufficiente per il rilascio');
       } else {
         if (cross.independence && !cross.independence.ok) reasons.push('indipendenza dei modelli non soddisfatta: ' + cross.independence.issues.join('; '));
         if (cross.idcm >= cross.threshold_profile.critical) reasons.push(`IDCM ${cross.idcm} oltre la soglia critica ${cross.threshold_profile.critical}`);
         if (masked) reasons.push('consenso apparente critico: score sintetico ' + synthetic + ' accettabile ma divergenza oltre soglia su ' + maskedDims.join(', '));
+        if ((extra.scope_violations || []).length) reasons.push('il secondo stadio ha valutato dimensioni vietate dal payload (' + extra.scope_violations.join('; ') + ')');
         if (reasons.length) state = 'UNCERTAIN_STATE';
         else {
           if (cross.idcm >= cross.threshold_profile.warn) reasons.push(`IDCM ${cross.idcm} oltre la soglia di avviso`);
@@ -464,9 +473,164 @@ module.exports = async function handler(req, res) {
           masked_consensus: masked,
           authorized_connectors: authorized,
           blocked_connectors: blocked,
-          payload_hash: null, // Conflict Execution Payload: Fase 4
+          payload_hash: extra.payload_hash || null,
           timestamp: new Date().toISOString()
         }
+      };
+    }
+
+    // ══════════════════════════════════════════════════════════
+    //  MIRAGE — Fase 4: Conflict Execution Payload e Selective Routing
+    //  (descrizione v7.7-bis, sez. 7 e 8)
+    // ══════════════════════════════════════════════════════════
+    const crypto = require('crypto');
+    const sha256 = (t) => crypto.createHash('sha256').update(String(t), 'utf8').digest('hex');
+    // serializzazione canonica: chiavi ordinate, per hash deterministici
+    const canon = (v) => Array.isArray(v) ? '[' + v.map(canon).join(',') + ']'
+      : (v && typeof v === 'object') ? '{' + Object.keys(v).sort().map(k => JSON.stringify(k) + ':' + canon(v[k])).join(',') + '}'
+      : JSON.stringify(v);
+    const BORDERLINE_BAND = 0.10; // un vincolo rigido e "a rischio" se il punteggio e entro ±0,10 dalla soglia
+
+    const RECHECK_TEMPLATE = CLAUDE_PREFIX +
+      'Sei un valutatore indipendente di seconda istanza su bandi Invitalia ON e Smart&Start. ' +
+      'Valuta il progetto SOLO sulle dimensioni elencate in AMBITO e su nessun\'altra. ' +
+      'Non hai accesso a valutazioni precedenti: esprimi un giudizio autonomo.\n\n' +
+      'DEFINIZIONI: requisiti = ammissibilita formale; innovazione = grado di novita e difendibilita; mercato = domanda, concorrenza, modello di ricavo; ' +
+      'team = competenze e completezza; numeri = solidita economico-finanziaria; impatti = occupazione, territorio, inclusione.\n\n' +
+      'AMBITO: {{SCOPE}}\n\nPROGETTO:\n{{PROJECT}}\n\n' +
+      'Rispondi SOLO con JSON valido, nessun testo prima o dopo. Lo schema indica solo il formato: ogni <intero 0-100> va sostituito con il tuo punteggio.\n{{SCHEMA}}';
+
+    function buildRecheckPrompt(scope, project) {
+      const schema = '{"dimensioni":{' + scope.map(d => '"' + d + '":<intero 0-100>').join(',') + '},"motivazione":"<una frase per dimensione>"}';
+      return RECHECK_TEMPLATE.replace('{{SCOPE}}', scope.join(', ')).replace('{{PROJECT}}', project).replace('{{SCHEMA}}', schema);
+    }
+
+    // Decide ambito e intensita del secondo stadio a partire dal solo primo stadio
+    function routeFromStage1(m1) {
+      const merit = (m1.agent_vectors || []).slice(0, AAA_INDEX).filter(Boolean);
+      const meritMean = merit.length ? MIRAGE_DIMS.map((_, j) => _mean(_col(merit, j))) : null;
+      const why = {};
+      const add = (d, r) => { (why[d] = why[d] || []).push(r); };
+      (m1.conflict_dimensions || []).forEach(d => add(d, 'divergenza tra agenti di merito (IDP ' + m1.idp_per_dim[d] + ')'));
+      ((m1.aaa && m1.aaa.targeted_objections) || []).forEach(d => add(d, 'obiezione mirata del Devil\'s Advocate'));
+      const borderline = [];
+      if (meritMean) MIRAGE_DIMS.forEach((d, j) => {
+        const c = CRITERIA_SET.dims[d];
+        if (c.hard_constraint_flag && Math.abs(meritMean[j] - c.min_score) <= BORDERLINE_BAND) { borderline.push(d); add(d, 'vincolo rigido a rischio (' + Math.round(meritMean[j] * 100) + ' vs soglia ' + Math.round(c.min_score * 100) + ')'); }
+      });
+      const scope = MIRAGE_DIMS.filter(d => why[d]);
+      const anomalies = (m1.anomaly_flags || []).length;
+      const critical = MIRAGE_DIMS.some(d => m1.idp_per_dim && m1.idp_per_dim[d] >= THRESHOLD_PROFILE.critical);
+      const synth1 = meritMean ? weightedScore(meritMean) : 0;
+      // consenso apparente potenziale: esito accettabile ma divergenza forte tra agenti di merito su dimensione pesante
+      const potentialMasked = synth1 >= GATE_PROFILE.acceptance_threshold && MIRAGE_DIMS.some(d =>
+        CRITERIA_SET.dims[d].weight >= GATE_PROFILE.weight_min && m1.idp_per_dim && m1.idp_per_dim[d] >= GATE_PROFILE.dim_divergence_threshold);
+      let mode, models;
+      if (!merit.length || merit.length < 2) { mode = 'impossibile'; models = []; }
+      else if (!scope.length && !anomalies) { mode = 'nessuno'; models = []; }
+      else if (borderline.length || critical || potentialMasked || anomalies) { mode = 'rafforzato'; models = ['claude', 'gpt', 'grok']; }
+      else { mode = 'limitato'; models = ['gpt', 'grok']; }
+      // con anomalie ma senza dimensioni in conflitto, si ricontrollano tutte le dimensioni rigide
+      const finalScope = (mode === 'rafforzato' && !scope.length) ? MIRAGE_DIMS.filter(d => CRITERIA_SET.dims[d].hard_constraint_flag) : scope;
+      return { mode, models, scope: finalScope, reasons_per_dim: why, merit_mean: meritMean, anomalies, borderline };
+    }
+
+    function buildPayload(executionId, project, route, m1) {
+      const forbidden = MIRAGE_DIMS.filter(d => !route.scope.includes(d));
+      const body = {
+        execution_id: executionId,
+        input_hash: sha256(project),
+        criteria_version: CRITERIA_SET.version,
+        criteria_hash: sha256(canon(CRITERIA_SET)),
+        conflict_dimension_ids: route.scope,
+        conflict_mask: MIRAGE_DIMS.map(d => route.scope.includes(d) ? 1 : 0).join(''),
+        forbidden_dimensions: forbidden,
+        authorized_execution_scope: { dimensions: route.scope, models: route.models, connectors_on_release: CONNECTORS },
+        IDP_vector: m1.idp_per_dim || null,
+        agent_contribution_matrix: (m1.aaa && m1.aaa.gap_per_dim) ? { aaa_gap_per_dim: m1.aaa.gap_per_dim } : null,
+        required_recheck_mode: route.mode,
+        threshold_profile_id: THRESHOLD_PROFILE.id,
+        gate_profile_id: GATE_PROFILE.id,
+        output_destination_class: 'report_cliente',
+        prompt_template_hash: sha256(RECHECK_TEMPLATE)
+      };
+      return Object.assign({}, body, { payload_hash: sha256(canon(body)) });
+    }
+
+    // Il validatore ricalcola tutto: un payload alterato non autorizza il secondo stadio
+    function validatePayload(pl, project) {
+      const errors = [];
+      const { payload_hash, ...body } = pl;
+      if (sha256(canon(body)) !== payload_hash) errors.push('payload_hash non coincide (payload alterato)');
+      if (pl.input_hash !== sha256(project)) errors.push('input_hash non coincide con l\'input corrente');
+      if (pl.criteria_hash !== sha256(canon(CRITERIA_SET))) errors.push('criteria_hash non coincide con il set criteri corrente');
+      if (pl.prompt_template_hash !== sha256(RECHECK_TEMPLATE)) errors.push('prompt_template_hash non coincide');
+      const scope = pl.conflict_dimension_ids || [];
+      if (scope.some(d => !MIRAGE_DIMS.includes(d))) errors.push('dimensioni non previste dal set criteri');
+      if (scope.some(d => (pl.forbidden_dimensions || []).includes(d))) errors.push('dimensioni contemporaneamente autorizzate e vietate');
+      return { valid: errors.length === 0, errors };
+    }
+
+    // Secondo stadio limitato all'ambito del payload; dimensioni fuori ambito ignorate e segnalate
+    async function runStage2(pl, project) {
+      const scope = pl.conflict_dimension_ids;
+      const prompt = buildRecheckPrompt(scope, project);
+      const out = {};
+      await Promise.all(pl.authorized_execution_scope.models.map(async (name, k) => {
+        await delay(k * 400);
+        let r = null;
+        if (name === 'claude') {
+          const WAITS = [0, 4000, 10000];
+          for (let a = 0; a < WAITS.length && !r; a++) { if (WAITS[a]) await delay(WAITS[a]); r = await callClaude(prompt, 'R', { raw: true, model: MODEL_AAA, schema: 'recheck' }); }
+        } else {
+          r = await callChatRetry(name, prompt, 'R', { raw: true, schema: 'recheck' });
+        }
+        const flags = [];
+        let vector = null;
+        if (r && r.dimensioni && typeof r.dimensioni === 'object') {
+          const extra = Object.keys(r.dimensioni).filter(d => !scope.includes(d));
+          if (extra.length) flags.push({ type: 'SCOPE_VIOLATION', detail: 'dimensioni fuori ambito ignorate: ' + extra.join(', ') });
+          const vals = scope.map(d => Number(r.dimensioni[d]));
+          if (vals.every(v => isFinite(v))) vector = vals.map(v => Math.max(0, Math.min(1, v / 100)));
+          else flags.push({ type: 'SCOPE_INCOMPLETE', detail: 'mancano punteggi su dimensioni dell\'ambito' });
+        } else if (r) flags.push({ type: 'SCHEMA_ERROR', detail: 'risposta senza campo dimensioni' });
+        out[name] = { vector, flags, motivazione: r && r.motivazione ? String(r.motivazione).substring(0, 400) : null, prompt_hash: sha256(prompt) };
+      }));
+      return { scope, prompt_hash: sha256(prompt), results: out };
+    }
+
+    function crossFromStage2(st2, route, panels) {
+      const scope = st2.scope, N = scope.length;
+      const models = Object.keys(st2.results).map(name => Object.assign({ name }, MODEL_META[name] || {}, { scope_vector: st2.results[name].vector, prompt_template_hash: st2.results[name].prompt_hash, available: !!st2.results[name].vector }));
+      const usable = models.filter(m => m.available);
+      const issues = [];
+      for (let a = 0; a < models.length; a++) for (let b = a + 1; b < models.length; b++)
+        if (models[a].provider === models[b].provider && models[a].family === models[b].family) issues.push(`${models[a].name} e ${models[b].name}: stesso provider e famiglia`);
+      if (new Set(models.map(m => m.prompt_template_hash)).size > 1) issues.push('prompt di rivalutazione diversi tra i modelli');
+      const dimDiv = {}; MIRAGE_DIMS.forEach(d => dimDiv[d] = 0);
+      let idcmVal = null, dist = {}, scopeMean = null;
+      if (usable.length >= 2) {
+        const V = usable.map(m => m.scope_vector);
+        scopeMean = scope.map((_, j) => _mean(_col(V, j)));
+        usable.forEach((m, k) => { let s2 = 0; for (let j = 0; j < N; j++) { const d = V[k][j] - scopeMean[j]; s2 += d * d; } dist[m.name] = +(Math.sqrt(s2) / Math.sqrt(N)).toFixed(4); });
+        idcmVal = +_mean(Object.values(dist)).toFixed(4);
+        scope.forEach((d, j) => { dimDiv[d] = +_std(_col(V, j)).toFixed(4); });
+      }
+      // vettore completo: primo stadio, con le dimensioni in ambito sostituite dalla media del secondo stadio
+      const vFull = route.merit_mean ? route.merit_mean.slice() : null;
+      if (vFull && scopeMean) scope.forEach((d, j) => { vFull[MIRAGE_DIMS.indexOf(d)] = scopeMean[j]; });
+      return {
+        threshold_profile: THRESHOLD_PROFILE,
+        stage2_skipped: false,
+        models: [{ name: 'claude', vector: vFull }],
+        stage2_models: models,
+        models_used: usable.length,
+        independence: { ok: issues.length === 0, issues },
+        idcm: idcmVal,
+        model_distances: dist,
+        dim_divergence: dimDiv,
+        conflict_dimensions: scope.filter(d => dimDiv[d] >= THRESHOLD_PROFILE.warn),
+        v_mean: vFull ? vFull.map(x => +x.toFixed(4)) : null
       };
     }
 
@@ -529,6 +693,48 @@ module.exports = async function handler(req, res) {
         panels,
         idcm,
         gate,
+        errors: { claude: agentErrors, gpt: providerErrors.gpt, grok: providerErrors.grok }
+      });
+    }
+
+    // ── MIRAGE FASE 4: primo stadio → payload validato → secondo stadio selettivo → gate ──
+    if (requestedAI === 'mirage-routed') {
+      const panelPrompts = prompts.slice(0, AAA_INDEX + 1);
+      const project = String(req.body.project || panelPrompts[0] || '');
+      const executionId = crypto.randomUUID();
+      const stage1 = await runClaudePanel(panelPrompts);
+      const m1 = mirageBlock(stage1);
+      const panels = { claude: { results: stage1, mirage: m1 } };
+      const route = routeFromStage1(m1);
+      let payload = buildPayload(executionId, project, route, m1);
+      if (req.body.simulate_tamper) payload = Object.assign({}, payload, { conflict_dimension_ids: MIRAGE_DIMS.slice(), forbidden_dimensions: [] }); // solo test
+      const validation = validatePayload(payload, project);
+      const calls = { stage1: panelPrompts.length, stage2: 0, full_mode: panelPrompts.length * 3 };
+      let cross, stage2 = null;
+      if (!validation.valid || route.mode === 'impossibile') {
+        cross = { threshold_profile: THRESHOLD_PROFILE, stage2_skipped: true, models: [{ name: 'claude', vector: route.merit_mean }], models_used: 1, idcm: null, dim_divergence: {}, conflict_dimensions: [], v_mean: route.merit_mean, independence: { ok: true, issues: [] } };
+      } else if (route.mode === 'nessuno') {
+        cross = { threshold_profile: THRESHOLD_PROFILE, stage2_skipped: true, models: [{ name: 'claude', vector: route.merit_mean }], models_used: 1, idcm: null, dim_divergence: {}, conflict_dimensions: [], v_mean: route.merit_mean ? route.merit_mean.map(x => +x.toFixed(4)) : null, independence: { ok: true, issues: [] } };
+      } else {
+        stage2 = await runStage2(payload, project);
+        calls.stage2 = payload.authorized_execution_scope.models.length;
+        cross = crossFromStage2(stage2, route, panels);
+      }
+      const scopeViolations = stage2 ? Object.entries(stage2.results).flatMap(([k, v]) => v.flags.filter(f => f.type === 'SCOPE_VIOLATION').map(f => k + ': ' + f.detail)) : [];
+      const gate = computeGate(panels, cross, {
+        scope_violations: scopeViolations,
+        payload_hash: payload.payload_hash,
+        payload_valid: route.mode === 'impossibile' ? false : validation.valid,
+        payload_errors: route.mode === 'impossibile' ? ['primo stadio con meno di 2 agenti di merito validi'] : validation.errors
+      });
+      calls.total = calls.stage1 + calls.stage2;
+      calls.saved_vs_full = calls.full_mode - calls.total;
+      return res.status(200).json({
+        mode: 'mirage-routed', execution_id: executionId,
+        stage1: { results: stage1, mirage: m1 },
+        routing: { mode: route.mode, models: route.models, scope: route.scope, reasons_per_dim: route.reasons_per_dim, borderline: route.borderline },
+        payload, payload_validation: validation,
+        stage2, cross, gate, calls,
         errors: { claude: agentErrors, gpt: providerErrors.gpt, grok: providerErrors.grok }
       });
     }
