@@ -345,14 +345,14 @@ module.exports = async function handler(req, res) {
     // Set di criteri versionato. hard_constraint_flag = la dimensione non puo essere mediata dall'aggregato:
     // per Invitalia ogni criterio ha un minimo (Smart&Start 6/10 per criterio), quindi una media alta non compensa.
     const CRITERIA_SET = {
-      version: 'starton-invitalia-1.0.0',
+      version: 'starton-invitalia-1.1.0',
       dims: {
-        requisiti:   { weight: 0.20, min_score: 0.60, hard_constraint_flag: true },
-        innovazione: { weight: 0.15, min_score: 0.60, hard_constraint_flag: true },
-        mercato:     { weight: 0.15, min_score: 0.60, hard_constraint_flag: true },
-        team:        { weight: 0.20, min_score: 0.60, hard_constraint_flag: true },
-        numeri:      { weight: 0.15, min_score: 0.60, hard_constraint_flag: true },
-        impatti:     { weight: 0.15, min_score: 0.50, hard_constraint_flag: false }
+        requisiti:   { weight: 0.20, min_score: 0.60, hard_constraint_flag: true, release_effect: 'block_candidatura' },
+        innovazione: { weight: 0.15, min_score: 0.60, hard_constraint_flag: true, release_effect: 'block_candidatura' },
+        mercato:     { weight: 0.15, min_score: 0.60, hard_constraint_flag: true, release_effect: 'block_candidatura' },
+        team:        { weight: 0.20, min_score: 0.60, hard_constraint_flag: true, release_effect: 'block_candidatura' },
+        numeri:      { weight: 0.15, min_score: 0.60, hard_constraint_flag: true, release_effect: 'block_candidatura' },
+        impatti:     { weight: 0.15, min_score: 0.50, hard_constraint_flag: false, release_effect: 'annotate' }
       }
     };
     const GATE_PROFILE = {
@@ -362,6 +362,8 @@ module.exports = async function handler(req, res) {
       dim_divergence_threshold: 0.15 // divergence_i oltre la quale la dimensione non e consensuale
     };
     const CONNECTORS = ['report_cliente', 'generazione_dossier', 'export_docx', 'passaggio_adastra'];
+    // release_effect 'block_candidatura': criterio sotto soglia = domanda non candidabile finche non viene corretto
+    const CANDIDATURA_CONNECTORS = ['generazione_dossier', 'export_docx', 'passaggio_adastra'];
 
     function weightedScore(vec) {
       let s = 0, sw = 0;
@@ -430,7 +432,12 @@ module.exports = async function handler(req, res) {
         UNCERTAIN_STATE:    ['report_cliente'],   // solo report tecnico con le cause; niente dossier, export, mandato
         QUARANTINED_OUTPUT: []                    // conservato, non rilasciabile
       }[state];
-      const authorized = enabledBy.slice();
+      let authorized = enabledBy.slice();
+      const blockingViolations = hardViolations.filter(d => CRITERIA_SET.dims[d].release_effect === 'block_candidatura');
+      if (blockingViolations.length && authorized.some(c => CANDIDATURA_CONNECTORS.includes(c))) {
+        authorized = authorized.filter(c => !CANDIDATURA_CONNECTORS.includes(c));
+        reasons.push('candidatura bloccata finche questi criteri non superano la soglia minima: ' + blockingViolations.join(', '));
+      }
       const blocked = CONNECTORS.filter(c => !authorized.includes(c));
       return {
         version: 'mirage-phase3',
