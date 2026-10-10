@@ -28,13 +28,16 @@ td.l{text-align:left;color:#ccc}
 </style>
 </head>
 <body>
-<h1>M I R A G E — TEST FASE 4.2</h1>
+<h1>M I R A G E — TEST FASE 5</h1>
 <p class="sub">Stessi 3 scenari di test.html · endpoint /api/analyze-mirage · non tocca la produzione</p>
 
 <div class="btns">
   <button onclick="runAll()">MIRAGE · 3 SCENARI</button>
   <button onclick="runPhase4(false)">FASE 4 · PAYLOAD + ROUTING</button>
   <button class="sec" onclick="runPhase4(true)">FASE 4 · PAYLOAD MANOMESSO</button>
+  <button onclick="runAudit('chain')">FASE 5 · VERIFICA CATENA</button>
+  <button class="sec" onclick="runAudit('replay')">FASE 5 · REPLAY ULTIMA DECISIONE</button>
+  <button class="sec" onclick="runAudit('corrupt')">FASE 5 · RECORD ALTERATO</button>
   <button class="sec" onclick="runPhase2(true)">FASE 3 · TRE MODELLI + GATE</button>
   <button class="sec" onclick="runPhase2(false)">FASE 2 · ESEMPI NUMERICI (come produzione)</button>
   <button class="sec" onclick="runCompare()">CONFRONTO PRODUZIONE vs MIRAGE</button>
@@ -238,7 +241,37 @@ function gateBox(g){
     '<br><span style="color:#81c784">abilitati: '+(g.authorized_connectors.join(', ')||'nessuno')+'</span>'+
     (g.blocked_connectors.length?' · <span class="hot">bloccati: '+g.blocked_connectors.join(', ')+'</span>':'')+'</div>';
 }
+let BUSY=false;
 async function runPhase4(tamper){
+  if(BUSY){alert('Test gia in corso: attendi la fine.');return;}
+  BUSY=true; try{ await runPhase4Inner(tamper); } finally { BUSY=false; }
+}
+async function runAudit(kind){
+  section('FASE 5 — '+(kind==='chain'?'VERIFICA DELLA CATENA':kind==='replay'?'REPLAY DELL\'ULTIMA DECISIONE':'RECORD ALTERATO (solo in memoria, archivio intatto)'));
+  const b=box('pending','…');
+  try{
+    const head=await (await fetch(EP_MIRAGE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ai:'mirage-audit',action:'chain',limit:1})})).json();
+    if(!head.configured){b.className='box fail';b.innerHTML='✗ '+head.reason;return;}
+    const last=head.head.seq;
+    if(!last){b.className='box fail';b.innerHTML='✗ archivio vuoto: lancia prima FASE 4 · PAYLOAD + ROUTING';return;}
+    const corrupt=kind==='corrupt'?last:0;
+    let h='';
+    if(kind==='chain'||kind==='corrupt'){
+      const c=await (await fetch(EP_MIRAGE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ai:'mirage-audit',action:'chain',limit:50,simulate_corruption:corrupt})})).json();
+      h+=(c.chain_ok?'<b style="color:#81c784">✓ catena integra</b>':'<b class="hot">✗ catena interrotta al record n. '+c.first_break+'</b>')+' · '+c.records.length+' record verificati';
+      h+='<table><tr><th>n.</th><th>data</th><th>esito</th><th>routing</th><th>hash</th><th>collegamento</th><th>record_hash</th></tr>';
+      c.records.forEach(r=>{h+='<tr><td>'+r.seq+'</td><td class="l">'+(r.created_at||'').replace('T',' ').slice(0,19)+'</td><td class="l">'+(r.state||'—')+(r.tamper_test?' <span class="dim">(test manomissione)</span>':'')+'</td><td>'+(r.routing||'—')+'</td><td class="'+(r.hash_ok?'':'hot')+'">'+(r.hash_ok?'✓':'✗')+'</td><td class="'+(r.link_ok?'':'hot')+'">'+(r.link_ok?'✓':'✗')+'</td><td class="dim">'+(r.record_hash||'').slice(0,16)+'…</td></tr>';});
+      h+='</table>';
+    }
+    if(kind==='replay'||kind==='corrupt'){
+      const r=(await (await fetch(EP_MIRAGE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ai:'mirage-audit',action:'replay',seq:last,simulate_corruption:corrupt})})).json()).replay;
+      h+='<div style="margin-top:8px"><b>Replay del record n. '+r.seq+'</b> — '+(r.reproduced?'<span style="color:#81c784">✓ decisione riprodotta dagli output registrati, senza richiamare i modelli</span>':'<span class="hot">✗ decisione NON riprodotta</span>')+'</div>';
+      h+='<table><tr><th>controllo</th><th>esito</th><th>dettaglio</th></tr>'+r.checks.map(c=>'<tr><td class="l">'+c.name+'</td><td class="'+(c.ok?'':'hot')+'">'+(c.ok?'✓':'✗')+'</td><td class="l dim">'+(c.detail||'')+'</td></tr>').join('')+'</table>';
+    }
+    b.className='box ok'; b.innerHTML=h;
+  }catch(e){b.className='box fail';b.innerHTML='✗ '+e.message;}
+}
+async function runPhase4Inner(tamper){
   section('FASE 4 — PAYLOAD + ROUTING SELETTIVO'+(tamper?' · PAYLOAD MANOMESSO':''));
   for(let i=0;i<SCENARIOS.length;i++){
     const sc=SCENARIOS[i];
@@ -280,6 +313,10 @@ async function runPhase4(tamper){
       Object.entries(x.errors||{}).forEach(([prov,by])=>Object.entries(by||{}).forEach(([k,errs])=>{
         h+='<br><span class="gold">↻ '+MODEL_LABEL[prov]+' '+(NAMES[k]||'rivalutazione')+': '+errs.length+' errore/i</span> <span class="dim">'+errs.map(e=>String(e).replace(/</g,'&lt;')).join(' · ')+'</span>';}));
       h+=gateBox(x.gate);
+      const au=x.audit||{};
+      h+='<div style="margin-top:6px;font-size:11px">'+(au.persisted
+        ?'<span style="color:#81c784">✓ registrato nell\'audit trail</span> · record n. <span class="gold">'+au.seq+'</span> · hash '+au.record_hash.slice(0,16)+'… · precedente '+au.previous_record_hash.slice(0,16)+'…'
+        :'<span class="hot">✗ non registrato: '+(au.reason||'motivo sconosciuto')+'</span>')+'</div>';
       b.className='box ok'; b.innerHTML=h;
     }catch(e){b.className='box fail';b.innerHTML='✗ '+sc.name+' — '+e.message;}
     if(i<SCENARIOS.length-1)await sleep(2500);

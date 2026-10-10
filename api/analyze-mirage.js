@@ -28,7 +28,7 @@ module.exports = async function handler(req, res) {
     const OPENAI_KEY = process.env.OPENAI_API_KEY;
     const GROK_KEY = process.env.GROK_API_KEY;
 
-    if (!prompts || !prompts.length) return res.status(400).json({ error: 'Nessun prompt' });
+    if ((!prompts || !prompts.length) && ai !== 'mirage-audit') return res.status(400).json({ error: 'Nessun prompt' });
 
     // ── MODELLI CLAUDE ──
     // Gli agenti di scoring (AVF, AAS, AVT) girano su Haiku: compito strutturato, veloce, economico.
@@ -549,11 +549,11 @@ module.exports = async function handler(req, res) {
         outcome_determined_by: hardFail, aaa_objections_not_rechecked: skippedAAA };
     }
 
-    function buildPayload(executionId, project, route, m1) {
+    function buildPayload(executionId, inputHash, route, m1) {
       const forbidden = MIRAGE_DIMS.filter(d => !route.scope.includes(d));
       const body = {
         execution_id: executionId,
-        input_hash: sha256(project),
+        input_hash: inputHash,
         criteria_version: CRITERIA_SET.version,
         criteria_hash: sha256(canon(CRITERIA_SET)),
         conflict_dimension_ids: route.scope,
@@ -572,11 +572,11 @@ module.exports = async function handler(req, res) {
     }
 
     // Il validatore ricalcola tutto: un payload alterato non autorizza il secondo stadio
-    function validatePayload(pl, project) {
+    function validatePayload(pl, inputHash) {
       const errors = [];
       const { payload_hash, ...body } = pl;
       if (sha256(canon(body)) !== payload_hash) errors.push('payload_hash non coincide (payload alterato)');
-      if (pl.input_hash !== sha256(project)) errors.push('input_hash non coincide con l\'input corrente');
+      if (pl.input_hash !== inputHash) errors.push('input_hash non coincide con l\'input corrente');
       if (pl.criteria_hash !== sha256(canon(CRITERIA_SET))) errors.push('criteria_hash non coincide con il set criteri corrente');
       if (pl.prompt_template_hash !== sha256(RECHECK_TEMPLATE)) errors.push('prompt_template_hash non coincide');
       const scope = pl.conflict_dimension_ids || [];
@@ -712,43 +712,187 @@ module.exports = async function handler(req, res) {
     }
 
     // ── MIRAGE FASE 4: primo stadio → payload validato → secondo stadio selettivo → gate ──
-    if (requestedAI === 'mirage-routed') {
-      const panelPrompts = prompts.slice(0, AAA_INDEX + 1);
-      const project = String(req.body.project || panelPrompts[0] || '');
-      const executionId = crypto.randomUUID();
-      const stage1 = await runClaudePanel(panelPrompts);
-      const m1 = mirageBlock(stage1);
-      const panels = { claude: { results: stage1, mirage: m1 } };
-      const route = routeFromStage1(m1);
-      let payload = buildPayload(executionId, project, route, m1);
-      if (req.body.simulate_tamper) payload = Object.assign({}, payload, { conflict_dimension_ids: MIRAGE_DIMS.slice(), forbidden_dimensions: [] }); // solo test
-      const validation = validatePayload(payload, project);
-      const calls = { stage1: panelPrompts.length, stage2: 0, full_mode: panelPrompts.length * 3 };
-      let cross, stage2 = null;
-      if (!validation.valid || route.mode === 'impossibile') {
-        cross = { threshold_profile: THRESHOLD_PROFILE, stage2_skipped: true, models: [{ name: 'claude', vector: route.merit_mean }], models_used: 1, idcm: null, dim_divergence: {}, conflict_dimensions: [], v_mean: route.merit_mean, independence: { ok: true, issues: [] } };
-      } else if (route.mode === 'nessuno') {
-        cross = { threshold_profile: THRESHOLD_PROFILE, stage2_skipped: true, models: [{ name: 'claude', vector: route.merit_mean }], models_used: 1, idcm: null, dim_divergence: {}, conflict_dimensions: [], v_mean: route.merit_mean ? route.merit_mean.map(x => +x.toFixed(4)) : null, independence: { ok: true, issues: [] } };
+    // Decisione deterministica a partire dagli output registrati: usata dal flusso live e dal Replay Verifier.
+    function decideFromStage2(panels, route, payload, validation, stage2) {
+      let cross;
+      if (!stage2) {
+        const vm = route.merit_mean ? route.merit_mean.map(x => +x.toFixed(4)) : null;
+        cross = { threshold_profile: THRESHOLD_PROFILE, stage2_skipped: true, models: [{ name: 'claude', vector: route.merit_mean }], models_used: 1, idcm: null, dim_divergence: {}, conflict_dimensions: [], v_mean: vm, independence: { ok: true, issues: [] } };
       } else {
-        stage2 = await runStage2(payload, project);
-        calls.stage2 = payload.authorized_execution_scope.models.length;
         cross = crossFromStage2(stage2, route, panels);
       }
-      const scopeViolations = stage2 ? Object.entries(stage2.results).flatMap(([k, v]) => v.flags.filter(f => f.type === 'SCOPE_VIOLATION').map(f => k + ': ' + f.detail)) : [];
+      const scopeViolations = stage2 ? Object.entries(stage2.results).flatMap(([k, v]) => (v.flags || []).filter(f => f.type === 'SCOPE_VIOLATION').map(f => k + ': ' + f.detail)) : [];
       const gate = computeGate(panels, cross, {
         scope_violations: scopeViolations,
         payload_hash: payload.payload_hash,
         payload_valid: route.mode === 'impossibile' ? false : validation.valid,
         payload_errors: route.mode === 'impossibile' ? ['primo stadio con meno di 2 agenti di merito validi'] : validation.errors
       });
+      return { cross, gate };
+    }
+
+    // ══════════════════════════════════════════════════════════
+    //  MIRAGE — Fase 5: audit trail append-only con hash a catena e Replay Verifier
+    //  (descrizione v7.7-bis: registrazione verificabile della decisione di rilascio)
+    //  Archivio: Upstash Redis via REST (variabili KV_REST_API_URL/TOKEN o UPSTASH_REDIS_REST_URL/TOKEN).
+    //  Append-only: ogni record e scritto con SET NX su una chiave numerata, mai sovrascritto.
+    // ══════════════════════════════════════════════════════════
+    const AUDIT_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+    const AUDIT_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+    const AUDIT_PREFIX = 'mirage:audit:';
+    const GENESIS_HASH = '0'.repeat(64);
+    async function redis(cmd) {
+      const r = await fetch(AUDIT_URL, { method: 'POST', headers: { Authorization: 'Bearer ' + AUDIT_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify(cmd) });
+      const d = await r.json();
+      if (d.error) throw new Error('archivio: ' + d.error);
+      return d.result;
+    }
+    const plain = (o) => JSON.parse(JSON.stringify(o)); // forma stabile prima dell'hash (niente undefined)
+    const recordHash = (rec) => { const { record_hash, ...body } = rec; return sha256(canon(body)); };
+    const minimalAgent = (r) => r ? { scoreON: r.scoreON, scoreSS: r.scoreSS, dimensioni: r.dimensioni || null, _fallback: !!r._fallback } : null;
+
+    function buildAuditBody(ctx) {
+      return plain({
+        record_type: 'mirage_release_decision',
+        execution_id: ctx.executionId,
+        created_at: new Date().toISOString(),
+        code_version: process.env.VERCEL_GIT_COMMIT_SHA || 'locale',
+        criteria_version: CRITERIA_SET.version,
+        criteria_hash: sha256(canon(CRITERIA_SET)),
+        threshold_profile: THRESHOLD_PROFILE,
+        gate_profile: GATE_PROFILE,
+        input_hash: ctx.inputHash,
+        stage1: ctx.stage1.slice(0, AAA_INDEX + 1).map(minimalAgent),
+        routing: { mode: ctx.route.mode, models: ctx.route.models, scope: ctx.route.scope },
+        payload: ctx.payload,
+        payload_validation: ctx.validation,
+        stage2: ctx.stage2 ? { scope: ctx.stage2.scope, prompt_hash: ctx.stage2.prompt_hash, results: ctx.stage2.results } : null,
+        decision: gateSummary(ctx.gate),
+        test_flags: ctx.testFlags || {}
+      });
+    }
+    function gateSummary(g) {
+      return plain({ state: g.state, synthetic_score: g.synthetic_score, authorized_connectors: g.authorized_connectors, blocked_connectors: g.blocked_connectors,
+        hard_constraint_violations: g.hard_constraint_violations, masked_consensus: g.masked_consensus, reasons: g.reasons });
+    }
+
+    async function auditAppend(body) {
+      if (!AUDIT_URL || !AUDIT_TOKEN) return { persisted: false, reason: 'archivio non configurato (manca Upstash Redis nel progetto Vercel)', record_hash: recordHash(Object.assign({ seq: null, previous_record_hash: null }, body)) };
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const head = JSON.parse((await redis(['GET', AUDIT_PREFIX + 'head'])) || 'null') || { seq: 0, hash: GENESIS_HASH };
+        let seq = head.seq, prev = head.hash;
+        // la testa e solo un indice: si avanza finche esistono record successivi
+        for (;;) { const nx = await redis(['GET', AUDIT_PREFIX + 'rec:' + (seq + 1)]); if (!nx) break; seq++; prev = JSON.parse(nx).record_hash; }
+        const rec = Object.assign({ seq: seq + 1, previous_record_hash: prev }, body);
+        rec.record_hash = recordHash(rec);
+        const ok = await redis(['SET', AUDIT_PREFIX + 'rec:' + rec.seq, JSON.stringify(rec), 'NX']);
+        if (ok === 'OK') {
+          await redis(['SET', AUDIT_PREFIX + 'head', JSON.stringify({ seq: rec.seq, hash: rec.record_hash })]);
+          await redis(['SET', AUDIT_PREFIX + 'exec:' + rec.execution_id, String(rec.seq), 'NX']);
+          return { persisted: true, seq: rec.seq, record_hash: rec.record_hash, previous_record_hash: prev };
+        }
+        await delay(150 + attempt * 150); // un'altra esecuzione ha preso lo stesso numero: si riprova
+      }
+      return { persisted: false, reason: 'conflitto di scrittura ripetuto' };
+    }
+
+    // Replay Verifier: ricalcola la decisione dagli output registrati, senza richiamare i modelli
+    function replayRecord(rec) {
+      const checks = [];
+      const push = (name, ok, detail) => checks.push({ name, ok, detail: detail || null });
+      push('integrita record (record_hash)', recordHash(rec) === rec.record_hash);
+      const criteriaSame = rec.criteria_hash === sha256(canon(CRITERIA_SET));
+      push('set criteri invariato dalla registrazione', criteriaSame, criteriaSame ? null : 'criteri registrati ' + rec.criteria_version + ', correnti ' + CRITERIA_SET.version + ': il ricalcolo usa i correnti');
+      const stage1 = rec.stage1.map(a => a || { _fallback: true });
+      const m1 = mirageBlock(stage1);
+      const panels = { claude: { results: stage1, mirage: m1 } };
+      const route = routeFromStage1(m1);
+      push('routing riprodotto', route.mode === rec.routing.mode && canon(route.scope) === canon(rec.routing.scope),
+        'registrato ' + rec.routing.mode + ' [' + rec.routing.scope.join(', ') + '], ricalcolato ' + route.mode + ' [' + route.scope.join(', ') + ']');
+      const expected = buildPayload(rec.execution_id, rec.input_hash, route, m1);
+      const payloadIsOriginal = expected.payload_hash === rec.payload.payload_hash;
+      const validation = validatePayload(rec.payload, rec.input_hash);
+      push('validazione del payload riprodotta', validation.valid === rec.payload_validation.valid,
+        payloadIsOriginal ? 'payload registrato = payload ricostruito dal primo stadio' : 'payload registrato diverso da quello ricostruito: ' + (validation.errors.join('; ') || 'nessun errore'));
+      const { gate } = decideFromStage2(panels, route, rec.payload, validation, rec.stage2);
+      const now = gateSummary(gate);
+      push('stato del gate riprodotto', now.state === rec.decision.state, 'registrato ' + rec.decision.state + ', ricalcolato ' + now.state);
+      push('connettori riprodotti', canon(now.authorized_connectors) === canon(rec.decision.authorized_connectors), 'ricalcolati: ' + (now.authorized_connectors.join(', ') || 'nessuno'));
+      push('score sintetico riprodotto', now.synthetic_score === rec.decision.synthetic_score, 'registrato ' + rec.decision.synthetic_score + ', ricalcolato ' + now.synthetic_score);
+      return { seq: rec.seq, execution_id: rec.execution_id, reproduced: checks.every(c => c.ok || c.name.startsWith('set criteri')), checks, recomputed_decision: now };
+    }
+
+    if (requestedAI === 'mirage-audit') {
+      if (!AUDIT_URL || !AUDIT_TOKEN) return res.status(200).json({ configured: false, reason: 'archivio non configurato (manca Upstash Redis nel progetto Vercel)' });
+      const head = JSON.parse((await redis(['GET', AUDIT_PREFIX + 'head'])) || 'null') || { seq: 0, hash: GENESIS_HASH };
+      const action = req.body.action || 'chain';
+      const corrupt = Number(req.body.simulate_corruption) || 0; // solo test: altera in memoria, l'archivio non viene toccato
+      async function load(seq) {
+        const raw = await redis(['GET', AUDIT_PREFIX + 'rec:' + seq]);
+        if (!raw) return null;
+        const rec = JSON.parse(raw);
+        if (seq === corrupt) rec.decision.state = rec.decision.state === 'STABLE_OUTPUT' ? 'ANNOTATED_OUTPUT' : 'STABLE_OUTPUT';
+        return rec;
+      }
+      if (action === 'chain') {
+        const limit = Math.min(Number(req.body.limit) || 50, 200);
+        const from = Math.max(1, head.seq - limit + 1);
+        let prev = from === 1 ? GENESIS_HASH : null;
+        if (from > 1) { const p = await load(from - 1); prev = p ? p.record_hash : null; }
+        const rows = []; let firstBreak = null;
+        for (let s = from; s <= head.seq; s++) {
+          const rec = await load(s);
+          if (!rec) { rows.push({ seq: s, missing: true }); if (!firstBreak) firstBreak = s; continue; }
+          const hashOk = recordHash(rec) === rec.record_hash;
+          const linkOk = prev === null || rec.previous_record_hash === prev;
+          if ((!hashOk || !linkOk) && !firstBreak) firstBreak = s;
+          rows.push({ seq: s, execution_id: rec.execution_id, created_at: rec.created_at, state: rec.decision.state, routing: rec.routing.mode, tamper_test: !!(rec.test_flags && rec.test_flags.simulate_tamper), hash_ok: hashOk, link_ok: linkOk, record_hash: rec.record_hash });
+          prev = rec.record_hash;
+        }
+        return res.status(200).json({ configured: true, head, chain_ok: !firstBreak, first_break: firstBreak, records: rows });
+      }
+      if (action === 'replay') {
+        let seq = Number(req.body.seq) || 0;
+        if (!seq && req.body.execution_id) seq = Number(await redis(['GET', AUDIT_PREFIX + 'exec:' + req.body.execution_id])) || 0;
+        if (!seq) seq = head.seq;
+        const rec = await load(seq);
+        if (!rec) return res.status(404).json({ error: 'record ' + seq + ' non trovato' });
+        return res.status(200).json({ configured: true, replay: replayRecord(rec) });
+      }
+      return res.status(400).json({ error: 'azione non prevista: ' + action });
+    }
+
+    if (requestedAI === 'mirage-routed') {
+      const panelPrompts = prompts.slice(0, AAA_INDEX + 1);
+      const project = String(req.body.project || panelPrompts[0] || '');
+      const inputHash = sha256(project);
+      const executionId = crypto.randomUUID();
+      const stage1 = await runClaudePanel(panelPrompts);
+      const m1 = mirageBlock(stage1);
+      const panels = { claude: { results: stage1, mirage: m1 } };
+      const route = routeFromStage1(m1);
+      let payload = buildPayload(executionId, inputHash, route, m1);
+      if (req.body.simulate_tamper) payload = Object.assign({}, payload, { conflict_dimension_ids: MIRAGE_DIMS.slice(), forbidden_dimensions: [] }); // solo test
+      const validation = validatePayload(payload, inputHash);
+      const calls = { stage1: panelPrompts.length, stage2: 0, full_mode: panelPrompts.length * 3 };
+      let stage2 = null;
+      if (validation.valid && route.mode !== 'impossibile' && route.mode !== 'nessuno') {
+        stage2 = await runStage2(payload, project);
+        calls.stage2 = payload.authorized_execution_scope.models.length;
+      }
+      const { cross, gate } = decideFromStage2(panels, route, payload, validation, stage2);
       calls.total = calls.stage1 + calls.stage2;
       calls.saved_vs_full = calls.full_mode - calls.total;
+      let audit;
+      try {
+        audit = await auditAppend(buildAuditBody({ executionId, inputHash, stage1, route, payload, validation, stage2, gate, testFlags: { simulate_tamper: !!req.body.simulate_tamper } }));
+      } catch (e) { audit = { persisted: false, reason: e.message }; }
       return res.status(200).json({
         mode: 'mirage-routed', execution_id: executionId,
         stage1: { results: stage1, mirage: m1 },
         routing: { mode: route.mode, models: route.models, scope: route.scope, reasons_per_dim: route.reasons_per_dim, borderline: route.borderline, outcome_determined_by: route.outcome_determined_by, aaa_objections_not_rechecked: route.aaa_objections_not_rechecked },
         payload, payload_validation: validation,
-        stage2, cross, gate, calls,
+        stage2, cross, gate, calls, audit,
         errors: { claude: agentErrors, gpt: providerErrors.gpt, grok: providerErrors.grok }
       });
     }
