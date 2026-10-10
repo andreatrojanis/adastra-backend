@@ -560,7 +560,7 @@ module.exports = async function handler(req, res) {
         outcome_determined_by: hardFail, aaa_objections_not_rechecked: skippedAAA };
     }
 
-    function buildPayload(executionId, inputHash, route, m1) {
+    function buildPayload(executionId, inputHash, route, m1, templateHash = sha256(RECHECK_TEMPLATE)) {
       const forbidden = MIRAGE_DIMS.filter(d => !route.scope.includes(d));
       const body = {
         execution_id: executionId,
@@ -577,19 +577,19 @@ module.exports = async function handler(req, res) {
         threshold_profile_id: THRESHOLD_PROFILE.id,
         gate_profile_id: GATE_PROFILE.id,
         output_destination_class: 'report_cliente',
-        prompt_template_hash: sha256(RECHECK_TEMPLATE)
+        prompt_template_hash: templateHash
       };
       return Object.assign({}, body, { payload_hash: sha256(canon(body)) });
     }
 
     // Il validatore ricalcola tutto: un payload alterato non autorizza il secondo stadio
-    function validatePayload(pl, inputHash) {
+    function validatePayload(pl, inputHash, expectedTemplateHash = sha256(RECHECK_TEMPLATE)) {
       const errors = [];
       const { payload_hash, ...body } = pl;
       if (sha256(canon(body)) !== payload_hash) errors.push('payload_hash non coincide (payload alterato)');
       if (pl.input_hash !== inputHash) errors.push('input_hash non coincide con l\'input corrente');
       if (pl.criteria_hash !== sha256(canon(CRITERIA_SET))) errors.push('criteria_hash non coincide con il set criteri corrente');
-      if (pl.prompt_template_hash !== sha256(RECHECK_TEMPLATE)) errors.push('prompt_template_hash non coincide');
+      if (pl.prompt_template_hash !== expectedTemplateHash) errors.push('prompt_template_hash non coincide');
       const scope = pl.conflict_dimension_ids || [];
       if (scope.some(d => !MIRAGE_DIMS.includes(d))) errors.push('dimensioni non previste dal set criteri');
       if (scope.some(d => (pl.forbidden_dimensions || []).includes(d))) errors.push('dimensioni contemporaneamente autorizzate e vietate');
@@ -751,6 +751,9 @@ module.exports = async function handler(req, res) {
     const AUDIT_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
     const AUDIT_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
     const AUDIT_PREFIX = 'mirage:audit:';
+    // Versione della logica decisionale (routing + gate). Va aumentata a ogni modifica delle regole:
+    // il Replay Verifier confronta le decisioni solo tra record e codice con la stessa logica.
+    const DECISION_LOGIC_VERSION = 'mirage-decision-5.1';
     const GENESIS_HASH = '0'.repeat(64);
     async function redis(cmd) {
       const r = await fetch(AUDIT_URL, { method: 'POST', headers: { Authorization: 'Bearer ' + AUDIT_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify(cmd) });
@@ -768,8 +771,10 @@ module.exports = async function handler(req, res) {
         execution_id: ctx.executionId,
         created_at: new Date().toISOString(),
         code_version: process.env.VERCEL_GIT_COMMIT_SHA || 'locale',
+        decision_logic_version: DECISION_LOGIC_VERSION,
         criteria_version: CRITERIA_SET.version,
         criteria_hash: sha256(canon(CRITERIA_SET)),
+        prompt_template_hash: sha256(RECHECK_TEMPLATE),
         threshold_profile: THRESHOLD_PROFILE,
         gate_profile: GATE_PROFILE,
         input_hash: ctx.inputHash,
@@ -810,27 +815,34 @@ module.exports = async function handler(req, res) {
     // Replay Verifier: ricalcola la decisione dagli output registrati, senza richiamare i modelli
     function replayRecord(rec) {
       const checks = [];
-      const push = (name, ok, detail) => checks.push({ name, ok, detail: detail || null });
+      const push = (name, ok, detail, informative) => checks.push({ name, ok, detail: detail || null, informative: !!informative });
       push('integrita record (record_hash)', recordHash(rec) === rec.record_hash);
       const criteriaSame = rec.criteria_hash === sha256(canon(CRITERIA_SET));
-      push('set criteri invariato dalla registrazione', criteriaSame, criteriaSame ? null : 'criteri registrati ' + rec.criteria_version + ', correnti ' + CRITERIA_SET.version + ': il ricalcolo usa i correnti');
+      push('set criteri invariato dalla registrazione', criteriaSame, criteriaSame ? null : 'criteri registrati ' + rec.criteria_version + ', correnti ' + CRITERIA_SET.version + ': il ricalcolo usa i correnti', true);
+      // Il payload si valida contro il template in vigore alla registrazione, non contro quello attuale.
+      // Record precedenti alla 5.1 non lo riportano: si usa quello dichiarato nel payload (integro grazie al payload_hash).
+      const tplHash = rec.prompt_template_hash || rec.payload.prompt_template_hash;
+      const tplSame = tplHash === sha256(RECHECK_TEMPLATE);
+      push('template di rivalutazione invariato dalla registrazione', tplSame, tplSame ? null : 'il prompt di rivalutazione e cambiato dopo la registrazione: la validazione usa il template registrato', true);
+      const logicSame = rec.decision_logic_version === DECISION_LOGIC_VERSION;
+      push('logica decisionale invariata dalla registrazione', logicSame, logicSame ? null : 'registrata ' + (rec.decision_logic_version || 'precedente alla 5.1') + ', attuale ' + DECISION_LOGIC_VERSION + ': il confronto della decisione e solo indicativo; l\'integrita resta garantita dal record_hash', true);
       const stage1 = rec.stage1.map(a => a || { _fallback: true });
       const m1 = mirageBlock(stage1);
       const panels = { claude: { results: stage1, mirage: m1 } };
       const route = routeFromStage1(m1);
       push('routing riprodotto', route.mode === rec.routing.mode && canon(route.scope) === canon(rec.routing.scope),
-        'registrato ' + rec.routing.mode + ' [' + rec.routing.scope.join(', ') + '], ricalcolato ' + route.mode + ' [' + route.scope.join(', ') + ']');
-      const expected = buildPayload(rec.execution_id, rec.input_hash, route, m1);
+        'registrato ' + rec.routing.mode + ' [' + rec.routing.scope.join(', ') + '], ricalcolato ' + route.mode + ' [' + route.scope.join(', ') + ']', !logicSame);
+      const expected = buildPayload(rec.execution_id, rec.input_hash, route, m1, tplHash);
       const payloadIsOriginal = expected.payload_hash === rec.payload.payload_hash;
-      const validation = validatePayload(rec.payload, rec.input_hash);
+      const validation = validatePayload(rec.payload, rec.input_hash, tplHash);
       push('validazione del payload riprodotta', validation.valid === rec.payload_validation.valid,
-        payloadIsOriginal ? 'payload registrato = payload ricostruito dal primo stadio' : 'payload registrato diverso da quello ricostruito: ' + (validation.errors.join('; ') || 'nessun errore'));
+        payloadIsOriginal ? 'payload registrato = payload ricostruito dal primo stadio' : 'payload registrato diverso da quello ricostruito: ' + (validation.errors.join('; ') || 'nessun errore'), !logicSame);
       const { gate } = decideFromStage2(panels, route, rec.payload, validation, rec.stage2);
       const now = gateSummary(gate);
-      push('stato del gate riprodotto', now.state === rec.decision.state, 'registrato ' + rec.decision.state + ', ricalcolato ' + now.state);
-      push('connettori riprodotti', canon(now.authorized_connectors) === canon(rec.decision.authorized_connectors), 'ricalcolati: ' + (now.authorized_connectors.join(', ') || 'nessuno'));
-      push('score sintetico riprodotto', now.synthetic_score === rec.decision.synthetic_score, 'registrato ' + rec.decision.synthetic_score + ', ricalcolato ' + now.synthetic_score);
-      return { seq: rec.seq, execution_id: rec.execution_id, reproduced: checks.every(c => c.ok || c.name.startsWith('set criteri')), checks, recomputed_decision: now };
+      push('stato del gate riprodotto', now.state === rec.decision.state, 'registrato ' + rec.decision.state + ', ricalcolato ' + now.state, !logicSame);
+      push('connettori riprodotti', canon(now.authorized_connectors) === canon(rec.decision.authorized_connectors), 'ricalcolati: ' + (now.authorized_connectors.join(', ') || 'nessuno'), !logicSame);
+      push('score sintetico riprodotto', now.synthetic_score === rec.decision.synthetic_score, 'registrato ' + rec.decision.synthetic_score + ', ricalcolato ' + now.synthetic_score, !logicSame);
+      return { seq: rec.seq, execution_id: rec.execution_id, reproduced: checks.every(c => c.ok || c.informative), drift: checks.filter(c => c.informative && !c.ok).map(c => c.name), checks, recomputed_decision: now };
     }
 
     if (requestedAI === 'mirage-audit') {

@@ -28,7 +28,7 @@ td.l{text-align:left;color:#ccc}
 </style>
 </head>
 <body>
-<h1>M I R A G E — TEST FASE 5.1</h1>
+<h1>M I R A G E — TEST FASE 5.2</h1>
 <p class="sub">Stessi 3 scenari di test.html · endpoint /api/analyze-mirage · non tocca la produzione</p>
 
 <div class="btns">
@@ -265,8 +265,8 @@ async function runAudit(kind){
     }
     if(kind==='replay'||kind==='corrupt'){
       const r=(await (await fetch(EP_MIRAGE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ai:'mirage-audit',action:'replay',seq:last,simulate_corruption:corrupt})})).json()).replay;
-      h+='<div style="margin-top:8px"><b>Replay del record n. '+r.seq+'</b> — '+(r.reproduced?'<span style="color:#81c784">✓ decisione riprodotta dagli output registrati, senza richiamare i modelli</span>':'<span class="hot">✗ decisione NON riprodotta</span>')+'</div>';
-      h+='<table><tr><th>controllo</th><th>esito</th><th>dettaglio</th></tr>'+r.checks.map(c=>'<tr><td class="l">'+c.name+'</td><td class="'+(c.ok?'':'hot')+'">'+(c.ok?'✓':'✗')+'</td><td class="l dim">'+(c.detail||'')+'</td></tr>').join('')+'</table>';
+      h+='<div style="margin-top:8px"><b>Replay del record n. '+r.seq+'</b> — '+(r.reproduced?'<span style="color:#81c784">✓ decisione riprodotta dagli output registrati, senza richiamare i modelli</span>'+((r.drift||[]).length?' <span class="gold">· versioni cambiate dalla registrazione: '+r.drift.join(', ')+'</span>':''):'<span class="hot">✗ decisione NON riprodotta</span>')+'</div>';
+      h+='<table><tr><th>controllo</th><th>esito</th><th>dettaglio</th></tr>'+r.checks.map(c=>'<tr><td class="l">'+c.name+(c.informative&&!c.ok?' <span class="dim">(informativo)</span>':'')+'</td><td class="'+(c.ok?'':(c.informative?'gold':'hot'))+'">'+(c.ok?'✓':(c.informative?'≠':'✗'))+'</td><td class="l dim">'+(c.detail||'')+'</td></tr>').join('')+'</table>';
     }
     b.className='box ok'; b.innerHTML=h;
   }catch(e){b.className='box fail';b.innerHTML='✗ '+e.message;}
