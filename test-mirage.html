@@ -28,7 +28,7 @@ td.l{text-align:left;color:#ccc}
 </style>
 </head>
 <body>
-<h1>M I R A G E — TEST FASE 4</h1>
+<h1>M I R A G E — TEST FASE 4.1</h1>
 <p class="sub">Stessi 3 scenari di test.html · endpoint /api/analyze-mirage · non tocca la produzione</p>
 
 <div class="btns">
@@ -255,6 +255,8 @@ async function runPhase4(tamper){
         '<br>Routing: <span class="gold">'+r.mode+'</span>'+(r.models.length?' · modelli 2° stadio: '+r.models.map(m=>MODEL_LABEL[m]).join(', '):'')+
         ' · ambito: '+(r.scope.length?'<span class="hot">'+r.scope.join(', ')+'</span>':'<span class="dim">nessuna dimensione</span>')+
         '<br><span class="dim">'+Object.entries(r.reasons_per_dim||{}).map(([d,rs])=>d+': '+rs.join(', ')).join(' · ')+'</span>'+
+        ((r.outcome_determined_by||[]).length?'<br><span class="dim">Esito già determinato: '+r.outcome_determined_by.join(', ')+' nettamente sotto soglia con agenti concordi'+
+          ((r.aaa_objections_not_rechecked||[]).length?' · obiezioni del Devil non rivalutate: '+r.aaa_objections_not_rechecked.join(', '):'')+'</span>':'')+
         '<br>Chiamate ai modelli: <span class="gold">'+c.total+'</span> invece di '+c.full_mode+' · risparmiate <span class="gold">'+c.saved_vs_full+'</span>';
       h+='<div style="margin:8px 0;padding:8px 10px;background:#111;border-radius:6px;font-size:11px">'+
         '<b class="gold">Conflict Execution Payload</b> '+(v.valid?'<span style="color:#81c784">✓ validato</span>':'<span class="hot">✗ NON valido: '+v.errors.join('; ')+'</span>')+
@@ -269,7 +271,9 @@ async function runPhase4(tamper){
           h+='<tr><td class="l">'+MODEL_LABEL[m]+'</td>'+(res.vector?res.vector.map(v=>'<td>'+Math.round(v*100)+'</td>').join(''):'<td colspan="'+sc2.length+'" class="hot">nessuna risposta valida</td>')+
             '<td class="gold">'+((x.cross.model_distances||{})[m]!=null?x.cross.model_distances[m].toFixed(3):'—')+'</td><td class="hot">'+res.flags.map(f=>f.type).join(', ')+'</td></tr>';
         });
-        h+='</table>IDCM sull\'ambito: <span class="gold">'+(x.cross.idcm!=null?x.cross.idcm.toFixed(3):'—')+'</span>';
+        h+='</table>';
+        Object.entries(x.stage2.results).forEach(([m,res])=>{ if(res.motivazione) h+='<div style="font-size:11px;margin-top:3px"><span class="gold">'+MODEL_LABEL[m]+':</span> <span class="dim">'+String(res.motivazione).replace(/</g,'&lt;')+'</span></div>'; });
+        h+='IDCM sull\'ambito: <span class="gold">'+(x.cross.idcm!=null?x.cross.idcm.toFixed(3):'—')+'</span>';
       } else {
         h+='<br><span class="dim">Secondo stadio non eseguito'+(v.valid?': il primo stadio non ha dimensioni da rivalutare.':': payload non valido.')+'</span>';
       }

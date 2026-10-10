@@ -518,6 +518,18 @@ module.exports = async function handler(req, res) {
         const c = CRITERIA_SET.dims[d];
         if (c.hard_constraint_flag && Math.abs(meritMean[j] - c.min_score) <= BORDERLINE_BAND) { borderline.push(d); add(d, 'vincolo rigido a rischio (' + Math.round(meritMean[j] * 100) + ' vs soglia ' + Math.round(c.min_score * 100) + ')'); }
       });
+      // Esito gia determinato: un vincolo rigido e nettamente sotto soglia e gli agenti di merito concordano.
+      // Le obiezioni del Devil's Advocate spingono solo verso il basso: non possono cambiare un blocco gia certo,
+      // quindi le dimensioni segnalate soltanto dall'AAA non giustificano un secondo stadio.
+      const conflicts1 = m1.conflict_dimensions || [];
+      const hardFail = meritMean ? MIRAGE_DIMS.filter((d, j) => {
+        const c = CRITERIA_SET.dims[d];
+        return c.hard_constraint_flag && meritMean[j] < c.min_score - BORDERLINE_BAND && !conflicts1.includes(d);
+      }) : [];
+      const skippedAAA = [];
+      if (hardFail.length) Object.keys(why).forEach(d => {
+        if (why[d].every(r => r.startsWith('obiezione mirata'))) { skippedAAA.push(d); delete why[d]; }
+      });
       const scope = MIRAGE_DIMS.filter(d => why[d]);
       const anomalies = (m1.anomaly_flags || []).length;
       const critical = MIRAGE_DIMS.some(d => m1.idp_per_dim && m1.idp_per_dim[d] >= THRESHOLD_PROFILE.critical);
@@ -532,7 +544,8 @@ module.exports = async function handler(req, res) {
       else { mode = 'limitato'; models = ['gpt', 'grok']; }
       // con anomalie ma senza dimensioni in conflitto, si ricontrollano tutte le dimensioni rigide
       const finalScope = (mode === 'rafforzato' && !scope.length) ? MIRAGE_DIMS.filter(d => CRITERIA_SET.dims[d].hard_constraint_flag) : scope;
-      return { mode, models, scope: finalScope, reasons_per_dim: why, merit_mean: meritMean, anomalies, borderline };
+      return { mode, models, scope: finalScope, reasons_per_dim: why, merit_mean: meritMean, anomalies, borderline,
+        outcome_determined_by: hardFail, aaa_objections_not_rechecked: skippedAAA };
     }
 
     function buildPayload(executionId, project, route, m1) {
@@ -594,7 +607,7 @@ module.exports = async function handler(req, res) {
           if (vals.every(v => isFinite(v))) vector = vals.map(v => Math.max(0, Math.min(1, v / 100)));
           else flags.push({ type: 'SCOPE_INCOMPLETE', detail: 'mancano punteggi su dimensioni dell\'ambito' });
         } else if (r) flags.push({ type: 'SCHEMA_ERROR', detail: 'risposta senza campo dimensioni' });
-        out[name] = { vector, flags, motivazione: r && r.motivazione ? String(r.motivazione).substring(0, 400) : null, prompt_hash: sha256(prompt) };
+        out[name] = { vector, flags, motivazione: r && r.motivazione ? (typeof r.motivazione === 'object' ? Object.entries(r.motivazione).map(([k, v]) => k + ': ' + v).join(' | ') : String(r.motivazione)).substring(0, 600) : null, prompt_hash: sha256(prompt) };
       }));
       return { scope, prompt_hash: sha256(prompt), results: out };
     }
@@ -732,7 +745,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({
         mode: 'mirage-routed', execution_id: executionId,
         stage1: { results: stage1, mirage: m1 },
-        routing: { mode: route.mode, models: route.models, scope: route.scope, reasons_per_dim: route.reasons_per_dim, borderline: route.borderline },
+        routing: { mode: route.mode, models: route.models, scope: route.scope, reasons_per_dim: route.reasons_per_dim, borderline: route.borderline, outcome_determined_by: route.outcome_determined_by, aaa_objections_not_rechecked: route.aaa_objections_not_rechecked },
         payload, payload_validation: validation,
         stage2, cross, gate, calls,
         errors: { claude: agentErrors, gpt: providerErrors.gpt, grok: providerErrors.grok }
