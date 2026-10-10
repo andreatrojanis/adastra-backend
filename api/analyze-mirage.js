@@ -123,7 +123,7 @@ module.exports = async function handler(req, res) {
         r = await fetch(cfg.url, {
           method: 'POST', signal: ctrl.signal,
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg.key() },
-          body: JSON.stringify({ model: cfg.model, max_tokens: 2000, temperature: 0, messages: opts.raw ? [ { role: 'user', content: prompt } ] : [ { role: 'system', content: cfg.system }, { role: 'user', content: prompt } ] })
+          body: JSON.stringify({ model: cfg.model, max_tokens: 2000, temperature: 0, seed: 7, messages: opts.raw ? [ { role: 'user', content: prompt } ] : [ { role: 'system', content: cfg.system }, { role: 'user', content: prompt } ] })
         });
       } catch (e) {
         clearTimeout(timer);
@@ -407,6 +407,12 @@ module.exports = async function handler(req, res) {
       // Vincoli rigidi: dimensione sotto la soglia minima sul vettore medio dei modelli
       const vmean = cross.v_mean || null;
       const hardViolations = vmean ? MIRAGE_DIMS.filter((d, j) => CRITERIA_SET.dims[d].hard_constraint_flag && vmean[j] < CRITERIA_SET.dims[d].min_score) : [];
+      // Vincolo rigido non determinabile: i modelli divergono sulla dimensione e la soglia cade dentro la loro dispersione.
+      // L'esito (sopra o sotto soglia) dipenderebbe da quale modello prevale: non si rilascia ne si blocca in silenzio.
+      const hardUndecidable = vmean ? MIRAGE_DIMS.filter((d, j) => {
+        const c = CRITERIA_SET.dims[d], dv = cross.dim_divergence ? cross.dim_divergence[d] : 0;
+        return c.hard_constraint_flag && dv >= THRESHOLD_PROFILE.warn && Math.abs(vmean[j] - c.min_score) < dv;
+      }) : [];
       const averageHidesHard = synthetic != null && synthetic >= GATE_PROFILE.acceptance_threshold && hardViolations.length > 0;
 
       const anomalies = Object.keys(panels).reduce((n, k) => n + ((panels[k].mirage.anomaly_flags || []).length), 0);
@@ -424,6 +430,7 @@ module.exports = async function handler(req, res) {
         if (cross.independence && !cross.independence.ok) reasons.push('indipendenza dei modelli non soddisfatta: ' + cross.independence.issues.join('; '));
         if (cross.idcm >= cross.threshold_profile.critical) reasons.push(`IDCM ${cross.idcm} oltre la soglia critica ${cross.threshold_profile.critical}`);
         if (masked) reasons.push('consenso apparente critico: score sintetico ' + synthetic + ' accettabile ma divergenza oltre soglia su ' + maskedDims.join(', '));
+        if (hardUndecidable.length) reasons.push('vincolo rigido non determinabile: la soglia minima cade dentro la divergenza tra modelli su ' + hardUndecidable.map(d => d + ' (media ' + Math.round(vmean[MIRAGE_DIMS.indexOf(d)] * 100) + ', soglia ' + Math.round(CRITERIA_SET.dims[d].min_score * 100) + ', dispersione ' + Math.round(cross.dim_divergence[d] * 100) + ')').join(', '));
         if ((extra.scope_violations || []).length) reasons.push('il secondo stadio ha valutato dimensioni vietate dal payload (' + extra.scope_violations.join('; ') + ')');
         if (reasons.length) state = 'UNCERTAIN_STATE';
         else {
@@ -461,6 +468,7 @@ module.exports = async function handler(req, res) {
         masked_dimensions: masked ? maskedDims : [],
         divergence_per_dim: divergence,
         hard_constraint_violations: hardViolations,
+        hard_constraints_undecidable: hardUndecidable,
         average_hides_hard_constraint: averageHidesHard,
         authorized_connectors: authorized,
         blocked_connectors: blocked,
@@ -498,6 +506,9 @@ module.exports = async function handler(req, res) {
       'Non hai accesso a valutazioni precedenti: esprimi un giudizio autonomo.\n\n' +
       'DEFINIZIONI: requisiti = ammissibilita formale; innovazione = grado di novita e difendibilita; mercato = domanda, concorrenza, modello di ricavo; ' +
       'team = competenze e completezza; numeri = solidita economico-finanziaria; impatti = occupazione, territorio, inclusione.\n\n' +
+      'REGOLA SUI NUMERI: i dati finanziari di dettaglio (runway, capex e opex per voce, cash-burn, costi API, scenari di break-even) NON sono raccolti in questa fase: ' +
+      'la loro assenza NON riduce il punteggio. Valuta invece, in entrambe le direzioni, i dati dichiarati: rapporto tra capitale proprio e investimento, ' +
+      'garanzie e fideiussioni, coinvestitori, trazione (LOI, ricavi), coerenza del modello di ricavo. Un dato dichiarato debole va penalizzato anche se gli altri sono buoni.\n\n' +
       'AMBITO: {{SCOPE}}\n\nPROGETTO:\n{{PROJECT}}\n\n' +
       'Rispondi SOLO con JSON valido, nessun testo prima o dopo. Lo schema indica solo il formato: ogni <intero 0-100> va sostituito con il tuo punteggio.\n{{SCHEMA}}';
 
