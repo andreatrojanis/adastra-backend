@@ -890,7 +890,8 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       if(trazione.includes('3 '))
         azioni.push({livello:'preferibile',label:'Avvia almeno un pilot operativo',desc:'Un pilot con data di inizio e deliverable documentati vale piu di 10 LOI. Anche a titolo gratuito o a prezzo ridotto.',tempo:'variabile',costo:'0'});
 
-      if(!azioni.length) return '';
+      // Nessuna azione preliminare: la sezione (con il pulsante del dossier) va mostrata comunque
+      const nessunaAzione = !azioni.length;
 
       const colori = {
         obbligatorio:{bg:'rgba(176,0,32,0.04)',brd:'rgba(176,0,32,0.25)',col:'#b00020',lbl:'OBBLIGATORIO'},
@@ -975,9 +976,9 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
 
       return D+'Piano pre-candidatura</div>'+
         '<div style="border:1px solid '+border+';'+br+';padding:20px;background:#fff;margin-bottom:12px;">'+
-        '<div style="'+fb+';font-size:13px;font-weight:300;color:#555;line-height:1.6;margin-bottom:16px;">Prima di generare il dossier, completa queste azioni per massimizzare le probabilita di approvazione.</div>'+
+        '<div style="'+fb+';font-size:13px;font-weight:300;color:#555;line-height:1.6;margin-bottom:16px;">'+(nessunaAzione?'Non risultano azioni preliminari obbligatorie: i requisiti principali dichiarati sono coperti.':'Prima di generare il dossier, completa queste azioni per massimizzare le probabilita di approvazione.')+'</div>'+
         banner+
-        righe+
+        (nessunaAzione?'':righe)+
         '<div style="margin-top:16px;padding:14px 16px;background:'+goldBg+';border-radius:10px;border:1px solid '+border+';">'+
         '<div style="'+fd+';font-size:12px;font-weight:600;color:#111;margin-bottom:4px;">Passo 2 — Genera il dossier</div>'+
         '<div style="'+fb+';font-size:12px;font-weight:300;color:#555;line-height:1.6;margin-bottom:12px;">Il dossier generato da Starton è pronto per essere caricato sul portale Invitalia. Generalo quando le azioni obbligatorie sono completate, poi presentalo tu stesso in autonomia.</div>'+
