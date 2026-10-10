@@ -72,6 +72,7 @@ module.exports = async function handler(req, res) {
           body: JSON.stringify({
             model: model,
             max_tokens: 3000,
+            temperature: 0, // valutatore: niente rumore di campionamento tra esecuzioni
             messages: [{ role: 'user', content: opts.raw ? prompt : CLAUDE_PREFIX + prompt }]
           })
         });
@@ -122,7 +123,7 @@ module.exports = async function handler(req, res) {
         r = await fetch(cfg.url, {
           method: 'POST', signal: ctrl.signal,
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg.key() },
-          body: JSON.stringify({ model: cfg.model, max_tokens: 2000, messages: opts.raw ? [ { role: 'user', content: prompt } ] : [ { role: 'system', content: cfg.system }, { role: 'user', content: prompt } ] })
+          body: JSON.stringify({ model: cfg.model, max_tokens: 2000, temperature: 0, messages: opts.raw ? [ { role: 'user', content: prompt } ] : [ { role: 'system', content: cfg.system }, { role: 'user', content: prompt } ] })
         });
       } catch (e) {
         clearTimeout(timer);
