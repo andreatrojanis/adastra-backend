@@ -987,7 +987,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
   const MSTATE = {
     STABLE_OUTPUT:{t:'Valutazione solida',d:'I tre modelli indipendenti concordano e nessun criterio è sotto la soglia minima.',c:'#0a7f2e',bg:'rgba(10,127,46,0.05)',b:'rgba(10,127,46,0.25)'},
     ANNOTATED_OUTPUT:{t:'Valutazione con avvertenze',d:'Il risultato è affidabile, con alcune avvertenze da leggere prima di procedere.',c:'#a07820',bg:'rgba(160,120,32,0.06)',b:'rgba(160,120,32,0.3)'},
-    UNCERTAIN_STATE:{t:'Valutazione incerta su un criterio decisivo',d:'I modelli non concordano su un criterio che decide l\'ammissibilità. Finche il punto non è chiarito, dossier e candidatura restano sospesi.',c:'#b06000',bg:'rgba(176,96,0,0.06)',b:'rgba(176,96,0,0.3)'},
+    UNCERTAIN_STATE:{t:'Valutazione incerta su un criterio decisivo',d:'I modelli non concordano su un criterio che decide l\'ammissibilità. Finché il punto non è chiarito, dossier e candidatura restano sospesi.',c:'#b06000',bg:'rgba(176,96,0,0.06)',b:'rgba(176,96,0,0.3)'},
     QUARANTINED_OUTPUT:{t:'Analisi non rilasciabile',d:'Il controllo di integrità ha bloccato il risultato.',c:'#b00020',bg:'rgba(176,0,32,0.04)',b:'rgba(176,0,32,0.3)'}
   };
   function mirageCauses(m){
@@ -1010,7 +1010,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       '<div style="'+fd+';font-size:16px;font-weight:600;color:'+S.c+';margin-bottom:6px;">'+S.t+'</div>'+
       '<div style="'+fb+';font-size:13px;color:#555;line-height:1.6;margin-bottom:8px;">'+((m.gate.state==='STABLE_OUTPUT'&&!m.stage2)?'Gli agenti del panel concordano e nessun criterio è sotto la soglia minima: non è stato necessario un ricontrollo con altri modelli.':S.d)+'</div>'+
       '<ul style="margin:0 0 8px 18px;'+fb+';font-size:13px;color:#333;line-height:1.7;">'+mirageCauses(m).map(x=>'<li>'+x+'</li>').join('')+'</ul>'+
-      '<div style="'+fb+';font-size:12px;color:'+(dossierOk?'#0a7f2e':'#b06000')+';">'+(dossierOk?'Dossier e candidatura: abilitati.':'Dossier e candidatura: sospesi finche i criteri indicati non sono risolti.')+'</div>'+
+      '<div style="'+fb+';font-size:12px;color:'+(dossierOk?'#0a7f2e':'#b06000')+';">'+(dossierOk?'Dossier e candidatura: abilitati.':'Dossier e candidatura: sospesi finché i criteri indicati non sono risolti.')+'</div>'+
       '</div>';
   }
   function miragePanel(m){
