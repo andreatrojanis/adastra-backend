@@ -49,6 +49,19 @@
           "value": "no-store, max-age=0"
         }
       ]
+    },
+    {
+      "source": "/analisi-mirage(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        }
+      ]
     }
   ],
   "routes": [
@@ -59,6 +72,10 @@
     {
       "src": "/analisi",
       "dest": "/index.html"
+    },
+    {
+      "src": "/analisi-mirage",
+      "dest": "/analisi-mirage.html"
     },
     {
       "src": "/investitori",
