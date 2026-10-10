@@ -160,7 +160,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
           <div class="field"><label>Comune</label><input type="text" id="f-comune" placeholder="es. Bari"></div>
           <div class="field"><label>Cratere sismico Centro Italia</label><select id="f-cratere"><option value="no">No</option><option value="si">Sì — comune nel cratere</option></select></div>
         </div>
-        <div class="field"><label>Investimento totale previsto (€)</label><input type="number" id="f-investimento" min="10000" step="1000" placeholder="es. 350000"><div class="q-note">Inserisci il costo totale reale per far partire o crescere il progetto.</div></div>
+        <div class="field"><label>Investimento totale previsto (€)</label><input type="text" inputmode="numeric" autocomplete="off" id="f-investimento" data-num="eur" placeholder="es. 350000"><div class="num-hint" id="f-investimento-hint" style="font-size:11px;color:#a07820;margin-top:4px;min-height:14px;"></div><div class="q-note">Inserisci il costo totale reale per far partire o crescere il progetto.</div></div>
       </div>
     </div>
 
@@ -227,7 +227,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
         <div class="field"><label>Fideiussione disponibile</label><select id="f-fideiussione"><option value="Non ancora valutata">Non ancora valutata</option><option value="Sì — disponibile">Sì — disponibile</option><option value="Da strutturare">Da strutturare con garanzie terze</option><option value="No — non disponibile">No — non disponibile</option></select><div class="q-note">Smart&Start richiede garanzia fideiussoria sul finanziamento agevolato.</div></div>
         <div class="field"><label>Fatturato attuale</label><select id="f-fatturato"><option value="Impresa non ancora costituita">Impresa non ancora costituita</option><option value="Zero — pre-revenue">Zero — pre-revenue</option><option value="Sotto 50k">Sotto €50.000</option><option value="50k–200k">€50.000 – €200.000</option><option value="200k–500k">€200.000 – €500.000</option><option value="Oltre 500k">Oltre €500.000</option></select></div>
         <div class="field-row">
-          <div class="field"><label>Capitale iniziale disponibile (€)</label><input type="number" id="f-capitale" min="0" step="1000" placeholder="es. 60000"></div>
+          <div class="field"><label>Capitale iniziale disponibile (€)</label><input type="text" inputmode="numeric" autocomplete="off" id="f-capitale" data-num="eur" placeholder="es. 60000"><div class="num-hint" id="f-capitale-hint" style="font-size:11px;color:#a07820;margin-top:4px;min-height:14px;"></div></div>
           <div class="field"><label>Co-investitori / business angel</label><select id="f-coinvestitori"><option value="No">No</option><option value="In trattativa">In trattativa</option><option value="Sì — confermati">Sì — confermati</option></select></div>
         </div>
       </div>
@@ -320,8 +320,8 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       <div class="q-sub">Numeri concreti. Più specifico sei, più credibile sei.</div>
       <div class="field-group">
         <div class="field-row">
-          <div class="field"><label>LOI / pilot / contratti (numero)</label><input type="number" id="f-loi" min="0" max="100" placeholder="es. 3"></div>
-          <div class="field"><label>Ricavi mensili attuali (€)</label><input type="number" id="f-ricavi" min="0" step="100" placeholder="es. 5000"><div class="q-note">0 se pre-revenue</div></div>
+          <div class="field"><label>LOI / pilot / contratti (numero)</label><input type="text" inputmode="numeric" autocomplete="off" id="f-loi" data-num="int" data-max="100" maxlength="3" placeholder="es. 3"></div>
+          <div class="field"><label>Ricavi mensili attuali (€)</label><input type="text" inputmode="numeric" autocomplete="off" id="f-ricavi" data-num="eur" placeholder="es. 5000"><div class="num-hint" id="f-ricavi-hint" style="font-size:11px;color:#a07820;margin-top:4px;min-height:14px;"></div><div class="q-note">0 se pre-revenue</div></div>
         </div>
       </div>
     </div>
@@ -334,7 +334,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       <div class="field-group">
         <div class="field"><label>Descrizione del team</label><textarea id="f-team" maxlength="500" placeholder="Ruolo, anni esperienza, track record. es. Mario Rossi — CEO, 12 anni industria manifatturiera. Laura Bianchi — CTO, ex R&D Fiat."></textarea><div class="char-count"><span id="cc-team">0</span>/500</div></div>
         <div class="field-row">
-          <div class="field"><label>Esperienza cumulata (anni)</label><input type="number" id="f-esperienza" min="0" max="100" placeholder="es. 25"><div class="q-note">Somma anni rilevanti di tutti i soci</div></div>
+          <div class="field"><label>Esperienza cumulata (anni)</label><input type="text" inputmode="numeric" autocomplete="off" id="f-esperienza" data-num="int" data-max="200" maxlength="3" placeholder="es. 25"><div class="q-note">Somma anni rilevanti di tutti i soci</div></div>
           <div class="field"><label>Team tecnico qualificato</label><select id="f-teamtech"><option value="No — solo commerciale">No — competenze solo commerciali</option><option value="Parziale — un profilo tecnico">Parziale — un profilo tecnico</option><option value="Sì — team tecnico strutturato">Sì — team tecnico strutturato</option></select></div>
         </div>
         <div class="field-row">
@@ -351,14 +351,14 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       <div class="q-sub">La coerenza tra investimento e piano di spesa viene verificata in istruttoria.</div>
       <div class="field-group">
         <div class="field-row">
-          <div class="field"><label>Macchinari / attrezzature (%)</label><input type="number" id="f-mac" min="0" max="100" placeholder="0"></div>
-          <div class="field"><label>Software / brevetti / know-how (%)</label><input type="number" id="f-soft" min="0" max="100" placeholder="0"></div>
+          <div class="field"><label>Macchinari / attrezzature (%)</label><input type="text" inputmode="numeric" autocomplete="off" id="f-mac" data-num="int" data-max="100" maxlength="3" placeholder="0"></div>
+          <div class="field"><label>Software / brevetti / know-how (%)</label><input type="text" inputmode="numeric" autocomplete="off" id="f-soft" data-num="int" data-max="100" maxlength="3" placeholder="0"></div>
         </div>
         <div class="field-row">
-          <div class="field"><label>Opere murarie / adeguamenti (%)</label><input type="number" id="f-opere" min="0" max="100" placeholder="0"></div>
-          <div class="field"><label>Consulenze / formazione (%)</label><input type="number" id="f-cons" min="0" max="100" placeholder="0"></div>
+          <div class="field"><label>Opere murarie / adeguamenti (%)</label><input type="text" inputmode="numeric" autocomplete="off" id="f-opere" data-num="int" data-max="100" maxlength="3" placeholder="0"></div>
+          <div class="field"><label>Consulenze / formazione (%)</label><input type="text" inputmode="numeric" autocomplete="off" id="f-cons" data-num="int" data-max="100" maxlength="3" placeholder="0"></div>
         </div>
-        <div class="field"><label>Altro — autoveicoli, immobili, spese generali (%)</label><input type="number" id="f-altro" min="0" max="100" placeholder="0"></div>
+        <div class="field"><label>Altro — autoveicoli, immobili, spese generali (%)</label><input type="text" inputmode="numeric" autocomplete="off" id="f-altro" data-num="int" data-max="100" maxlength="3" placeholder="0"></div>
         <div id="spese-msg" class="q-note"></div>
       </div>
     </div>
@@ -492,6 +492,50 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
 
   const $ = id => document.getElementById(id);
 
+  // ── CAMPI NUMERICI: accettano 20000, 20.000, 20 000, €20.000, 20k, 1,5M; mostrano sempre la cifra interpretata ──
+  function parseEur(raw){
+    let t=String(raw||'').toLowerCase().replace(/€|euro|eur|\s/g,'');
+    if(!t) return null;
+    let mult=1;
+    if(/(milioni|mln|mio|m)$/.test(t)){mult=1e6;t=t.replace(/(milioni|mln|mio|m)$/,'');}
+    else if(/(mila|k)$/.test(t)){mult=1e3;t=t.replace(/(mila|k)$/,'');}
+    let n;
+    if(mult>1){ n=parseFloat(t.replace(/\./g,'').replace(',','.')); }
+    else {
+      t=t.replace(/,\d{1,2}$/,'');                 // centesimi con la virgola: ignorati
+      if(/^\d+\.\d{1,2}$/.test(t)) t=t.split('.')[0]; // 1500.50 → 1500
+      n=parseInt(t.replace(/\D/g,''),10);
+    }
+    return isFinite(n)?Math.round(n*mult):null;
+  }
+  function numStr(id){
+    const el=typeof id==='string'?document.getElementById(id):id;
+    if(!el) return '';
+    if(el.dataset.num==='eur'){const n=parseEur(el.value);return n==null?'':String(n);}
+    const d=String(el.value||'').replace(/\D/g,'');
+    return d;
+  }
+  window.numStr=numStr;
+  function bindNumericFields(){
+    document.querySelectorAll('input[data-num]').forEach(function(el){
+      const hint=document.getElementById(el.id+'-hint');
+      const show=function(){
+        if(el.dataset.num==='eur'){
+          const n=parseEur(el.value);
+          if(hint) hint.textContent = el.value.trim()==='' ? '' : (n==null ? 'Cifra non riconosciuta: scrivi solo il numero, es. 20000' : '= € '+n.toLocaleString('it-IT'));
+        } else {
+          let d=el.value.replace(/\D/g,''); const mx=parseInt(el.dataset.max||'0',10);
+          if(mx && d!=='' && parseInt(d,10)>mx) d=String(mx);
+          if(d!==el.value) el.value=d;
+        }
+      };
+      const fmt=function(){ if(el.dataset.num==='eur'){const n=parseEur(el.value); if(n!=null) el.value=n.toLocaleString('it-IT');} show(); };
+      el.addEventListener('input',show); el.addEventListener('blur',fmt); el.addEventListener('change',fmt);
+      fmt();
+    });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',bindNumericFields); else bindNumericFields();
+
   const RP = {"Abruzzo":["AQ","CH","PE","TE"],"Basilicata":["MT","PZ"],"Calabria":["CS","CZ","KR","RC","VV"],"Campania":["AV","BN","CE","NA","SA"],"Emilia-Romagna":["BO","FC","FE","MO","PR","PC","RA","RE","RN"],"Friuli Venezia Giulia":["GO","PN","TS","UD"],"Lazio":["FR","LT","RI","RM","VT"],"Liguria":["GE","IM","SP","SV"],"Lombardia":["BG","BS","CO","CR","LC","LO","MB","MI","MN","PV","SO","VA"],"Marche":["AN","AP","FM","MC","PU"],"Molise":["CB","IS"],"Piemonte":["AL","AT","BI","CN","NO","TO","VB","VC"],"Puglia":["BA","BAT","BR","FG","LE","TA"],"Sardegna":["CA","NU","OR","SS","SU"],"Sicilia":["AG","CL","CT","EN","ME","PA","RG","SR","TP"],"Toscana":["AR","FI","GR","LI","LU","MS","PI","PO","PT","SI"],"Trentino-Alto Adige":["BZ","TN"],"Umbria":["PG","TR"],"Valle d'Aosta":["AO"],"Veneto":["BL","PD","RO","TV","VE","VI","VR"]};
   const SUD = new Set(["Abruzzo","Basilicata","Calabria","Campania","Molise","Puglia","Sardegna","Sicilia"]);
 
@@ -549,7 +593,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
     const prov=$('f-provincia')?.value||'';
     const comune=$('f-comune')?.value||'';
     const sede=[comune,prov?'('+prov+')':null,reg].filter(Boolean).join(' ')||'—';
-    const inv=$('f-investimento')?.value;
+    const inv=numStr('f-investimento');
     $('gs-nome').textContent=$('f-nome')?.value||'—';
     $('gs-settore').textContent=answers['s2']||'—';
     $('gs-sede').textContent=sede;
@@ -599,7 +643,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
   ['f-mac','f-soft','f-opere','f-cons','f-altro'].forEach(id=>{
     const el=$(id);
     if(el)el.addEventListener('input',()=>{
-      const tot=['f-mac','f-soft','f-opere','f-cons','f-altro'].reduce((a,i)=>a+(parseFloat($(i)?.value||0)||0),0);
+      const tot=['f-mac','f-soft','f-opere','f-cons','f-altro'].reduce((a,i)=>a+(parseFloat(numStr(i)||0)||0),0);
       const msg=$('spese-msg');
       if(msg)msg.textContent=Math.abs(tot-100)>2?'Totale: '+tot.toFixed(0)+'% — punta a 100%':'Totale: '+tot.toFixed(0)+'% ✓';
     });
@@ -622,9 +666,9 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       '\nREGIONE: '+reg+(prov?' ('+prov+')':'')+' — '+(isSud?'SUD ITALIA (premialita Smart&Start attiva)':'Centro/Nord')+
       '\nCOMUNE: '+($('f-comune')?.value||'—')+
       '\n--- DATI ECONOMICI CRITICI ---'+
-      '\nINVESTIMENTO TOTALE: €'+parseInt($('f-investimento')?.value||0).toLocaleString('it-IT')+
-      '\nCAPITALE PROPRIO INIZIALE: €'+parseInt($('f-capitale')?.value||0).toLocaleString('it-IT')+
-      '\nRICAVI MENSILI CORRENTI: €'+parseInt($('f-ricavi')?.value||0).toLocaleString('it-IT')+
+      '\nINVESTIMENTO TOTALE: €'+parseInt(numStr('f-investimento')||0).toLocaleString('it-IT')+
+      '\nCAPITALE PROPRIO INIZIALE: €'+parseInt(numStr('f-capitale')||0).toLocaleString('it-IT')+
+      '\nRICAVI MENSILI CORRENTI: €'+parseInt(numStr('f-ricavi')||0).toLocaleString('it-IT')+
       '\nFATTURATOCORRENTE: '+($('f-fatturato')?.value||'—')+
       '\nCO-INVESTITORI: '+($('f-coinvestitori')?.value||'—')+
       '\nFIDEIUSSIONE: '+($('f-fideiussione')?.value||'—')+
@@ -635,7 +679,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       '\nDE MINIMIS: '+($('f-deminimis')?.value||'—')+
       '\nCRATERE SISMICO: '+($('f-cratere')?.value||'no')+
       '\n--- TEAM ---'+
-      '\nESPERIENZA CUMULATA TEAM: '+($('f-esperienza')?.value||'0')+' anni'+
+      '\nESPERIENZA CUMULATA TEAM: '+(numStr('f-esperienza')||'0')+' anni'+
       '\nTEAM: '+($('f-team')?.value||'—')+
       '\nTEAM TECNICO: '+($('f-teamtech')?.value||'—')+
       '\nADVISOR / INCUBATORE: '+($('f-advisor')?.value||'—')+
@@ -650,14 +694,14 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       '\n--- MERCATO ---'+
       '\nSCALABILITA: '+(answers['s12']||'—')+
       '\nTRAZIONE: '+(answers['s14']||'—')+
-      '\nLOI / PILOT / CONTRATTI: '+($('f-loi')?.value||'0')+
+      '\nLOI / PILOT / CONTRATTI: '+(numStr('f-loi')||'0')+
       '\nMERCATO TARGET: '+($('f-mercato')?.value||'—')+
       '\nCOMPETITOR E DIFFERENZIAZIONE: '+($('f-competitor')?.value||'—')+
       '\n--- PIANO FINANZIARIO ---'+
       '\nMODELLO REVENUE: '+($('f-revenue')?.value||'—')+
       '\nBREAK-EVEN: '+($('f-breakeven')?.value||'—')+
       '\nEXPORT: '+($('f-export')?.value||'—')+
-      '\nSPESE: Macchinari '+($('f-mac')?.value||'0')+'% Software '+($('f-soft')?.value||'0')+'% Opere '+($('f-opere')?.value||'0')+'% Consulenze '+($('f-cons')?.value||'0')+'% Altro '+($('f-altro')?.value||'0')+'%'+
+      '\nSPESE: Macchinari '+(numStr('f-mac')||'0')+'% Software '+(numStr('f-soft')||'0')+'% Opere '+(numStr('f-opere')||'0')+'% Consulenze '+(numStr('f-cons')||'0')+'% Altro '+(numStr('f-altro')||'0')+'%'+
       '\n--- RISCHI E IMPATTI ---'+
       '\nRISCHIO PRINCIPALE: '+($('f-rischio')?.value||'—')+
       '\nDIPENDENZE CRITICHE: '+($('f-dipendenze')?.value||'—')+
@@ -837,7 +881,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       const universita = document.getElementById('f-universita')?.value||'';
       const trazione = answers['s14']||'';
       const anzianita = answers['s6']||'';
-      const capital = parseInt(document.getElementById('f-capitale')?.value||'0')||0;
+      const capital = parseInt(numStr('f-capitale')||'0')||0;
 
       const D = '<div style="'+fd+';font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:'+gold+';margin:20px 0 12px;display:flex;align-items:center;gap:8px;"><span style="display:block;width:16px;height:1px;background:'+gold+'"></span>';
 
@@ -1666,7 +1710,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       provincia: document.getElementById('f-provincia')?.value||'',
       comune: document.getElementById('f-comune')?.value||'',
       isSud: SUD_SET.has(reg),
-      investimento: document.getElementById('f-investimento')?.value||'0',
+      investimento: numStr('f-investimento')||'0',
       revenue: document.getElementById('f-revenue')?.value||'',
       breakeven: document.getElementById('f-breakeven')?.value||'',
       export: document.getElementById('f-export')?.value||'',
@@ -1676,7 +1720,7 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       deminimis: document.getElementById('f-deminimis')?.value||'',
       fideiussione: document.getElementById('f-fideiussione')?.value||'',
       fatturato: document.getElementById('f-fatturato')?.value||'',
-      capitale: document.getElementById('f-capitale')?.value||'0',
+      capitale: numStr('f-capitale')||'0',
       coinvestitori: document.getElementById('f-coinvestitori')?.value||'',
       trl: answers['s9']||'',
       tipoInnovazione: answers['s10']||'',
@@ -1688,18 +1732,18 @@ html,body{min-height:100%;background:#f8f6f2;font-family:'Helvetica Neue',Helvet
       mercato: document.getElementById('f-mercato')?.value||'',
       competitor: document.getElementById('f-competitor')?.value||'',
       trazione: answers['s14']||'',
-      loi: document.getElementById('f-loi')?.value||'0',
-      ricavi: document.getElementById('f-ricavi')?.value||'0',
+      loi: numStr('f-loi')||'0',
+      ricavi: numStr('f-ricavi')||'0',
       team: document.getElementById('f-team')?.value||'',
-      esperienza: document.getElementById('f-esperienza')?.value||'0',
+      esperienza: numStr('f-esperienza')||'0',
       teamtech: document.getElementById('f-teamtech')?.value||'',
       advisor: document.getElementById('f-advisor')?.value||'',
       personale: document.getElementById('f-personale')?.value||'',
-      mac: document.getElementById('f-mac')?.value||'0',
-      soft: document.getElementById('f-soft')?.value||'0',
-      opere: document.getElementById('f-opere')?.value||'0',
-      cons: document.getElementById('f-cons')?.value||'0',
-      altro: document.getElementById('f-altro')?.value||'0',
+      mac: numStr('f-mac')||'0',
+      soft: numStr('f-soft')||'0',
+      opere: numStr('f-opere')||'0',
+      cons: numStr('f-cons')||'0',
+      altro: numStr('f-altro')||'0',
       rischio: document.getElementById('f-rischio')?.value||'',
       dipendenze: document.getElementById('f-dipendenze')?.value||'',
       impatti: answers['s19']||'',
