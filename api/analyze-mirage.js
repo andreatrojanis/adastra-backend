@@ -600,6 +600,12 @@ module.exports = async function handler(req, res) {
       return { valid: errors.length === 0, errors };
     }
 
+    // taglia al termine dell'ultima frase completa entro il limite, mai a meta parola
+    function clipSentence(t, max) {
+      if (t.length <= max) return t;
+      const cut = t.slice(0, max), i = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('; '));
+      return (i > max * 0.5 ? cut.slice(0, i + 1) : cut.replace(/\s+\S*$/, '')) + ' …';
+    }
     // Secondo stadio limitato all'ambito del payload; dimensioni fuori ambito ignorate e segnalate
     async function runStage2(pl, project) {
       const scope = pl.conflict_dimension_ids;
@@ -623,7 +629,7 @@ module.exports = async function handler(req, res) {
           if (vals.every(v => isFinite(v))) vector = vals.map(v => Math.max(0, Math.min(1, v / 100)));
           else flags.push({ type: 'SCOPE_INCOMPLETE', detail: 'mancano punteggi su dimensioni dell\'ambito' });
         } else if (r) flags.push({ type: 'SCHEMA_ERROR', detail: 'risposta senza campo dimensioni' });
-        out[name] = { vector, flags, motivazione: r && r.motivazione ? (typeof r.motivazione === 'object' ? Object.entries(r.motivazione).map(([k, v]) => k + ': ' + v).join(' | ') : String(r.motivazione)).substring(0, 600) : null, prompt_hash: sha256(prompt) };
+        out[name] = { vector, flags, motivazione: r && r.motivazione ? clipSentence(typeof r.motivazione === 'object' ? Object.entries(r.motivazione).map(([k, v]) => k + ': ' + v).join(' | ') : String(r.motivazione), 1200) : null, prompt_hash: sha256(prompt) };
       }));
       return { scope, prompt_hash: sha256(prompt), results: out };
     }
