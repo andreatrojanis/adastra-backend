@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /analisi
+Disallow: /index.html
+Disallow: /investitori
+Disallow: /accesso-investitori
+Disallow: /dossier
+Disallow: /test
+Disallow: /api/

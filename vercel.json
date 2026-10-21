@@ -21,69 +21,47 @@
     },
     "api/log-acceptance.js": {
       "maxDuration": 10
+    },
+    "api/platform-closed.js": {
+      "maxDuration": 10
     }
   },
-  "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        },
-        {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET,POST,OPTIONS"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type"
-        }
-      ]
-    },
-    {
-      "source": "/(test.*\\.html)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, max-age=0"
-        }
-      ]
-    },
-    {
-      "source": "/analisi-mirage(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, max-age=0"
-        },
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex"
-        }
-      ]
-    }
-  ],
   "routes": [
     {
-      "src": "/",
+      "src": "^/(?:landing\\.html)?$",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "headers": {
+        "Cache-Control": "no-cache"
+      },
       "dest": "/landing.html"
     },
     {
-      "src": "/analisi",
-      "dest": "/index.html"
+      "src": "^/robots\\.txt$",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "dest": "/robots.txt"
     },
     {
-      "src": "/analisi-mirage",
-      "dest": "/analisi-mirage.html"
+      "src": "^/favicon\\.ico$",
+      "methods": [
+        "GET",
+        "HEAD"
+      ],
+      "status": 204
     },
     {
-      "src": "/investitori",
-      "dest": "/investitori.html"
-    },
-    {
-      "src": "/accesso-investitori",
-      "dest": "/accesso-investitori.html"
+      "src": "^/.*$",
+      "headers": {
+        "Cache-Control": "no-store, max-age=0",
+        "X-Robots-Tag": "noindex, nofollow",
+        "Retry-After": "3600"
+      },
+      "dest": "/api/platform-closed"
     }
   ]
 }
