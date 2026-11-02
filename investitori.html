@@ -75,7 +75,7 @@
 
   /* PRODUCT */
   .layers { display:flex; flex-direction:column; gap:1px; background:var(--border); border:1px solid var(--border); }
-  .layer { display:grid; grid-template-columns:48px 1fr auto; background:var(--cream); transition:background 0.2s; }
+  .layer { display:grid; grid-template-columns:48px 1fr; background:var(--cream); transition:background 0.2s; }
   .layer:hover { background:var(--cream2); }
   .layer.gold { background:var(--gold-dim); }
   .layer.gold:hover { background:rgba(201,168,76,0.18); }
@@ -189,12 +189,12 @@
       <div class="h-stat-label">FP Starton<br>Smart&Start Puglia</div>
     </div>
     <div class="h-stat">
-      <div class="h-stat-val">5%</div>
-      <div class="h-stat-label">Success fee<br>solo sul FP vinto</div>
+      <div class="h-stat-val">Quota fissa</div>
+      <div class="h-stat-label">Per il<br>servizio</div>
     </div>
     <div class="h-stat">
-      <div class="h-stat-val">€7.400</div>
-      <div class="h-stat-label">LTV medio<br>pratica vinta</div>
+      <div class="h-stat-val">Percentuale</div>
+      <div class="h-stat-label">Sul buon esito<br>della pratica</div>
     </div>
   </div>
 </div>
@@ -206,7 +206,7 @@
   <div class="two-col">
     <div class="prose reveal">
       <p>I bandi Invitalia per startup esistono, sono finanziati e aperti. Il problema non è trovarli — è <strong>costruire un dossier che regga l'istruttoria.</strong></p>
-      <p>Questa competenza costa oggi <strong>5.000–15.000€ di consulenza anticipata</strong>, senza garanzia di risultato. Un costo insostenibile per la maggior parte delle startup in fase pre-revenue.</p>
+      <p>L'accesso a questa competenza richiede consulenza specialistica, spesso difficile da sostenere per una startup in fase pre-revenue.</p>
       <p>Il risultato: il <strong>94,8% delle imprese italiane</strong> non ottiene nulla. Non per mancanza di fondi — per mancanza di dossier adeguati.</p>
     </div>
     <div class="reveal">
@@ -272,7 +272,6 @@
         <div class="l-title">Score di finanziabilità</div>
         <div class="l-desc">Analisi della startup sui criteri reali Invitalia. Score separato ON e Smart&Start su 6 dimensioni. Verdetto operativo e red flags bloccanti.</div>
       </div>
-      <div class="l-price">€99</div>
     </div>
     <div class="layer">
       <div class="l-num">02</div>
@@ -280,15 +279,13 @@
         <div class="l-title">Dossier completo</div>
         <div class="l-desc">Business plan, piano finanziario, relazione tecnica, allegati. Strutturati sui format Invitalia e ottimizzati sui criteri di valutazione reali.</div>
       </div>
-      <div class="l-price">€399</div>
     </div>
     <div class="layer gold">
       <div class="l-num">03</div>
       <div class="l-body">
-        <div class="l-title">Success fee sul fondo perduto</div>
-        <div class="l-desc">5% del FP effettivamente erogato da Invitalia. Solo se vinci. Incentivi totalmente allineati tra Starton e la startup.</div>
+        <div class="l-title">Percentuale sul buon esito</div>
+        <div class="l-desc">Componente variabile del compenso, legata al buon esito della pratica.</div>
       </div>
-      <div class="l-price">5% FP</div>
     </div>
     <div class="layer">
       <div class="l-num">04</div>
@@ -296,7 +293,6 @@
         <div class="l-title">Consulente integrato</div>
         <div class="l-desc">Per strutture complesse, doppia candidatura, strategie multi-bando. Rete di specialisti integrata nella piattaforma.</div>
       </div>
-      <div class="l-price">Su richiesta</div>
     </div>
   </div>
 
@@ -508,22 +504,8 @@
 <div class="section">
   <div class="section-tag">04 — Revenue model</div>
   <h2 class="section-title">Economics <em>chiari.</em><br>Incentivi allineati.</h2>
-  <div class="rev-grid reveal">
-    <div class="rev-card">
-      <div class="rev-label">Scenario prudente</div>
-      <div class="rev-num">~€593k</div>
-      <div class="rev-desc">600 simulatori · 50 pratiche vinte<br>20 partner B2B · 8% su FP medio €120k</div>
-    </div>
-    <div class="rev-card featured">
-      <div class="rev-label">Scenario ambizioso</div>
-      <div class="rev-num">~€2,1M</div>
-      <div class="rev-desc">2.000 simulatori · 150 pratiche vinte<br>60 partner B2B · 8% su FP medio €140k</div>
-    </div>
-    <div class="rev-card">
-      <div class="rev-label">Target mix ricavi</div>
-      <div class="rev-num">~€11.200</div>
-      <div class="rev-desc">LTV medio per pratica vinta<br>€29 + 8% su FP medio €140k</div>
-    </div>
+  <div class="quote-box reveal">
+    <p><strong>Quota fissa + percentuale sul buon esito.</strong> Il compenso combina una componente per il servizio e una componente variabile legata al risultato della pratica.</p>
   </div>
 </div>
 
@@ -553,19 +535,19 @@
     </div>
     <div style="display:grid; grid-template-columns:140px 1fr 1fr 160px; background:var(--cream2);">
       <div style="padding:14px 16px; font-family:var(--fv); font-size:12px; color:var(--text); border-right:1px solid var(--border);">Bandiora</div>
-      <div style="padding:14px 16px; font-size:11px; color:var(--text-dim); border-right:1px solid var(--border); line-height:1.5;">AI matching 300+ fonti, ranking compatibilità, generazione documenti formali. €49/mese.</div>
+      <div style="padding:14px 16px; font-size:11px; color:var(--text-dim); border-right:1px solid var(--border); line-height:1.5;">AI matching 300+ fonti, ranking compatibilità, generazione documenti formali.</div>
       <div style="padding:14px 16px; font-size:11px; color:var(--text-dim); border-right:1px solid var(--border); line-height:1.5;">Scoperta · matching · dashboard · documenti</div>
       <div style="padding:14px 16px; font-size:11px; color:var(--text-dim);">PMI · startup · consulenti</div>
     </div>
     <div style="display:grid; grid-template-columns:140px 1fr 1fr 160px; background:var(--cream);">
       <div style="padding:14px 16px; font-family:var(--fv); font-size:12px; color:var(--text); border-right:1px solid var(--border);">Bando Easy</div>
-      <div style="padding:14px 16px; font-size:11px; color:var(--text-dim); border-right:1px solid var(--border); line-height:1.5;">Dashboard bandi + consulenza dalla ricerca alla rendicontazione. Silver/Gold/Platinum.</div>
+      <div style="padding:14px 16px; font-size:11px; color:var(--text-dim); border-right:1px solid var(--border); line-height:1.5;">Dashboard bandi + consulenza dalla ricerca alla rendicontazione.</div>
       <div style="padding:14px 16px; font-size:11px; color:var(--text-dim); border-right:1px solid var(--border); line-height:1.5;">Ricerca · consulenza · candidatura · rendicontazione</div>
       <div style="padding:14px 16px; font-size:11px; color:var(--text-dim);">Startup · MPMI</div>
     </div>
     <div style="display:grid; grid-template-columns:140px 1fr 1fr 160px; background:var(--cream2);">
       <div style="padding:14px 16px; font-family:var(--fv); font-size:12px; color:var(--text); border-right:1px solid var(--border);">GetBandit</div>
-      <div style="padding:14px 16px; font-size:11px; color:var(--text-dim); border-right:1px solid var(--border); line-height:1.5;">Automazione documentale e validazione finale per pratiche di finanza agevolata. Pricing a progetto.</div>
+      <div style="padding:14px 16px; font-size:11px; color:var(--text-dim); border-right:1px solid var(--border); line-height:1.5;">Automazione documentale e validazione finale per pratiche di finanza agevolata.</div>
       <div style="padding:14px 16px; font-size:11px; color:var(--text-dim); border-right:1px solid var(--border); line-height:1.5;">Compilazione · documenti · validazione</div>
       <div style="padding:14px 16px; font-size:11px; color:var(--text-dim);">Consulenti · studi</div>
     </div>
@@ -681,13 +663,13 @@
         <td style="text-align:center;"><span class="check">✓</span> Invitalia-spec.</td>
       </tr>
       <tr>
-        <td class="feat">Success fee allineato outcome</td>
+        <td class="feat">Percentuale sul buon esito</td>
         <td style="text-align:center; font-size:11px; color:var(--text-muted);">—</td>
         <td style="text-align:center; font-size:11px; color:var(--text-muted);">—</td>
         <td style="text-align:center; font-size:11px; color:var(--text-muted);">—</td>
         <td style="text-align:center; font-size:11px; color:var(--text-muted);">—</td>
         <td style="text-align:center; font-size:11px; color:var(--text-muted);">—</td>
-        <td style="text-align:center;"><span class="check">✓</span> 5% solo FP vinto</td>
+        <td style="text-align:center;"><span class="check">✓</span> Percentuale sul buon esito</td>
       </tr>
       <tr>
         <td class="feat">Rendicontazione</td>
@@ -709,7 +691,7 @@
   <!-- Competitor più pericoloso -->
   <div style="margin-top:16px; border:1px solid var(--border); background:var(--cream); padding:20px 24px; font-size:12px; color:var(--text-dim); line-height:1.65;" class="reveal">
     <span style="font-family:var(--fv); font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-muted);">Nota benchmark · </span>
-    <strong style="color:var(--text);">Bandiora è il competitor funzionale più pericoloso</strong> — presidia matching e generazione documenti con pricing accessibile (€49/mese) su target ampio. Il differenziatore di Starton non è la generalità ma la verticalità: pochi strumenti, criteri reali Invitalia, modello a outcome. <strong style="color:var(--text);">BandoSubito è il competitor istituzionale più forte</strong> — €2M raccolti, forte B2B/PRO — ma opera su scoperta e accesso, non su diagnosi di finanziabilità.
+    <strong style="color:var(--text);">Bandiora è il competitor funzionale più pericoloso</strong> — presidia matching e generazione documenti su target ampio. Il differenziatore di Starton non è la generalità ma la verticalità: pochi strumenti, criteri reali Invitalia, modello a outcome. <strong style="color:var(--text);">BandoSubito è il competitor istituzionale più forte</strong> — €2M raccolti, forte B2B/PRO — ma opera su scoperta e accesso, non su diagnosi di finanziabilità.
   </div>
 
   <!-- Modelli di revenue competitor -->
@@ -722,67 +704,59 @@
     <thead>
       <tr>
         <th style="width:18%">Player</th>
-        <th style="width:22%">Modello revenue</th>
-        <th style="width:22%">Pricing osservato</th>
-        <th style="width:18%; text-align:center;">Allineato all'outcome</th>
-        <th style="width:20%">Note</th>
+        <th style="width:32%">Modello revenue</th>
+        <th style="width:20%; text-align:center;">Allineato all'outcome</th>
+        <th style="width:30%">Note</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td class="feat" style="font-weight:400; color:var(--text);">BandoSubito</td>
         <td style="font-size:12px;">Abbonamento SaaS</td>
-        <td style="font-size:12px; color:var(--text-dim);">Piani mensili/annuali PRO</td>
         <td style="text-align:center;"><span class="cross">—</span></td>
         <td style="font-size:11px; color:var(--text-muted);">Flat indipendente dal risultato</td>
       </tr>
       <tr>
         <td class="feat" style="font-weight:400; color:var(--text);">Bandiora</td>
         <td style="font-size:12px;">Abbonamento SaaS</td>
-        <td style="font-size:12px; color:var(--text-dim);">€49/mese Pro</td>
         <td style="text-align:center;"><span class="cross">—</span></td>
         <td style="font-size:11px; color:var(--text-muted);">Flat indipendente dal risultato</td>
       </tr>
       <tr>
         <td class="feat" style="font-weight:400; color:var(--text);">Bando Easy</td>
         <td style="font-size:12px;">Abbonamento + consulenza</td>
-        <td style="font-size:12px; color:var(--text-dim);">€12–69/mese + fee consulenza</td>
         <td style="text-align:center;"><span class="cross">—</span></td>
         <td style="font-size:11px; color:var(--text-muted);">Fee anticipata, risultato non garantito</td>
       </tr>
       <tr>
         <td class="feat" style="font-weight:400; color:var(--text);">GetBandit</td>
         <td style="font-size:12px;">Fee a progetto</td>
-        <td style="font-size:12px; color:var(--text-dim);">Pricing a pacchetto</td>
         <td style="text-align:center;"><span class="cross">—</span></td>
         <td style="font-size:11px; color:var(--text-muted);">Pagamento anticipato per compilazione</td>
       </tr>
       <tr>
         <td class="feat" style="font-weight:400; color:var(--text);">Muffin</td>
         <td style="font-size:12px;">Abbonamento + rete consulenti</td>
-        <td style="font-size:12px; color:var(--text-dim);">Non pubblico</td>
         <td style="text-align:center;"><span class="cross">—</span></td>
         <td style="font-size:11px; color:var(--text-muted);">Consulenza tradizionale digitalizzata</td>
       </tr>
       <tr>
         <td class="feat" style="font-weight:400; color:var(--text);">BandiAI · Bandora</td>
         <td style="font-size:12px;">Abbonamento SaaS</td>
-        <td style="font-size:12px; color:var(--text-dim);">Non pubblico</td>
         <td style="text-align:center;"><span class="cross">—</span></td>
         <td style="font-size:11px; color:var(--text-muted);">Flat indipendente dal risultato</td>
       </tr>
       <tr style="background:var(--gold-dim);">
         <td style="font-family:var(--fv); font-size:12px; color:var(--gold); padding:13px 18px; border-bottom:1px solid var(--border);">S T A R T O N</td>
-        <td style="font-size:12px; padding:13px 18px; border-bottom:1px solid var(--border); color:var(--text);">Simulatore + success fee</td>
-        <td style="font-size:12px; padding:13px 18px; border-bottom:1px solid var(--border); color:var(--text);">€29 simulatore · dossier incluso · 8% FP vinto</td>
+        <td style="font-size:12px; padding:13px 18px; border-bottom:1px solid var(--border); color:var(--text);">Quota fissa + percentuale sul buon esito</td>
         <td style="text-align:center; padding:13px 18px; border-bottom:1px solid var(--border);"><span class="check" style="font-size:16px; font-weight:700;">✓</span></td>
-        <td style="font-size:11px; padding:13px 18px; border-bottom:1px solid var(--border); color:var(--text);">L'unico modello interamente allineato all'outcome. Nessuna barriera all'ingresso reale.</td>
+        <td style="font-size:11px; padding:13px 18px; border-bottom:1px solid var(--border); color:var(--text);">La componente variabile del compenso è legata al risultato.</td>
       </tr>
     </tbody>
   </table>
 
   <div style="margin-top:16px; border:1px solid var(--gold-border); background:var(--gold-dim); padding:20px 24px; font-family:var(--fv); font-size:13px; color:var(--text); line-height:1.65;" class="reveal">
-    Nessun competitor chiede il success fee. Tutti incassano prima, indipendentemente dall'esito. <strong>Starton è l'unico player che guadagna solo quando il cliente vince.</strong> Questo non è solo un modello di pricing — è un posizionamento: dichiara fiducia nella qualità del dossier e allinea completamente gli incentivi.
+    Il modello Starton combina una <strong>quota fissa per il servizio con una percentuale sul buon esito della pratica.</strong> La componente variabile collega una parte della remunerazione al risultato ottenuto dal cliente.
   </div>
 
   <!-- ARCHITETTURA VERIFICA RNA -->
@@ -869,99 +843,20 @@
 <div class="section">
   <div class="section-tag">07 — Revenue model</div>
   <h2 class="section-title">Come <em>guadagna</em> Starton.</h2>
-
-  <!-- Modello a tre livelli -->
-  <div class="layers reveal" style="margin-bottom:32px;">
+  <div class="layers reveal">
     <div class="layer">
       <div class="l-num">01</div>
       <div class="l-body">
-        <div class="l-title">Simulatore di finanziabilità</div>
-        <div class="l-desc">Score completo sul profilo startup, radar su 6 assi, verdetto panel AI con 4 agenti specializzati e Minority Report cross-AI. Filtro di serietà — non una barriera economica.</div>
+        <div class="l-title">Quota fissa</div>
+        <div class="l-desc">Una componente del compenso per il servizio di analisi e preparazione della candidatura.</div>
       </div>
-      <div class="l-price">€29</div>
     </div>
     <div class="layer gold">
       <div class="l-num">02</div>
       <div class="l-body">
-        <div class="l-title">Dossier completo + success fee</div>
-        <div class="l-desc">Business plan, piano finanziario, relazione tecnica, allegati submission-ready — inclusi nel success fee. Il cliente non paga il dossier anticipato. Paga solo quando Invitalia eroga il fondo perduto.</div>
+        <div class="l-title">Percentuale sul buon esito</div>
+        <div class="l-desc">Una componente variabile del compenso, legata al buon esito della pratica.</div>
       </div>
-      <div class="l-price">8% FP</div>
-    </div>
-    <div class="layer">
-      <div class="l-num">03</div>
-      <div class="l-body">
-        <div class="l-title">Licenza partner B2B</div>
-        <div class="l-desc">Per incubatori, acceleratori e commercialisti che usano Starton per l'intero portfolio clienti. ARR ricorrente mensile — il canale a moltiplicatore più alto.</div>
-      </div>
-      <div class="l-price">€199–999/mese</div>
-    </div>
-  </div>
-
-  <!-- Scenari ricavo -->
-  <div style="font-family:var(--fv); font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:var(--gold); margin-bottom:20px; display:flex; align-items:center; gap:8px;">
-    <span style="width:20px; height:1px; background:var(--gold); display:block;"></span>
-    Scenari di ricavo annuo
-  </div>
-
-  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); border:1px solid var(--border); margin-bottom:24px;" class="reveal">
-    <!-- Scenario prudente -->
-    <div style="padding:28px; background:var(--cream);">
-      <div style="font-family:var(--fv); font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-muted); margin-bottom:16px;">Scenario prudente · 50 pratiche vinte</div>
-      <div style="display:flex; flex-direction:column; gap:1px; background:var(--border); border:1px solid var(--border); margin-bottom:16px;">
-        <div style="display:grid; grid-template-columns:1fr auto; padding:10px 14px; background:var(--cream2); font-size:12px;">
-          <span style="color:var(--text-dim);">600 simulatori × €29</span>
-          <span style="font-family:var(--fv); color:var(--text);">€17.400</span>
-        </div>
-        <div style="display:grid; grid-template-columns:1fr auto; padding:10px 14px; background:var(--cream); font-size:12px;">
-          <span style="color:var(--text-dim);">50 pratiche vinte × FP medio €120k × 8%</span>
-          <span style="font-family:var(--fv); color:var(--text);">€480.000</span>
-        </div>
-        <div style="display:grid; grid-template-columns:1fr auto; padding:10px 14px; background:var(--cream2); font-size:12px;">
-          <span style="color:var(--text-dim);">20 partner B2B × €399/mese</span>
-          <span style="font-family:var(--fv); color:var(--text);">€95.760</span>
-        </div>
-      </div>
-      <div style="display:flex; justify-content:space-between; align-items:center; padding-top:12px; border-top:1px solid var(--gold-border);">
-        <span style="font-family:var(--fv); font-size:11px; color:var(--text-muted); letter-spacing:0.08em; text-transform:uppercase;">Totale</span>
-        <span style="font-family:var(--fv); font-size:24px; color:var(--gold); letter-spacing:-0.02em;">~€593k</span>
-      </div>
-    </div>
-    <!-- Scenario ambizioso -->
-    <div style="padding:28px; background:var(--gold-dim);">
-      <div style="font-family:var(--fv); font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--gold); margin-bottom:16px;">Scenario ambizioso · 150 pratiche vinte</div>
-      <div style="display:flex; flex-direction:column; gap:1px; background:var(--border); border:1px solid var(--gold-border); margin-bottom:16px;">
-        <div style="display:grid; grid-template-columns:1fr auto; padding:10px 14px; background:var(--cream); font-size:12px;">
-          <span style="color:var(--text-dim);">2.000 simulatori × €29</span>
-          <span style="font-family:var(--fv); color:var(--text);">€58.000</span>
-        </div>
-        <div style="display:grid; grid-template-columns:1fr auto; padding:10px 14px; background:var(--cream2); font-size:12px;">
-          <span style="color:var(--text-dim);">150 pratiche vinte × FP medio €140k × 8%</span>
-          <span style="font-family:var(--fv); color:var(--text);">€1.680.000</span>
-        </div>
-        <div style="display:grid; grid-template-columns:1fr auto; padding:10px 14px; background:var(--cream); font-size:12px;">
-          <span style="color:var(--text-dim);">60 partner B2B × €499/mese</span>
-          <span style="font-family:var(--fv); color:var(--text);">€359.280</span>
-        </div>
-      </div>
-      <div style="display:flex; justify-content:space-between; align-items:center; padding-top:12px; border-top:1px solid var(--gold-border);">
-        <span style="font-family:var(--fv); font-size:11px; color:var(--text-muted); letter-spacing:0.08em; text-transform:uppercase;">Totale</span>
-        <span style="font-family:var(--fv); font-size:24px; color:var(--gold); letter-spacing:-0.02em;">~€2,1M</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Mix ricavi target -->
-  <div style="border:1px solid var(--gold-border); background:var(--cream); padding:24px 28px; display:grid; grid-template-columns:1fr 1fr; gap:32px;" class="reveal">
-    <div>
-      <div style="font-family:var(--fv); font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">Target mix ricavi — visione fondo</div>
-      <div style="font-family:var(--fv); font-size:28px; color:var(--gold); margin-bottom:6px;">70 / 30</div>
-      <div style="font-size:12px; color:var(--text-dim); line-height:1.6;">70% software e ricorrente · 30% consulenziale. Il mix che genera multipli SaaS — non multipli da agenzia.</div>
-    </div>
-    <div>
-      <div style="font-family:var(--fv); font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">LTV medio per pratica vinta</div>
-      <div style="font-family:var(--fv); font-size:28px; color:var(--gold); margin-bottom:6px;">~€11.200</div>
-      <div style="font-size:12px; color:var(--text-dim); line-height:1.6;">€29 simulatore + 8% success fee su FP medio €140k = €11.200. CAC quasi zero — nessuna barriera all'ingresso.</div>
     </div>
   </div>
 </div>
