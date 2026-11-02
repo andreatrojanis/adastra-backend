@@ -153,7 +153,7 @@
 
   /* PRICING */
   .pricing-grid { display:flex; flex-direction:column; gap:1px; background:var(--border); border:1px solid var(--border); }
-  .pricing-row { display:grid; grid-template-columns:48px 1fr auto; background:var(--cream); transition:all 0.25s; position:relative; overflow:hidden; }
+  .pricing-row { display:grid; grid-template-columns:48px 1fr; background:var(--cream); transition:all 0.25s; position:relative; overflow:hidden; }
   .pricing-row::before { content:''; position:absolute; left:0; top:0; bottom:0; width:0; background:var(--gold-dim); transition:width 0.4s; }
   .pricing-row:hover { background:var(--cream2); }
   .pricing-row:hover::before { width:100%; }
@@ -279,8 +279,8 @@
         <div class="h-stat-label">Imprese italiane<br>senza finanziamento</div>
       </div>
       <div class="h-stat">
-        <div class="h-stat-val">5%</div>
-        <div class="h-stat-label">Success fee<br>solo se vinci</div>
+        <div class="h-stat-val">Quota fissa</div>
+        <div class="h-stat-label">+ percentuale<br>sul buon esito</div>
       </div>
       <div class="h-stat">
         <div class="h-stat-val">3</div>
@@ -296,7 +296,7 @@
   <h2 class="section-title reveal">La competenza non dovrebbe<br>essere un <em>privilegio.</em></h2>
   <div class="two-col">
     <div class="prose reveal-left">
-      <p>Produrre un dossier che regge l'istruttoria Invitalia richiede competenza specialistica. Fino ad oggi quella competenza costava <strong>5.000–15.000€ anticipati</strong> — e non era garantita.</p>
+      <p>Produrre un dossier che regge l'istruttoria Invitalia richiede <strong>competenza specialistica</strong>, spesso difficile da acquisire per una startup.</p>
       <p>Starton incorpora quel know-how direttamente nella piattaforma. Chi sa come funziona davvero un'istruttoria Invitalia ha costruito il motore. <strong>Adesso è disponibile a chiunque abbia un progetto valido.</strong></p>
       <p><em style="font-style:italic; color:var(--gold);">From know-how to know-AI.</em> La competenza non cambia — cambia chi può accederci.</p>
     </div>
@@ -420,8 +420,8 @@
 
 <!-- PRICING -->
 <div class="section">
-  <div class="section-tag">Pricing</div>
-  <h2 class="section-title reveal">€29 per sapere.<br><em>8% solo se vinci.</em></h2>
+  <div class="section-tag">Modello di compenso</div>
+  <h2 class="section-title reveal">Quota fissa.<br><em>Percentuale sul buon esito.</em></h2>
   <div class="pricing-grid reveal">
     <div class="pricing-row">
       <div class="p-num">01</div>
@@ -429,15 +429,13 @@
         <div class="p-title">Simulatore di finanziabilità</div>
         <div class="p-desc">Score completo sui criteri reali Invitalia. Panel 4 agenti specializzati + Minority Report cross-AI. Verdetto operativo e mappa delle criticità bloccanti.</div>
       </div>
-      <div class="p-price">€29</div>
     </div>
     <div class="pricing-row gold">
       <div class="p-num">02</div>
       <div class="p-body">
-        <div class="p-title">Dossier completo + success fee</div>
-        <div class="p-desc">Business plan, piano finanziario, relazione tecnica, allegati submission-ready. Il dossier è incluso nel success fee — non paghi nulla anticipato. Paghi solo quando Invitalia eroga il fondo perduto.</div>
+        <div class="p-title">Dossier completo</div>
+        <div class="p-desc">Business plan, piano finanziario, relazione tecnica, allegati submission-ready.</div>
       </div>
-      <div class="p-price">8% FP</div>
     </div>
     <div class="pricing-row">
       <div class="p-num">03</div>
@@ -445,7 +443,6 @@
         <div class="p-title">Consulente integrato</div>
         <div class="p-desc">Per strutture complesse, doppia candidatura ON + Smart&Start, strategie multi-bando. Rete di specialisti integrata.</div>
       </div>
-      <div class="p-price">Su richiesta</div>
     </div>
   </div>
 </div>
@@ -457,7 +454,7 @@
 <div style="border-bottom:none; padding:80px 0;">
   <div class="cta-box reveal-scale">
     <div class="cta-title">La tua startup.<br>Il finanziamento <em>giusto.</em></div>
-    <p class="cta-sub">Tre bandi Invitalia. Fondo perduto reale. €29 per sapere se sei finanziabile. Zero anticipi sul dossier — paghi solo se vinci.</p>
+    <p class="cta-sub">Tre bandi Invitalia. Fondo perduto reale. Quota fissa + percentuale sul buon esito.</p>
     <a href="/analisi" class="btn-primary">Analizza la tua startup →</a>
   </div>
 </div>
